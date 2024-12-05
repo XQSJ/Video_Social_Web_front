@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import MainUIView from "@/views/MainUIView.vue";
 import RecommendView from "@/views/RecommendView.vue";
 import FollowView from "@/views/FollowView.vue";
 import SearchView from "@/views/SearchView.vue";
+import UserView from "@/views/UserView.vue";
+
 
 Vue.use(VueRouter)
 
@@ -23,6 +24,11 @@ const routes = [
     path: '/search',
     name: 'search',
     component: SearchView
+  },
+  {
+    path: '/user',
+    name: 'user',
+    component: UserView
   },
 ]
 

@@ -3,10 +3,22 @@
     data(){
       return{
         input_search: '',
-        button_Search_isDisable: true
+        button_Search_isDisable: true,
       }
     },
     methods:{
+      //点击用户时触发
+      clickUser(user_id){
+        if(true){     //！！！修改为若该用户存在时
+          this.$router.push({
+            name:'user',
+            query:{
+              user:user_id
+            },
+          }, () => {});
+
+        }
+      },
       //点击推荐按钮时触发
       clickRecommend(){
         this.$router.push({name:'recommend'}, () => {});
@@ -53,7 +65,7 @@
               <el-button :class="{'operate-button':true}" @click="clickRecommend">推荐</el-button>
               <el-button :class="{'operate-button':true}" @click="clickFollow">关注</el-button>
               <el-button :class="{'operate-button':true}" @click="clickRecommend">聊天</el-button>
-              <el-button :class="{'operate-button':true}" @click="clickRecommend">我的</el-button>
+              <el-button :class="{'operate-button':true}" @click="clickUser('self')">我的</el-button>
 
             </div>
 
