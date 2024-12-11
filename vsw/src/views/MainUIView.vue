@@ -10,12 +10,8 @@
       //点击用户时触发
       clickUser(user_id){
         if(true){     //！！！修改为若该用户存在时
-          this.$router.push({
-            name:'user',
-            query:{
-              user:user_id
-            },
-          }, () => {});
+          //调用全局函数
+          this.toUserView(user_id)
 
         }
       },
@@ -36,6 +32,7 @@
       clickSearch(){
         //若input_search不为空时触发
          if(this.input_search!==''){
+
            this.$router.push({
              name:'search',
              query:{
@@ -113,8 +110,8 @@
   .left{
     width:200px !important;
     //根据计算得出左侧栏布局
-    --iconsheight: 150px;         //通过此变量根据左上角logo大小控制header大小
-    --bottomheight:200px;
+    --iconsheight: 100px;         //通过此变量根据左上角logo大小控制header大小
+    --bottomheight:100px;
     .el-header{
 
       height:var(--iconsheight) !important;

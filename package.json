@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "element-ui": "^2.15.14"
+    "element-ui": "^2.15.14",
+    "swiper": "^5.4.5",
+    "xgplayer": "^3.0.20"
   }
 }

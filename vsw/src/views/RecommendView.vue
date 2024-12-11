@@ -1,10 +1,14 @@
 <script setup>
+import PlayerView from "@/views/PlayerView.vue";
 
 </script>
 
 <template>
-    <i>推荐</i>
+  <PlayerView></PlayerView>
 </template>
+
+
+
 
 <style scoped lang="stylus">
 

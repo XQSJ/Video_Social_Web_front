@@ -2,9 +2,22 @@
   export default {
     data() {
       return {
-        user_id:''
+        userid:''
       }
     },
+    mounted() {
+      //将id赋值
+      this.userid=this.$route.query.id
+    },
+    watch:{
+      //监听路由更改时将id赋值
+      '$route.query'(newId){
+        if(this.$route.name==='user'){  //当路由为该界面时
+          this.userid=newId.id
+        }
+
+      }
+    }
   }
 </script>
 
@@ -15,7 +28,8 @@
             <el-col :span="4">touxiang</el-col>
             <el-col :span="12">
               <el-row>mingzi</el-row>
-              <el-row>aihao</el-row>
+              <el-row>{{userid}}</el-row>
+
             </el-col>
 
           </el-row>
