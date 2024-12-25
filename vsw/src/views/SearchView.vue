@@ -1,4 +1,5 @@
 <script>
+import Middle from '@/utils/middle.js';
 export default {
   data() {
     return {
@@ -27,11 +28,19 @@ export default {
     clickUserSearch(){
       this.changeType('user')
     },
+    Search(){ //执行搜索
+      console.log("sousuo"+this.searching+this.type)
+    }
   },
   mounted() {
+    let _this = this
+    Middle.$on('search',(data)=>{
+      _this.Search();
+    })
     //将搜索关键词赋值
     this.searching=this.$route.query.key
     this.type=this.$route.query.type
+    this.Search();
   },
   watch:{
     //监听路由更改时将搜索结果赋值
@@ -40,6 +49,7 @@ export default {
       {
         this.searching=newKey.key
         this.type=newKey.type
+        this.Search();
       }
 
     }

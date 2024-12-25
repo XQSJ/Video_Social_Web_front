@@ -1,4 +1,5 @@
 <script >
+import Middle from '@/utils/middle.js';
   export default {
     data(){
       return{
@@ -32,14 +33,19 @@
       clickSearch(){
         //若input_search不为空时触发
          if(this.input_search!==''){
+            if(this.$route.name!=='search'){
 
-           this.$router.push({
-             name:'search',
-             query:{
-               key: this.input_search,
-               type: 'general'
-             }
-           }, () => {});
+              this.$router.push({
+                name:'search',
+                query:{
+                  key: this.input_search,
+                  type: 'general'
+                }
+              }, () => {});
+            }
+            else{
+              Middle.$emit('search');
+            }
 
          }
       }
@@ -61,7 +67,7 @@
             <div class="operate" >
               <el-button :class="{'operate-button':true}" @click="clickRecommend">推荐</el-button>
               <el-button :class="{'operate-button':true}" @click="clickFollow">关注</el-button>
-              <el-button :class="{'operate-button':true}" @click="clickRecommend">聊天</el-button>
+              <el-button :class="{'operate-button':true}" @click="">聊天</el-button>
               <el-button :class="{'operate-button':true}" @click="clickUser('self')">我的</el-button>
 
             </div>
@@ -75,7 +81,7 @@
         <el-container>
           <el-header>
             <el-input placeholder="请输入内容" v-model="input_search" class="input-with-select" clearable @clear="clearSearch">
-              <el-button slot="append" icon="el-icon-search" @click="clickSearch" :disabled="input_search===''" :class="{'search-button':input_search===''}"></el-button>
+              <el-button slot="append" icon="el-icon-search" @click="clickSearch"  ></el-button> <!--:disabled="input_search===''" :class="{'search-button':input_search===''}"-->
             </el-input>
             <div class="xth">
               <el-button>通知</el-button>

@@ -25,9 +25,9 @@
    <el-container style="height: 100%">
        <el-header>
           <el-row>
-            <el-col :span="4">touxiang</el-col>
+            <el-col :span="4">头像</el-col>
             <el-col :span="12">
-              <el-row>mingzi</el-row>
+              <el-row>用户名</el-row>
               <el-row>{{userid}}</el-row>
 
             </el-col>
