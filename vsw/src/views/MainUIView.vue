@@ -1,13 +1,33 @@
 <script >
 import Middle from '@/utils/middle.js';
+import ChatView from "@/views/ChatView.vue";
+import MessageView from "@/views/MessageView.vue";
+
   export default {
+    components: {ChatView, MessageView},
     data(){
       return{
         input_search: '',
         button_Search_isDisable: true,
+        dialogVisible:{
+          messageView:false,
+          chatView:false
+        }
       }
     },
     methods:{
+      handleOpenMessageView(){
+        this.dialogVisible.messageView=true
+      },
+      handleCloseMessageView(){
+
+      },
+      handleOpenChatView(){
+        this.dialogVisible.chatView=true
+      },
+      handleCloseChatView(){
+
+      },
       //点击用户时触发
       clickUser(user_id){
         if(true){     //！！！修改为若该用户存在时
@@ -55,6 +75,7 @@ import Middle from '@/utils/middle.js';
 
 <template>
     <div class="ui">
+
       <!--容器布局-->
       <el-container class="ui">
         <!--侧边栏-->
@@ -84,8 +105,15 @@ import Middle from '@/utils/middle.js';
               <el-button slot="append" icon="el-icon-search" @click="clickSearch"  ></el-button> <!--:disabled="input_search===''" :class="{'search-button':input_search===''}"-->
             </el-input>
             <div class="xth">
-              <el-button>通知</el-button>
-              <el-button>私信</el-button>
+              <el-popover placement="bottom" title="通知" trigger="hover">
+                  <el-button slot="reference">通知</el-button>
+                  <MessageView style="height: 500px;width: 300px"></MessageView>
+              </el-popover>
+              <el-popover placement="bottom" title="私信" trigger="hover">
+                  <el-button slot="reference">私信</el-button>
+                  <ChatView style="height: 500px;width: 300px"></ChatView>
+              </el-popover>
+
               <el-button>投稿</el-button>
               <el-button>主页</el-button>
             </div>

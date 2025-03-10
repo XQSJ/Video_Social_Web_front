@@ -25,8 +25,11 @@ export default {
           name: "2"
         }
       },
-      dialogFormVisible_fans: false,
-      dialogFormVisible_editIntro: false,
+      dialogVisible:{
+        fans:false,
+        editIntro:false
+      },
+
       input_searchUser: ''
     }
   },
@@ -48,16 +51,16 @@ export default {
   },
   methods: {
     handleCloseFans() {
-      this.dialogFormVisible_fans = false
+      this.dialogVisible.fans = false
     },
     handleOpenFans(item) {
-      this.dialogFormVisible_fans = true
+      this.dialogVisible.fans = true
     },
     handleCloseEdit() {
-      this.dialogFormVisible_editIntro = false
+      this.dialogVisible.editIntro = false
     },
     handleOpenEdit() {
-      this.dialogFormVisible_editIntro = true
+      this.dialogVisible.editIntro = true
       this.editForm.name=this.userinfo.name
       this.editForm.introduction=this.userinfo.introduction
       this.editForm.profile=this.userinfo.profile
@@ -103,7 +106,7 @@ export default {
 
 <template>
   <div style="height: 100%">
-    <el-dialog :visible="this.dialogFormVisible_fans" :before-close="handleCloseFans" :destroy-on-close=true>
+    <el-dialog :visible="this.dialogVisible.fans" :before-close="handleCloseFans" :destroy-on-close=true>
       <el-button>关注</el-button>
       <el-button>粉丝</el-button>
       <el-input placeholder="搜索用户名字或id" v-model="input_searchUser" clearable @clear="clearSearchUser">
@@ -113,7 +116,7 @@ export default {
         {{ user.name }}
       </div>
     </el-dialog>
-    <el-dialog :close-on-click-modal="false" :visible="this.dialogFormVisible_editIntro" :before-close="handleCloseEdit" :destroy-on-close=true>
+    <el-dialog :close-on-click-modal="false" :visible="this.dialogVisible.editIntro" :before-close="handleCloseEdit" :destroy-on-close=true>
       <el-row>
           编辑资料
       </el-row>
@@ -136,13 +139,12 @@ export default {
     </el-dialog>
     <el-container style="height: 100%">
 
-      <el-header style="height: 10%">
+      <el-header style="height: 15%">
         <el-row style="height: 100%">
           <el-col :span="4">头像</el-col>
           <el-col :span="12">
             <el-row>{{ userinfo.name }}</el-row>
-            <el-row>{{ userid }}</el-row>
-            <el-row>{{ userinfo.introduction }}</el-row>
+
             <el-row>
               <el-button @click="handleOpenFans('关注')">
                 关注 {{ userinfo.subscribeCount }}
@@ -152,7 +154,8 @@ export default {
               </el-button>
 
             </el-row>
-
+            <el-row>id: {{ userid }}</el-row>
+            <el-row>{{ userinfo.introduction }}</el-row>
           </el-col>
           <el-col :span="4">
             <el-button @click="handleOpenEdit">
