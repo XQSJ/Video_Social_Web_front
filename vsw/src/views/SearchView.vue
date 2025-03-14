@@ -8,6 +8,10 @@ export default {
     }
   },
   methods:{
+    back(){ //返回上一个界面
+
+      this.$router.go(-1)
+    },
     changeType(type){ //更改type时调用
       //更改路由
       this.$router.push({
@@ -62,6 +66,7 @@ export default {
   <div>
     <el-container>
       <el-header>
+        <el-button @click="back"> 返回</el-button>
         <el-button @click="clickGeneralSearch">综合</el-button>
         <el-button @click="clickVideoSearch">视频</el-button>
         <el-button @click="clickUserSearch">用户</el-button>

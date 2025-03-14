@@ -39,6 +39,13 @@ export default {
     //根据id查找其他值
     this.setinfo()
   },
+  created(){
+    /*if (window.name === '') {
+      console.log('1页面首次被加载')
+    } else {
+      console.log('1页面被刷新')
+    }*/
+  },
   watch: {
     //监听路由更改时将id赋值
     '$route.query'(newId) {

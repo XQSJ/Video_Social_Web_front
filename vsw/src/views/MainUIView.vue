@@ -16,7 +16,7 @@ import MessageView from "@/views/MessageView.vue";
       }
     },
     methods:{
-      handleOpenMessageView(){
+     /* handleOpenMessageView(){
         this.dialogVisible.messageView=true
       },
       handleCloseMessageView(){
@@ -27,7 +27,7 @@ import MessageView from "@/views/MessageView.vue";
       },
       handleCloseChatView(){
 
-      },
+      },*/
       //点击用户时触发
       clickUser(user_id){
         if(true){     //！！！修改为若该用户存在时
@@ -121,7 +121,10 @@ import MessageView from "@/views/MessageView.vue";
 
           </el-header>
           <el-main>
-              <router-view></router-view>
+            <keep-alive >
+                <router-view v-if="$route.meta.keepAlive" />
+            </keep-alive>
+            <router-view v-if="!$route.meta.keepAlive" />
           </el-main>
         </el-container>
       </el-container>

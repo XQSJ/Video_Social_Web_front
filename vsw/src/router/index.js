@@ -13,7 +13,10 @@ const routes = [
   {
     path: '/',
     name: 'recommend',
-    component: RecommendView
+    component: RecommendView,
+    meta:{
+      keepAlive:true
+    }
   },
   {
     path: '/follow',
