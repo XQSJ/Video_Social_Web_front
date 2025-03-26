@@ -13,7 +13,8 @@ import 'element-ui/lib/theme-chalk/index.css'; // 2.2引入样式
 Vue.use(ElementUI); // 3.安装
 
 Vue.config.productionTip = false
-
+// 在Vue实例创建之前设置silent为true
+Vue.config.silent = true;
 new Vue({
   router,
   store,

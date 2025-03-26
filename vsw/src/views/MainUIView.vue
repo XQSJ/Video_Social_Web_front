@@ -2,20 +2,33 @@
 import Middle from '@/utils/middle.js';
 import ChatView from "@/views/ChatView.vue";
 import MessageView from "@/views/MessageView.vue";
+import LoginView from "@/views/LoginView.vue";
+import loginView from "@/views/LoginView.vue";
 
   export default {
-    components: {ChatView, MessageView},
+    computed: {
+
+    },
+    components: {LoginView, ChatView, MessageView},
     data(){
       return{
         input_search: '',
         button_Search_isDisable: true,
         dialogVisible:{
           messageView:false,
-          chatView:false
+          chatView:false,
+          logView:true,
         }
       }
     },
     methods:{
+      logout(){
+          localStorage.clear();
+
+      },
+      handleCloseLog(){
+        this.dialogVisible.logView = false
+      },
      /* handleOpenMessageView(){
         this.dialogVisible.messageView=true
       },
@@ -75,7 +88,10 @@ import MessageView from "@/views/MessageView.vue";
 
 <template>
     <div class="ui">
-
+      <!-- 登陆弹窗-->
+      <el-dialog :visible="this.dialogVisible.logView" :before-close="handleCloseLog">
+          <LoginView></LoginView>
+      </el-dialog>
       <!--容器布局-->
       <el-container class="ui">
         <!--侧边栏-->

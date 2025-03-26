@@ -13,6 +13,19 @@
 
 
 </style>
-<script setup>
+<script >
 import MainUIView from "@/views/MainUIView.vue";
+export default {
+  data(){
+    return{
+
+    }
+  },
+  methods:{
+    logout(){
+      localStorage.clear();
+    }
+  },
+  components:{MainUIView}
+}
 </script>
