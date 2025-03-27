@@ -8,10 +8,43 @@ export default {
       userId: '',
       userPwd: '',
       loginButton: false,
-      loading: false
+      registerButton: false,
+      loading: false,
+      isRegister:false,
+      registerName:'',
+      registerPwd:'',
+      registerId:''
     }
   },
   methods: {
+    handleRegisterButton(){
+      this.registerName=''
+      this.registerPwd=''
+      this.registerId=''
+      this.isRegister=true;
+    },
+    async Register(){
+      let userRegister = {
+        "userName" : this.registerName,
+        "userPwd" : this.registerPwd
+      }
+      this.loading = true;
+      let _this = this;
+      await axios.post('/users/register',userRegister)
+          .then(response=>{
+
+            setTimeout(()=>{
+              this.loading=false;
+              _this.registerId=response.data.data;
+              _this.$message("你的用户id为："+this.registerId);
+            },500)
+
+            //this.$message(this.registerId)
+          })
+      this.userId='';
+      this.userPwd=''
+      this.isRegister=false;
+    },
     async verifyLogin() {
       let userLogin = {
         userId: this.userId,
@@ -88,6 +121,20 @@ export default {
       } else {
         this.loginButton = false
       }
+    },
+    registerName(newValue, oldValue) {
+      if (this.registerName !== "" && this.registerPwd !== "") {
+        this.registerButton = true
+      } else {
+        this.registerButton = false
+      }
+    },
+    registerPwd(newValue, oldValue) {
+      if (this.registerName !== "" && this.registerPwd !== "") {
+        this.registerButton = true
+      } else {
+        this.registerButton = false
+      }
     }
   }
 }
@@ -95,12 +142,24 @@ export default {
 
 <template>
   <div v-loading="loading">
-    登录<br>
-    账户
-    <el-input v-model.trim="userId" placeholder="请输入账户" clearable></el-input>
-    密码
-    <el-input v-model.trim="userPwd" placeholder="请输入密码" clearable></el-input>
-    <el-button @click="verifyLogin" :disabled="!this.loginButton">登录</el-button>
+    <div v-show="!isRegister">
+      登录<br>
+      账户
+      <el-input v-model.trim="userId" placeholder="请输入账户" clearable></el-input>
+      密码
+      <el-input v-model.trim="userPwd" placeholder="请输入密码" clearable></el-input>
+      <el-button @click="verifyLogin" :disabled="!this.loginButton">登录</el-button>
+      <el-button @click="handleRegisterButton" >注册</el-button>
+    </div>
+    <div v-show="isRegister">
+        <el-button @click="isRegister=false">返回</el-button>
+        注册<br>
+        用户名
+        <el-input v-model.trim="registerName" placeholder="请输入用户名" clearable></el-input>
+        密码
+        <el-input v-model.trim="registerPwd" placeholder="请输入密码" clearable></el-input>
+        <el-button @click="Register" :disabled="!this.registerButton">注册</el-button>
+    </div>
 
   </div>
 </template>

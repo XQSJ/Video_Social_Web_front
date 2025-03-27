@@ -52,10 +52,9 @@ import loginView from "@/views/LoginView.vue";
         this.$router.go(0);
         this.isLogin = false;
         localStorage.clear();
-
-
-
-
+      },
+      login(){
+        this.dialogVisible.logView= true;
       },
       handleCloseLog(){
         this.dialogVisible.logView = false
@@ -162,7 +161,7 @@ import loginView from "@/views/LoginView.vue";
               </el-popover>
 
               <el-button @click="test(isLogin)">投稿</el-button>
-              <el-button v-if="isLogin===false">登录</el-button>
+              <el-button v-if="isLogin===false" @click="login">登录</el-button>
               <el-button v-if="isLogin===true" @click="logout">注销</el-button>
 
             </div>
