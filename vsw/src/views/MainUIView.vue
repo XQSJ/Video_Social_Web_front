@@ -1,5 +1,6 @@
 <script >
 import Middle from '@/utils/middle.js';
+import fromLogin from '@/utils/LoginViewToMainUIView';
 import ChatView from "@/views/ChatView.vue";
 import MessageView from "@/views/MessageView.vue";
 import LoginView from "@/views/LoginView.vue";
@@ -12,18 +13,48 @@ import loginView from "@/views/LoginView.vue";
     components: {LoginView, ChatView, MessageView},
     data(){
       return{
+        isLogin:false,
         input_search: '',
         button_Search_isDisable: true,
         dialogVisible:{
           messageView:false,
           chatView:false,
-          logView:true,
+          logView:false,
         }
       }
     },
+    beforeMount(){
+      let _this = this
+      //console.log("登陆状态"+localStorage.getItem("isLogin"))
+      if(localStorage.getItem("isLogin")===null){
+        console.log("未登录")
+        this.isLogin = false
+        _this.dialogVisible.logView =  true
+      }else{
+        console.log("已登录")
+        this.isLogin = true
+        _this.dialogVisible.logView = false;
+      }
+
+    },
+    mounted(){
+      let _this = this
+      //console.log("登陆状态"+localStorage.getItem("isLogin"))
+      fromLogin.$on('login',(data)=>{
+        _this.handleCloseLog();
+        _this.isLogin = true;
+      })
+
+    },
     methods:{
+      test(a){console.log("test"+a)},
       logout(){
-          localStorage.clear();
+        this.$router.go(0);
+        this.isLogin = false;
+        localStorage.clear();
+
+
+
 
       },
       handleCloseLog(){
@@ -89,7 +120,7 @@ import loginView from "@/views/LoginView.vue";
 <template>
     <div class="ui">
       <!-- 登陆弹窗-->
-      <el-dialog :visible="this.dialogVisible.logView" :before-close="handleCloseLog">
+      <el-dialog :visible="this.dialogVisible.logView" :before-close="handleCloseLog" :close-on-click-modal="false">
           <LoginView></LoginView>
       </el-dialog>
       <!--容器布局-->
@@ -130,8 +161,10 @@ import loginView from "@/views/LoginView.vue";
                   <ChatView style="height: 500px;width: 300px"></ChatView>
               </el-popover>
 
-              <el-button>投稿</el-button>
-              <el-button>主页</el-button>
+              <el-button @click="test(isLogin)">投稿</el-button>
+              <el-button v-if="isLogin===false">登录</el-button>
+              <el-button v-if="isLogin===true" @click="logout">注销</el-button>
+
             </div>
 
 

@@ -1,19 +1,21 @@
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
       userid: '',
       userinfo: {
-        name: '用户名111',
+        name: '',
         profile: '',
         fansCount: 0,
         subscribeCount: 0,
-        introduction: '自我介绍1'
+        introduction: ''
       },
-      editForm:{
-          profile:'',
-          name:'',
-          introduction:''
+      editForm: {
+        profile: '',
+        name: '',
+        introduction: ''
       },
       option: '',
       videoList: {},
@@ -25,21 +27,19 @@ export default {
           name: "2"
         }
       },
-      dialogVisible:{
-        fans:false,
-        editIntro:false
+      dialogVisible: {
+        fans: false,
+        editIntro: false
       },
 
       input_searchUser: ''
     }
   },
   mounted() {
-    //将id赋值
-    this.userid = this.$route.query.id
-    //根据id查找其他值
-    this.setinfo()
+    this.initInfo()
+
   },
-  created(){
+  created() {
     /*if (window.name === '') {
       console.log('1页面首次被加载')
     } else {
@@ -57,6 +57,27 @@ export default {
     }
   },
   methods: {
+    initInfo() {
+      if (this.$route.query.id === 'self') {
+        //console.log(localStorage.getItem('userInfo'))
+        if (localStorage.getItem('userInfo') !== null) {
+          let user = JSON.parse(localStorage.getItem('userInfo'))
+
+          this.userid = user.userId
+          this.userinfo.name = user.userName
+          this.userinfo.profile = user.avatar
+          this.userinfo.introduction = user.userInfo
+          this.userinfo.fansCount = user.fans
+          this.userinfo.subscribeCount = user.subscriber
+        }
+
+      } else {
+        //将id赋值
+        this.userid = this.$route.query.id
+        //根据id查找其他值
+        this.setinfo()
+      }
+    },
     handleCloseFans() {
       this.dialogVisible.fans = false
     },
@@ -68,22 +89,42 @@ export default {
     },
     handleOpenEdit() {
       this.dialogVisible.editIntro = true
-      this.editForm.name=this.userinfo.name
-      this.editForm.introduction=this.userinfo.introduction
-      this.editForm.profile=this.userinfo.profile
+      this.editForm.name = this.userinfo.name
+      this.editForm.introduction = this.userinfo.introduction
+      this.editForm.profile = this.userinfo.profile
     },
-    editUserInfo(){
-      //调用接口修改信息 ？？？
-
-      //
-      if(1){//修改成功后触发下列内容
-        this.userinfo.name=this.editForm.name
-        this.userinfo.introduction=this.editForm.introduction
-        this.userinfo.profile=this.editForm.profile
-        this.handleCloseEdit()
-      }else{ //修改不成功？？？
-
+    async editUserInfo() {
+      let userInfo = {
+        "userId": this.userid,
+        "userName": this.editForm.name,
+        "avatar": this.editForm.profile,
+        "userInfo": this.editForm.introduction
       }
+
+      //调用接口修改信息 ？？？
+      await axios.put('/users/update', userInfo).then((response) => {
+        //console.log(response.data)
+        let user = JSON.parse(localStorage.getItem('userInfo'))
+        user.userName = userInfo.userName
+        user.userInfo = userInfo.userInfo
+        user.avatar = userInfo.avatar
+
+        localStorage.setItem('userInfo', JSON.stringify(user))
+        this.userinfo.name = this.editForm.name
+        this.userinfo.introduction = this.editForm.introduction
+        this.userinfo.profile = this.editForm.profile
+        this.handleCloseEdit()
+      }).catch(error => {
+
+      })
+      //
+      /*      if(1){//修改成功后触发下列内容
+              this.userinfo.name=this.editForm.name
+              this.userinfo.introduction=this.editForm.introduction
+              this.userinfo.profile=this.editForm.profile
+              this.handleCloseEdit()
+            }else{ //修改不成功？？？
+            }*/
 
     },
     setinfo() {
@@ -123,24 +164,25 @@ export default {
         {{ user.name }}
       </div>
     </el-dialog>
-    <el-dialog :close-on-click-modal="false" :visible="this.dialogVisible.editIntro" :before-close="handleCloseEdit" :destroy-on-close=true>
+    <el-dialog :close-on-click-modal="false" :visible="this.dialogVisible.editIntro" :before-close="handleCloseEdit"
+               :destroy-on-close=true>
       <el-row>
-          编辑资料
+        编辑资料
       </el-row>
       <el-row>
-          头像
+        头像
       </el-row>
       <el-row>
-          名字
-          <el-input placeholder="记得填写昵称" v-model="editForm.name"></el-input>
+        名字
+        <el-input placeholder="记得填写昵称" v-model="editForm.name"></el-input>
       </el-row>
       <el-row>
-          简介
-          <el-input placeholder="介绍一下你自己"  v-model="editForm.introduction"></el-input>
+        简介
+        <el-input placeholder="介绍一下你自己" v-model="editForm.introduction"></el-input>
       </el-row>
       <el-row>
-         <el-button @click="handleCloseEdit">取消</el-button>
-         <el-button @click="editUserInfo">保存</el-button>
+        <el-button @click="handleCloseEdit">取消</el-button>
+        <el-button @click="editUserInfo">保存</el-button>
       </el-row>
 
     </el-dialog>
@@ -171,7 +213,7 @@ export default {
           </el-col>
         </el-row>
       </el-header>
-      <el-main >
+      <el-main>
         <el-container>
           <el-header>
             <el-button @click="searchUserVideo('work')">作品</el-button>

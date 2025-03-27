@@ -4,12 +4,16 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import './assets/css/all.styl'
+import axios from "axios";
+import {url} from '../src/request/http'
 /*import { register } from 'swiper/element/bundle';
 
 register();*/
 //引入element组件
 import ElementUI from 'element-ui'; // 2.1引入结构
 import 'element-ui/lib/theme-chalk/index.css'; // 2.2引入样式
+
+axios.defaults.baseURL = url;
 Vue.use(ElementUI); // 3.安装
 
 Vue.config.productionTip = false
@@ -23,12 +27,10 @@ new Vue({
 
 
 Vue.prototype.toUserView=function (userid){
-
   this.$router.push({
     name:'user',
     query:{
       id:userid
-
     },
   }, () => {});
 }
