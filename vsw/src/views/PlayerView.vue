@@ -13,7 +13,7 @@
               </div>
           </div>
           <div class="control-buttons">
-            <el-button @click="toUserPage">
+            <el-button @click="toUserPage(item.userid)">
               头像
             </el-button>
             <el-button>
@@ -152,8 +152,8 @@ export default {
     pausePlay(data, index) { //暂停视频
 
     },
-    toUserPage(){
-      this.toUserView('self')
+    toUserPage(userid){
+      this.toUserView(userid)
     },
     test(a){
       console.log('test'+a)
@@ -337,12 +337,14 @@ export default {
       let newVideo = {
         id:this.videoList.length,
         player: -1,
-        url: ''
+        url: '',
+        userid:''
       }
       //1.拉取
       Middle.$emit('getNewVideo',this.videoList.length,(result)=>{
 
         newVideo.url = result.url
+        newVideo.userid=result.userid
       }) //？？？传参应为id
       //2.放入视频列表
 

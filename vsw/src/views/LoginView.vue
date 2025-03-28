@@ -1,6 +1,7 @@
 <script>
 import axios from "axios";
 import toMainUI from '@/utils/LoginViewToMainUIView';
+import toLogin from "@/utils/toLogin";
 
 export default {
   data() {
@@ -68,6 +69,7 @@ export default {
                   // this.getUser(response.data.userId);
 
                   _this.getLoginUser(userLogin.userId);
+
                   setTimeout(()=>{
                     toMainUI.$emit('login');    //调用mainUi的关闭登录弹窗
                   },500);
@@ -92,6 +94,7 @@ export default {
     },
 
     async getLoginUser(userId){
+
       await axios
           .get(`/users/${userId}`)
           .then((response)=>{
@@ -100,6 +103,7 @@ export default {
             localStorage.setItem("isLogin", "1");
             this.$router.go(0)
             this.$store.state.userInfo = userInfo;
+
 
             //console.log(localStorage.getItem("userInfo"))
       })
@@ -148,8 +152,9 @@ export default {
       <el-input v-model.trim="userId" placeholder="请输入账户" clearable></el-input>
       密码
       <el-input v-model.trim="userPwd" placeholder="请输入密码" clearable></el-input>
-      <el-button @click="verifyLogin" :disabled="!this.loginButton">登录</el-button>
       <el-button @click="handleRegisterButton" >注册</el-button>
+      <el-button @click="verifyLogin" :disabled="!this.loginButton">登录</el-button>
+
     </div>
     <div v-show="isRegister">
         <el-button @click="isRegister=false">返回</el-button>

@@ -14,22 +14,25 @@ export default {
           id: 0,
           player: 1,
           url: '//sf1-cdn-tos.huoshanstatic.com/obj/media-fe/xgplayer_doc_video/mp4/xgplayer-demo-360p.mp4',
-
+          userid:4
         },
           {
             id: 1,
             player: 0,
-            url: 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218114723HDu3hhxqIT.mp4'
+            url: 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218114723HDu3hhxqIT.mp4',
+            userid:5
           },
           {
             id: 2,
             player: -1,
-            url: 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4'
+            url: 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4',
+            userid:3
           },
           {
             id: 3,
             player: -1,
-            url: 'https://stream7.iqilu.com/10339/article/202002/18/2fca1c77730e54c7b500573c2437003f.mp4'
+            url: 'https://stream7.iqilu.com/10339/article/202002/18/2fca1c77730e54c7b500573c2437003f.mp4',
+            userid:9
           }]
 
         return  videos
@@ -43,7 +46,8 @@ export default {
 
       return newVideo = {
         id:length,
-        url: 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4'
+        url: 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4',
+        userid:10
       }
     }
   },
@@ -64,7 +68,7 @@ export default {
     })
 
     //第一次挂载时拉取videolist
-    console.log(111)
+    console.log("拉取videolist")
 
   }
 }

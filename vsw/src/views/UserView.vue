@@ -1,9 +1,11 @@
 <script>
 import axios from "axios";
-
+import toLogin from '@/utils/toLogin'
 export default {
   data() {
     return {
+      isSelf:false,
+      isFollower:0,
       userid: '',
       userinfo: {
         name: '',
@@ -20,12 +22,7 @@ export default {
       option: '',
       videoList: {},
       userList: {
-        user1: {
-          name: "1"
-        },
-        user2: {
-          name: "2"
-        }
+
       },
       dialogVisible: {
         fans: false,
@@ -35,9 +32,20 @@ export default {
       input_searchUser: ''
     }
   },
+  beforeMount(){
+    if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
+      if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
+        this.toUserView('self')
+      }
+    }
+  },
   mounted() {
+    if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
+      if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
+        this.toUserView('self')
+      }
+    }
     this.initInfo()
-
   },
   created() {
     /*if (window.name === '') {
@@ -51,37 +59,98 @@ export default {
     '$route.query'(newId) {
       if (this.$route.name === 'user') {  //当路由为该界面时
         this.userid = newId.id //将传入的id赋值
-        this.setinfo()//根据id查找其他值
+
+        if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
+          if(this.userid === JSON.parse(localStorage.getItem('userInfo')).userId){
+            this.toUserView('self')
+          }
+        }
+        this.initInfo()//根据id查找其他值
       }
 
     }
   },
   methods: {
+    toUser(userid){
+      this.handleCloseFans()
+      this.toUserView(userid)
+    },
+    handleUnFollow(followid){
+      let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+      axios.delete(`/follow/${userid}/${followid}`)
+          .then(response=>{
+            if(response.data.code===1){
+              this.$message(userid+"已取消关注"+followid)
+              this.isFollower = 0
+              this.userinfo.fansCount--;
+            }
+
+          })
+    },
+    handleFollow(followid){
+      if(localStorage.getItem('userInfo')!==null){
+        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+
+        axios.post(`/follow/${userid}/${followid}`)
+            .then(response=>{
+              if(response.data.code===1){
+                this.$message(userid+"已关注"+followid)
+                this.isFollower = response.data.data
+                this.userinfo.fansCount++;
+              }
+
+            })
+      }else{
+        //console.log('未登录')
+        this.login();
+      }
+
+
+
+    },
     initInfo() {
       if (this.$route.query.id === 'self') {
+
         //console.log(localStorage.getItem('userInfo'))
         if (localStorage.getItem('userInfo') !== null) {
           let user = JSON.parse(localStorage.getItem('userInfo'))
 
           this.userid = user.userId
-          this.userinfo.name = user.userName
+          this.isSelf = true
+          this.setinfo(this.userid)
+    /*      this.userinfo.name = user.userName
           this.userinfo.profile = user.avatar
           this.userinfo.introduction = user.userInfo
           this.userinfo.fansCount = user.fans
-          this.userinfo.subscribeCount = user.subscriber
+          this.userinfo.subscribeCount = user.subscriber*/
+
         }
 
       } else {
+        this.isSelf = false
         //将id赋值
         this.userid = this.$route.query.id
+        //console.log('其他用户'+this.userid)
         //根据id查找其他值
-        this.setinfo()
+        this.setinfo(this.userid)
       }
     },
     handleCloseFans() {
       this.dialogVisible.fans = false
+
     },
     handleOpenFans(item) {
+      let userid = this.userid
+      if(item==='关注'){
+        axios.get(`/follow/getsubs/${userid}`).then((response)=>{
+           this.userList = response.data.data;
+        });
+      }else{
+        axios.get(`/follow/getfans/${userid}`).then((response)=>{
+          this.userList = response.data.data;
+        });
+      }
+
       this.dialogVisible.fans = true
     },
     handleCloseEdit() {
@@ -127,10 +196,35 @@ export default {
             }*/
 
     },
-    setinfo() {
+    login(){
+      toLogin.$emit('log')
+    },
+    async isFollow(followid){
+      if(localStorage.getItem('userInfo')!==null){
+        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+        await axios.get(`/follow/${userid}/${followid}`)
+            .then((response)=>{
+              this.isFollower=response.data.data
+            })
+      }
+    },
+    async setinfo(userId) {
       //根据id查询user基本信息
+      await axios
+          .get(`/users/${userId}`)
+          .then((response)=>{
+            //user信息赋值
+            let user = response.data.data
+            this.userinfo.name = user.userName
+            this.userinfo.profile = user.avatar
+            this.userinfo.introduction = user.userInfo
+            this.userinfo.fansCount = user.fans
+            this.userinfo.subscribeCount = user.subscriber
+            if(this.isSelf===false){
+              this.isFollow(userId)
+            }
+          })
 
-      //user信息赋值
 
       //搜索作品
       this.searchUserVideo('work')
@@ -155,13 +249,15 @@ export default {
 <template>
   <div style="height: 100%">
     <el-dialog :visible="this.dialogVisible.fans" :before-close="handleCloseFans" :destroy-on-close=true>
-      <el-button>关注</el-button>
-      <el-button>粉丝</el-button>
+      <el-button @click="handleOpenFans('关注')">关注</el-button>
+      <el-button @click="handleOpenFans('粉丝')">粉丝</el-button>
       <el-input placeholder="搜索用户名字或id" v-model="input_searchUser" clearable @clear="clearSearchUser">
       </el-input>
-      <div v-for="(user, index) in userList">
-        {{ user.profile }}
-        {{ user.name }}
+      <div v-for="(user, index) in userList" @click="toUser(user.userId)">
+
+        id：{{ user.userId }}
+        名称：{{ user.userName }}<br>
+        {{ user.userInfo }}
       </div>
     </el-dialog>
     <el-dialog :close-on-click-modal="false" :visible="this.dialogVisible.editIntro" :before-close="handleCloseEdit"
@@ -207,9 +303,21 @@ export default {
             <el-row>{{ userinfo.introduction }}</el-row>
           </el-col>
           <el-col :span="4">
-            <el-button @click="handleOpenEdit">
+            <el-button @click="handleOpenEdit" v-if="this.isSelf">
               编辑资料
             </el-button>
+            <div v-if="!this.isSelf">
+              <el-button @click="handleFollow(userid)" v-if="isFollower===0">
+                关注
+              </el-button>
+              <el-button @click="handleUnFollow(userid)" v-if="isFollower===1">
+                已关注
+              </el-button>
+              <el-button @click="handleUnFollow(userid)" v-if="isFollower===2">
+                相互关注
+              </el-button>
+            </div>
+
           </el-col>
         </el-row>
       </el-header>

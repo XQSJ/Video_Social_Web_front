@@ -1,6 +1,7 @@
 <script >
 import Middle from '@/utils/middle.js';
 import fromLogin from '@/utils/LoginViewToMainUIView';
+import toLogin from '@/utils/toLogin'
 import ChatView from "@/views/ChatView.vue";
 import MessageView from "@/views/MessageView.vue";
 import LoginView from "@/views/LoginView.vue";
@@ -13,6 +14,9 @@ import loginView from "@/views/LoginView.vue";
     components: {LoginView, ChatView, MessageView},
     data(){
       return{
+        userinfo:{
+
+        },
         isLogin:false,
         input_search: '',
         button_Search_isDisable: true,
@@ -22,6 +26,9 @@ import loginView from "@/views/LoginView.vue";
           logView:false,
         }
       }
+    },
+    watch:{
+
     },
     beforeMount(){
       let _this = this
@@ -44,7 +51,13 @@ import loginView from "@/views/LoginView.vue";
         _this.handleCloseLog();
         _this.isLogin = true;
       })
-
+      toLogin.$on('log',(data)=>{
+        _this.login();
+      })
+      if(localStorage.getItem('userInfo')!==null){
+        this.userinfo = JSON.parse(localStorage.getItem('userInfo'))
+        console.log(this.userinfo)
+      }
     },
     methods:{
       test(a){console.log("test"+a)},
@@ -159,10 +172,26 @@ import loginView from "@/views/LoginView.vue";
                   <el-button slot="reference">私信</el-button>
                   <ChatView style="height: 500px;width: 300px"></ChatView>
               </el-popover>
+              <el-button @click="test(JSON.stringify(userinfo))">投稿</el-button>
 
-              <el-button @click="test(isLogin)">投稿</el-button>
-              <el-button v-if="isLogin===false" @click="login">登录</el-button>
-              <el-button v-if="isLogin===true" @click="logout">注销</el-button>
+                <el-popover v-if="isLogin===true" placement="bottom" title="" trigger="hover">
+                  <el-button slot="reference">{{ userinfo.userId }}</el-button>
+
+                  {{userinfo.userName}}<br>
+                  关注
+                  {{userinfo.subscriber}}
+                  粉丝
+                  {{userinfo.fans}}
+
+                  <br>
+                  <el-button  @click="logout">注销</el-button>
+                </el-popover>
+
+                <el-button v-if="isLogin===false" @click="login">登录</el-button>
+
+
+
+
 
             </div>
 
