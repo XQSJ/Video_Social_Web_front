@@ -83,6 +83,9 @@ export default {
               this.$message(userid+"已取消关注"+followid)
               this.isFollower = 0
               this.userinfo.fansCount--;
+            }else{
+              this.$message.error('response.data.data');
+              console.log(response.data.data)
             }
 
           })
@@ -97,6 +100,9 @@ export default {
                 this.$message(userid+"已关注"+followid)
                 this.isFollower = response.data.data
                 this.userinfo.fansCount++;
+              }else{
+                this.$message.error('response.data.data');
+                console.log(response.data.data)
               }
 
             })

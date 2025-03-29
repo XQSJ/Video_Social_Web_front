@@ -1,7 +1,6 @@
 <script>
 import axios from "axios";
 import toMainUI from '@/utils/LoginViewToMainUIView';
-import toLogin from "@/utils/toLogin";
 
 export default {
   data() {
@@ -11,40 +10,43 @@ export default {
       loginButton: false,
       registerButton: false,
       loading: false,
-      isRegister:false,
-      registerName:'',
-      registerPwd:'',
-      registerId:''
+      isRegister: false,
+      registerName: '',
+      registerPwd: '',
+      registerId: ''
     }
   },
   methods: {
-    handleRegisterButton(){
-      this.registerName=''
-      this.registerPwd=''
-      this.registerId=''
-      this.isRegister=true;
+    handleRegisterButton() {
+      this.registerName = ''
+      this.registerPwd = ''
+      this.registerId = ''
+      this.isRegister = true;
     },
-    async Register(){
+    async Register() {
       let userRegister = {
-        "userName" : this.registerName,
-        "userPwd" : this.registerPwd
+        "userName": this.registerName,
+        "userPwd": this.registerPwd
       }
       this.loading = true;
       let _this = this;
-      await axios.post('/users/register',userRegister)
-          .then(response=>{
+      await axios.post('/users/register', userRegister)
+          .then(response => {
+            if(response.data.code===1){
+              setTimeout(() => {
+                this.loading = false;
+                _this.registerId = response.data.data;
+                _this.$message("你的用户id为：" + this.registerId);
+              }, 500)
+            }else{
+              this.$message.error('response.data.data');
+              console.log(response.data.data)
+            }
 
-            setTimeout(()=>{
-              this.loading=false;
-              _this.registerId=response.data.data;
-              _this.$message("你的用户id为："+this.registerId);
-            },500)
-
-            //this.$message(this.registerId)
           })
-      this.userId='';
-      this.userPwd=''
-      this.isRegister=false;
+      this.userId = '';
+      this.userPwd = ''
+      this.isRegister = false;
     },
     async verifyLogin() {
       let userLogin = {
@@ -56,10 +58,16 @@ export default {
       await axios.post('/users/login', userLogin)
           .then(response => {
             //console.log(response.data)
-            setTimeout(()=>{
-              this.loading=false;
-              judge()
-            },500)
+            if (response.data.code === 1) {
+              setTimeout(() => {
+                this.loading = false;
+                judge()
+              }, 500)
+            } else {
+              this.$message.error('response.data.data');
+              console.log(response.data.data)
+            }
+
 
             function judge() {
               switch (response.data.code) {
@@ -70,9 +78,9 @@ export default {
 
                   _this.getLoginUser(userLogin.userId);
 
-                  setTimeout(()=>{
+                  setTimeout(() => {
                     toMainUI.$emit('login');    //调用mainUi的关闭登录弹窗
-                  },500);
+                  }, 500);
                   //window.location.href = window.location.href
                   break;
                 }
@@ -93,20 +101,25 @@ export default {
           })
     },
 
-    async getLoginUser(userId){
+    async getLoginUser(userId) {
 
       await axios
           .get(`/users/${userId}`)
-          .then((response)=>{
-            let userInfo = response.data.data
-            localStorage.setItem("userInfo", JSON.stringify(userInfo));
-            localStorage.setItem("isLogin", "1");
-            this.$router.go(0)
-            this.$store.state.userInfo = userInfo;
+          .then((response) => {
+            if (response.data.code === 1) {
+              let userInfo = response.data.data
+              localStorage.setItem("userInfo", JSON.stringify(userInfo));
+              localStorage.setItem("isLogin", "1");
+              this.$router.go(0)
+              this.$store.state.userInfo = userInfo;
+            } else {
+              this.$message.error('response.data.data');
+              console.log(response.data.data)
+            }
 
 
             //console.log(localStorage.getItem("userInfo"))
-      })
+          })
     }
   },
   watch: {
@@ -152,18 +165,18 @@ export default {
       <el-input v-model.trim="userId" placeholder="请输入账户" clearable></el-input>
       密码
       <el-input v-model.trim="userPwd" placeholder="请输入密码" clearable></el-input>
-      <el-button @click="handleRegisterButton" >注册</el-button>
+      <el-button @click="handleRegisterButton">注册</el-button>
       <el-button @click="verifyLogin" :disabled="!this.loginButton">登录</el-button>
 
     </div>
     <div v-show="isRegister">
-        <el-button @click="isRegister=false">返回</el-button>
-        注册<br>
-        用户名
-        <el-input v-model.trim="registerName" placeholder="请输入用户名" clearable></el-input>
-        密码
-        <el-input v-model.trim="registerPwd" placeholder="请输入密码" clearable></el-input>
-        <el-button @click="Register" :disabled="!this.registerButton">注册</el-button>
+      <el-button @click="isRegister=false">返回</el-button>
+      注册<br>
+      用户名
+      <el-input v-model.trim="registerName" placeholder="请输入用户名" clearable></el-input>
+      密码
+      <el-input v-model.trim="registerPwd" placeholder="请输入密码" clearable></el-input>
+      <el-button @click="Register" :disabled="!this.registerButton">注册</el-button>
     </div>
 
   </div>
