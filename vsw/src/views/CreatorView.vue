@@ -35,9 +35,14 @@ export default {
       this.initInfo()
       this.initAcsClint()
     },
+    created(){
+      if(localStorage.getItem('userInfo')===null){
+        this.toLoginView();
+      }
+    },
     methods:{
       test(a){
-
+          console.log("test:",a)
       },
       initInfo(){
         if(localStorage.getItem('userInfo')!=null){
@@ -111,6 +116,8 @@ export default {
           // 文件上传成功
           'onUploadSucceed': function (uploadInfo) {
             console.log(uploadInfo.file.name+'上传成功')
+
+
           },
           // 文件上传失败
           'onUploadFailed': function (uploadInfo, code, message) {
@@ -137,6 +144,7 @@ export default {
           // 全部文件上传结束
           'onUploadEnd':function(uploadInfo){
             console.log("onUploadEnd: uploaded all the files")
+            _this.toUserView('self')
           }
         })
          /*this.client = new AliyunUpload.Vod({
@@ -217,10 +225,10 @@ export default {
                    :multiple="multiple"
                    :before-upload="beforeUpload"
         >
-          <el-button @click="">选取文件</el-button>
+          <el-button @click="" v-show="fileList.length===0">选取文件</el-button>
         </el-upload>
         <br>
-        <el-button @click="reUpload">重新上传</el-button>
+        <el-button @click="reUpload" v-show="fileList.length>0">重新上传</el-button>
 
       </el-header>
       <el-main>
@@ -231,8 +239,8 @@ export default {
         <el-radio v-model="access" label="1">不公开</el-radio>
       </el-main>
       <el-footer>
-        <el-button @click="submitVideo">发布</el-button>
-        <el-button @click="test()">test</el-button>
+        <el-button @click="submitVideo" :disabled="fileList.length===0">发布</el-button>
+<!--        <el-button @click="test(fileList.length)">test</el-button>-->
       </el-footer>
     </el-container>
   </div>

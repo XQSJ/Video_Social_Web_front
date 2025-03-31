@@ -14,6 +14,7 @@ export default {
         subscribeCount: 0,
         introduction: ''
       },
+      aboutVideos:{},
       editForm: {
         profile: '',
         name: '',
@@ -33,11 +34,11 @@ export default {
     }
   },
   beforeMount(){
-    if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
+   /* if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
       if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
         this.toUserView('self')
       }
-    }
+    }*/
   },
   mounted() {
     if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
@@ -48,10 +49,8 @@ export default {
     this.initInfo()
   },
   created() {
-    /*if (window.name === '') {
-      console.log('1页面首次被加载')
-    } else {
-      console.log('1页面被刷新')
+   /* if(localStorage.getItem('userInfo')===null){
+      this.toLoginView();
     }*/
   },
   watch: {
@@ -66,6 +65,7 @@ export default {
           }
         }
         this.initInfo()//根据id查找其他值
+
       }
 
     }
@@ -115,6 +115,7 @@ export default {
 
     },
     initInfo() {
+
       if (this.$route.query.id === 'self') {
 
         //console.log(localStorage.getItem('userInfo'))
@@ -216,6 +217,7 @@ export default {
     },
 
     async setinfo(userId) {
+      await this.searchUserVideo('create',userId)
       //根据id查询user基本信息
       let user =await this.getUser(userId);
       //console.log(user)
@@ -229,17 +231,65 @@ export default {
       if(this.isSelf===false){
         this.isFollow(userId)
       }
-      //搜索作品
-      this.searchUserVideo('work')
+
 
     },
-    searchUserVideo(option) {
+    searchUserVideo(option,userId) {
 
-      if (option !== this.option) { //当当前选项不为所选选项时才执行
+      this.aboutVideos={}
+ //     if (option !== this.option) { //当当前选项不为所选选项时才执行
         this.option = option
         console.log('执行搜索' + option)
         //执行搜索
-      }
+        if(this.isSelf===true){
+          switch(option){
+            case 'create' : {
+              axios.get(`/video/getSelf/${userId}`).then(async (response) => {
+                if (response.data.code === 1) {
+                  let videos  = response.data.data
+                  //console.log("aboutVideos",videos)
+
+                  for (let v of videos) {
+                    //console.log(v)
+                    v.coverUrl = await this.getCover(v.path)
+                  }
+                  this.aboutVideos = videos
+
+                }
+              })
+            }
+          }
+        }else{
+          switch(option){
+            case 'create' : {
+              axios.get(`/video/getSelf/${userId}`).then(async (response) => {
+                if (response.data.code === 1) {
+                  let videos  = response.data.data
+                  //console.log("aboutVideos",videos)
+
+                  for (let v of videos) {
+                    //console.log(v)
+                    v.coverUrl = await this.getCover(v.path)
+                  }
+                  this.aboutVideos = videos
+
+                }
+              })
+            }
+          }
+        }
+
+   //   }
+    },
+    async getCover(videoId){
+      return await axios.get(`/video/getUrl/${videoId}`).then((response)=>{
+        if(response.data.code===1){
+          //console.log('resoponse',response.data.data)
+          return response.data.data.coverUrl;
+        }else{
+          return ''
+        }
+      })
     },
     clearSearchUser() {
 
@@ -250,7 +300,7 @@ export default {
 </script>
 
 <template>
-  <div style="height: 100%">
+  <div style="height: 100%" >
     <el-dialog :visible="this.dialogVisible.fans" :before-close="handleCloseFans" :destroy-on-close=true>
       <el-button @click="handleOpenFans('关注')">关注</el-button>
       <el-button @click="handleOpenFans('粉丝')">粉丝</el-button>
@@ -327,14 +377,21 @@ export default {
       <el-main>
         <el-container>
           <el-header>
-            <el-button @click="searchUserVideo('work')">作品</el-button>
-            <el-button @click="searchUserVideo('like')">喜欢</el-button>
-            <el-button @click="searchUserVideo('favorite')">收藏</el-button>
-            <el-button @click="searchUserVideo('history')">观看历史</el-button>
-            <el-button @click="searchUserVideo('later')">稍后再看</el-button>
+            <el-button @click="searchUserVideo('create',userid)">作品</el-button>
+            <el-button @click="searchUserVideo('like',userid)">喜欢</el-button>
+            <el-button @click="searchUserVideo('favorite',userid)">收藏</el-button>
+            <el-button @click="searchUserVideo('history',userid)">观看历史</el-button>
+            <el-button @click="searchUserVideo('later',userid)">稍后再看</el-button>
           </el-header>
           <el-main>
-
+            <div class="video-grid">
+            <div v-for="(item, index) in aboutVideos" :key="item.videoId" class="video-item">
+              <img v-if="item.coverUrl" :src="item.coverUrl" alt="视频封面" class="video-cover" />
+              <div v-else class="placeholder-cover">封面加载中...</div>
+              <h3>{{ item.title }}</h3>
+               点赞数 {{item.likeCount}}
+            </div>
+            </div>
           </el-main>
         </el-container>
       </el-main>
@@ -345,5 +402,40 @@ export default {
 </template>
 
 <style scoped lang="stylus">
+.video-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between; /* 分散对齐 */
+}
 
+.video-item {
+  width: calc(25% - 10px); /* 四列布局，减去间距 */
+  margin-bottom: 20px; /* 底部间距 */
+  background-color: #fff; /* 背景颜色 */
+  border: 1px solid #ddd; /* 边框 */
+  border-radius: 5px; /* 圆角 */
+  overflow: hidden; /* 防止内容溢出 */
+  position: relative; /* 位置相对 */
+}
+
+.video-cover {
+  width: 100%; /* 宽度100% */
+  height: 150px; /* 固定高度 */
+  object-fit: cover; /* 保持比例 */
+}
+
+.placeholder-cover {
+  width: 100%; /* 占位符宽度 */
+  height: 150px; /* 固定高度 */
+  background-color: #f0f0f0; /* 占位符背景色 */
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  align-items: center; /* 垂直居中 */
+  color: #999; /* 占位符字体颜色 */
+}
+
+.video-title {
+  font-size: 14px; /* 标题字体大小 */
+  margin: 10px; /* 标题间距 */
+}
 </style>

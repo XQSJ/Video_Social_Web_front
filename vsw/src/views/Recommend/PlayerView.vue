@@ -98,14 +98,7 @@ export default {
   },
   watch:{
 
-    page(newValue,oldValue){
-      //this.$refs.isPlaying[0].setAttribute("id","player2")
-   /*   console.log(this.$refs.isPlaying[0])
-      console.log(this.$refs.isPlaying)
-*/
 
-      //console.log(this.$refs.playing.id='player1')
-    }
   },
   beforeRouteEnter(){
 
@@ -119,7 +112,7 @@ export default {
 
   },
   activated() {
-    this.player_now.play()
+    //this.player_now.play()
   },
   deactivated() {
 
@@ -164,7 +157,7 @@ export default {
       return await axios.get(`/video/getUrl/${videoId}`).then((response)=>{
         if(response.data.code===1){
           //console.log('resoponse',response.data.data)
-          return response.data.data;
+          return response.data.data.videoUrl;
         }else{
           return ''
         }
@@ -172,7 +165,7 @@ export default {
     },
     async initPlayer(){
       let that = this;
-      console.log("videoList",this.videoList)
+     // console.log("videoList",this.videoList)
       // 等待获取第一个视频的 URL
       let firstVideoUrl = await this.getUrl(that.videoList[0].videoId);
       let secondVideoUrl = await this.getUrl(this.videoList[1].videoId);
@@ -368,20 +361,15 @@ export default {
 
     },
     addNewVideos(){ //拉取新视频
-      let newVideo = {
-        id:this.videoList.length,
-        player: -1,
-        url: '',
-        videoId:'',
-        userid:''
-      }
+      let newVideo = {}
       //1.拉取
       Middle.$emit('getNewVideo',this.videoList.length,(result)=>{
 
-        newVideo.url = result.url
-        newVideo.userid=result.userid
-        newVideo.videoId=result.videoId
-      }) //？？？传参应为id
+        newVideo = result
+        newVideo.player = -1
+        newVideo.id = this.videoList.length
+
+      })
       //2.放入视频列表
 
       this.videoList.push(newVideo)

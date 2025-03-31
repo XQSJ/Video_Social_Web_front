@@ -12,33 +12,32 @@ export default {
   methods:{
     LoadInitVideos(){
      // console.log("2")
+      /*axios.get().then((response)=>{
+
+      });*/
       let videos = [
         {
           id: 0,
           player: 1,
           videoId: '608798f40df971f08f7b6733a68f0102',
-          url: '',
           userid: 4
         },
         {
           id: 1,
           player: 0,
           videoId: '608798f40df971f08f7b6733a68f0102',
-          url: '',
           userid: 5
         },
         {
           id: 2,
           player: -1,
           videoId: '608798f40df971f08f7b6733a68f0102',
-          url: '',
           userid: 3
         },
         {
           id: 3,
           player: -1,
           videoId: '608798f40df971f08f7b6733a68f0102',
-          url: '',
           userid: 9
         }
       ];
@@ -65,9 +64,8 @@ export default {
 
       return newVideo = {
         id:length,
-        url: '',
         userid:10,
-        videoId:'608798f40df971f08f7b6733a68f0102'
+        videoId:'009529bc0e1171f0bffa5017f0f80102'
       }
     }
   },

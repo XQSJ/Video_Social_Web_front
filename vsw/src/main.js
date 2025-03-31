@@ -43,6 +43,11 @@ Vue.prototype.getUser=function (userId){
         }
       })
 };
+Vue.prototype.toLoginView=function (){
+  this.$router.push({
+    name:'login',
+  }, () => {});
+}
 Vue.prototype.toUserView=function (userid){
   this.$router.push({
     name:'user',
