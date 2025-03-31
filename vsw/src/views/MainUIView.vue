@@ -60,7 +60,11 @@ import loginView from "@/views/LoginView.vue";
       }
     },
     methods:{
+
       test(a){console.log("test"+a)},
+      toCreator(){
+        this.$router.push({name:'creator'}, () => {});
+      },
       logout(){
         this.$router.go(0);
         this.isLogin = false;
@@ -172,7 +176,7 @@ import loginView from "@/views/LoginView.vue";
                   <el-button slot="reference">私信</el-button>
                   <ChatView style="height: 500px;width: 300px"></ChatView>
               </el-popover>
-              <el-button @click="test(JSON.stringify(userinfo))">投稿</el-button>
+              <el-button @click="toCreator">投稿</el-button>
 
                 <el-popover v-if="isLogin===true" placement="bottom" title="" trigger="hover">
                   <el-button slot="reference">{{ userinfo.userId }}</el-button>

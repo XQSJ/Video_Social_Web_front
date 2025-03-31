@@ -102,24 +102,11 @@ export default {
     },
 
     async getLoginUser(userId) {
-
-      await axios
-          .get(`/users/${userId}`)
-          .then((response) => {
-            if (response.data.code === 1) {
-              let userInfo = response.data.data
-              localStorage.setItem("userInfo", JSON.stringify(userInfo));
-              localStorage.setItem("isLogin", "1");
-              this.$router.go(0)
-              this.$store.state.userInfo = userInfo;
-            } else {
-              this.$message.error('response.data.data');
-              console.log(response.data.data)
-            }
-
-
-            //console.log(localStorage.getItem("userInfo"))
-          })
+      let userInfo = await this.getUser(userId);
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      localStorage.setItem("isLogin", "1");
+      this.$router.go(0)
+      this.$store.state.userInfo = userInfo;
     }
   },
   watch: {

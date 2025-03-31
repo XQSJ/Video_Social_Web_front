@@ -15,6 +15,7 @@
 </style>
 <script >
 import MainUIView from "@/views/MainUIView.vue";
+import axios from "axios";
 export default {
   data(){
     return{
@@ -24,7 +25,8 @@ export default {
   methods:{
     logout(){
       localStorage.clear();
-    }
+    },
+
   },
   components:{MainUIView}
 }

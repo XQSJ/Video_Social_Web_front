@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import RecommendView from "@/views/RecommendView.vue";
+import RecommendView from "@/views/Recommend/RecommendView.vue";
 import FollowView from "@/views/FollowView.vue";
 import SearchView from "@/views/SearchView.vue";
 import UserView from "@/views/UserView.vue";
+import CreatorView from "@/views/CreatorView.vue";
 
 
 Vue.use(VueRouter)
@@ -33,6 +34,11 @@ const routes = [
     name: 'user',
     component: UserView
   },
+  {
+    path:'/creator',
+    name: 'creator',
+    component: CreatorView
+  }
 ]
 
 const router = new VueRouter({

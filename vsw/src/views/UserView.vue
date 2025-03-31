@@ -214,24 +214,21 @@ export default {
             })
       }
     },
+
     async setinfo(userId) {
       //根据id查询user基本信息
-      await axios
-          .get(`/users/${userId}`)
-          .then((response)=>{
-            //user信息赋值
-            let user = response.data.data
-            this.userinfo.name = user.userName
-            this.userinfo.profile = user.avatar
-            this.userinfo.introduction = user.userInfo
-            this.userinfo.fansCount = user.fans
-            this.userinfo.subscribeCount = user.subscriber
-            if(this.isSelf===false){
-              this.isFollow(userId)
-            }
-          })
+      let user =await this.getUser(userId);
+      //console.log(user)
 
+      this.userinfo.name = user.userName
+      this.userinfo.profile = user.avatar
+      this.userinfo.introduction = user.userInfo
+      this.userinfo.fansCount = user.fans
+      this.userinfo.subscribeCount = user.subscriber
 
+      if(this.isSelf===false){
+        this.isFollow(userId)
+      }
       //搜索作品
       this.searchUserVideo('work')
 
