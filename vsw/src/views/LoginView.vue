@@ -64,8 +64,9 @@ export default {
                 judge()
               }, 500)
             } else {
-              this.$message.error('response.data.data');
-              console.log(response.data.data)
+              this.$message.error(response.data);
+              console.log(response.data)
+              this.loading = false;
             }
 
 
