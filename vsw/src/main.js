@@ -38,7 +38,7 @@ Vue.prototype.getUser=function (userId){
           return response.data.data
         }else {
           this.$message.error(response.data.data);
-          console.log(response.data.data)
+          //console.log(response.data.data)
           return null
         }
       })

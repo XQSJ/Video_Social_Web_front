@@ -11,6 +11,16 @@
 
 <style lang="stylus">
 
+/* 隐藏全局滚动条 */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* 对于IE和Edge */
+body {
+  -ms-overflow-style: none;  /* Windows Edge, IE 浏览器的滚动条隐藏 */
+  scrollbar-width: none;  /* Firefox 浏览器的滚动条隐藏 */
+}
 
 </style>
 <script >

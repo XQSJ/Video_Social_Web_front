@@ -81,7 +81,7 @@ export default {
                   setTimeout(() => {
                     toMainUI.$emit('login');    //调用mainUi的关闭登录弹窗
                   }, 500);
-                  //window.location.href = window.location.href
+
                   break;
                 }
                 case 20004: {  //用户不存在

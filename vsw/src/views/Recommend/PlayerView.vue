@@ -4,12 +4,8 @@
     <div class="swiper-container">
       <div class="swiper-wrapper" ref="mySwiper" >
         <div class="swiper-slide" v-for="(item,index) in videoList" :key="index" ref="swiperSlides">
-
           <div :ref="`video${index}`" class="video-container">
-
-
               <div>
-
               </div>
           </div>
           <div class="control-buttons">
@@ -17,8 +13,11 @@
               头像
             </el-button>
 
-            <el-button>
+            <el-button @click="handleFollow(item.userid)" v-if="!item.isFollow">
               关注
+            </el-button>
+            <el-button @click="handleUnFollow(item.userid)" v-if="item.isFollow">
+              已关注
             </el-button>
             <el-button>
               {{item.userid}}
@@ -87,13 +86,15 @@ import Player from 'xgplayer';
 import 'xgplayer/dist/index.min.css';
 import Middle from '@/utils/RecommendVIewToPlayerView.js';
 import axios from "axios";
+import Follow from '@/utils/follow'
 export default {
   data() {
     return {
       videoList: [],
       page: 0,
       players:[],
-      mySwiper:{}
+      mySwiper:{},
+
     }
   },
   watch:{
@@ -128,6 +129,20 @@ export default {
 
   },
   methods: {
+    async isFollow(followid) {
+        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+      return  await axios.get(`/follow/${userid}/${followid}`)
+            .then((response) => {
+              this.isFollower = response.data.data
+              return response.data.data
+            })
+    },
+    handleFollow(followid){
+      Follow.$emit('follow',followid)
+    },
+    handleUnFollow(followid) {
+      Follow.$emit('unfollow',followid)
+    },
     createFirstVideo() { //生成第一个组件
 
     },
@@ -351,24 +366,33 @@ export default {
     },
     initVideos(){ //初始化视频列表
 
-      Middle.$emit('getInitVideos', (result)=>{
+      Middle.$emit('getInitVideos', async (result) => {
 
-          //console.log("result:",result)
-          this.videoList = result
-          //console.log("r",this.videoList)
-        })
+        //console.log("result:",result)
+        this.videoList = result
+        //console.log("r",this.videoList)
+        for (let v of this.videoList) {
+          if (localStorage.getItem('userInfo') !== null) {
+            v.isFollow = await this.isFollow(v.userid)
+          }else{
+            v.isFollow = false
+          }
+          console.log("outresult",v.isFollow)
+        }
+      })
 
 
     },
     addNewVideos(){ //拉取新视频
       let newVideo = {}
       //1.拉取
-      Middle.$emit('getNewVideo',this.videoList.length,(result)=>{
+      Middle.$emit('getNewVideo',this.videoList.length,async (result) => {
 
         newVideo = result
         newVideo.player = -1
         newVideo.id = this.videoList.length
-
+       // newVideo.isFollow = await this.isFollow(this.videoList.userid)
+        console.log(newVideo.isFollow)
       })
       //2.放入视频列表
 

@@ -1,10 +1,12 @@
 <script>
 import axios from "axios";
 import toLogin from '@/utils/toLogin'
+import Follow from '@/utils/follow'
 export default {
   data() {
     return {
       isSelf:false,
+      loading:true,
       isFollower:0,
       userid: '',
       userinfo: {
@@ -18,7 +20,8 @@ export default {
       editForm: {
         profile: '',
         name: '',
-        introduction: ''
+        introduction: '',
+
       },
       option: '',
       videoList: {},
@@ -27,7 +30,8 @@ export default {
       },
       dialogVisible: {
         fans: false,
-        editIntro: false
+        editIntro: false,
+        video:false
       },
 
       input_searchUser: ''
@@ -41,12 +45,20 @@ export default {
     }*/
   },
   mounted() {
+
     if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
-      if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
+      if(this.$route.query.id === String(JSON.parse(localStorage.getItem('userInfo')).userId)){
         this.toUserView('self')
       }
     }
     this.initInfo()
+    Follow.$on('follow',(data)=>{
+      this.handleFollow(data)
+    })
+    Follow.$on('unfollow',(data)=>{
+      this.handleUnFollow(data)
+    })
+
   },
   created() {
    /* if(localStorage.getItem('userInfo')===null){
@@ -68,7 +80,9 @@ export default {
 
       }
 
-    }
+    },
+
+
   },
   methods: {
     toUser(userid){
@@ -76,19 +90,23 @@ export default {
       this.toUserView(userid)
     },
     handleUnFollow(followid){
-      let userid = JSON.parse(localStorage.getItem('userInfo')).userId
-      axios.delete(`/follow/${userid}/${followid}`)
-          .then(response=>{
-            if(response.data.code===1){
-              this.$message(userid+"已取消关注"+followid)
-              this.isFollower = 0
-              this.userinfo.fansCount--;
-            }else{
-              this.$message.error('response.data.data');
-              console.log(response.data.data)
-            }
+      if(localStorage.getItem('userInfo')!==null) {
+        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+        axios.delete(`/follow/${userid}/${followid}`)
+            .then(response => {
+              if (response.data.code === 1) {
+                this.$message(userid + "已取消关注" + followid)
+                this.isFollower = 0
+                this.userinfo.fansCount--;
+              } else {
+                this.$message.error('response.data.data');
+                console.log(response.data.data)
+              }
 
-          })
+            })
+      }else{
+        this.login()
+      }
     },
     handleFollow(followid){
       if(localStorage.getItem('userInfo')!==null){
@@ -141,6 +159,9 @@ export default {
         //根据id查找其他值
         this.setinfo(this.userid)
       }
+    },
+    handleCloseVideos(){
+      this.dialogVisible.video = false
     },
     handleCloseFans() {
       this.dialogVisible.fans = false
@@ -206,14 +227,21 @@ export default {
     login(){
       toLogin.$emit('log')
     },
-    async isFollow(followid){
-      if(localStorage.getItem('userInfo')!==null){
-        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
-        await axios.get(`/follow/${userid}/${followid}`)
-            .then((response)=>{
-              this.isFollower=response.data.data
-            })
-      }
+    editVideo(video){
+      console.log(video)
+      this.dialogVisible.video = true
+    },
+    async isFollow(followid) {
+        if(localStorage.getItem('userInfo')!==null){
+          let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+          await axios.get(`/follow/${userid}/${followid}`)
+              .then((response)=>{
+                this.isFollower=response.data.data
+                return response.data.data
+              })
+        }
+        return false
+
     },
 
     async setinfo(userId) {
@@ -237,6 +265,7 @@ export default {
     searchUserVideo(option,userId) {
 
       this.aboutVideos={}
+      this.loading = true
  //     if (option !== this.option) { //当当前选项不为所选选项时才执行
         this.option = option
         console.log('执行搜索' + option)
@@ -254,7 +283,7 @@ export default {
                     v.coverUrl = await this.getCover(v.path)
                   }
                   this.aboutVideos = videos
-
+                  this.loading= false
                 }
               })
             }
@@ -272,7 +301,7 @@ export default {
                     v.coverUrl = await this.getCover(v.path)
                   }
                   this.aboutVideos = videos
-
+                  this.loading= false
                 }
               })
             }
@@ -301,6 +330,9 @@ export default {
 
 <template>
   <div style="height: 100%" >
+    <el-dialog :visible="this.dialogVisible.video" :before-close="handleCloseVideos" :destroy-on-close="true">
+
+    </el-dialog>
     <el-dialog :visible="this.dialogVisible.fans" :before-close="handleCloseFans" :destroy-on-close=true>
       <el-button @click="handleOpenFans('关注')">关注</el-button>
       <el-button @click="handleOpenFans('粉丝')">粉丝</el-button>
@@ -374,9 +406,9 @@ export default {
           </el-col>
         </el-row>
       </el-header>
-      <el-main>
-        <el-container>
-          <el-header>
+      <el-main style="height: 100%">
+        <el-container class="about-video">
+          <el-header class="about-video-header">
             <el-button @click="searchUserVideo('create',userid)">作品</el-button>
             <el-button @click="searchUserVideo('like',userid)">喜欢</el-button>
             <el-button @click="searchUserVideo('favorite',userid)">收藏</el-button>
@@ -384,12 +416,13 @@ export default {
             <el-button @click="searchUserVideo('later',userid)">稍后再看</el-button>
           </el-header>
           <el-main>
-            <div class="video-grid">
+            <div class="video-grid" v-loading="loading">
             <div v-for="(item, index) in aboutVideos" :key="item.videoId" class="video-item">
               <img v-if="item.coverUrl" :src="item.coverUrl" alt="视频封面" class="video-cover" />
               <div v-else class="placeholder-cover">封面加载中...</div>
               <h3>{{ item.title }}</h3>
                点赞数 {{item.likeCount}}
+              <el-button @click="editVideo(item)" v-if="isSelf">编辑</el-button>
             </div>
             </div>
           </el-main>
@@ -402,10 +435,28 @@ export default {
 </template>
 
 <style scoped lang="stylus">
+.about-video {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative; // 添加相对定位
+}
+.about-video-header {
+  position: sticky; // 使用 sticky 定位
+  top: 0; // 固定在顶部
+  z-index: 10; // 确保在其他内容之上
+  //background-color: #fff; // 添加背景色防止内容穿透
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); // 可选：添加轻微阴影
+}
 .video-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between; /* 分散对齐 */
+
 }
 
 .video-item {
