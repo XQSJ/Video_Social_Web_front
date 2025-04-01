@@ -450,7 +450,7 @@ export default {
       Middle.$emit('getInitVideos', async (result) => {
         //console.log("result:",result)
         this.videoList = result
-        //console.log("r",this.videoList)
+
         for (let i = 0; i < this.videoList.length; i++) {
           let v = this.videoList[i]
           let isfollow
