@@ -90,11 +90,11 @@ import loginView from "@/views/LoginView.vue";
       },*/
       //点击用户时触发
       clickUser(user_id){
-        if(true){     //！！！修改为若该用户存在时
+
           //调用全局函数
           this.toUserView(user_id)
 
-        }
+
       },
       //点击推荐按钮时触发
       clickRecommend(){
