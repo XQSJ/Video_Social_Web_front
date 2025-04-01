@@ -9,8 +9,11 @@
             </div>
           </div>
           <div class="control-buttons">
+
             <el-button @click="toUserPage(item.userid)">
-              头像
+              <el-avatar :size="60" :src=" item.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+<!--
+              -->
               <br>
               {{ item.userid }}
             </el-button>
@@ -457,6 +460,12 @@ export default {
             isfollow = false
           }
           v.isFollow = isfollow
+          v.avatar = (await this.getUser(v.userid)).avatar
+          if (v.avatar !== null) {
+            await axios.get(`/image/getUrl/${v.avatar}`).then((response) => {
+              v.avatar = response.data.data
+            })
+          }
           this.$set(this.videoList, i, v)
         }
         for (let v of this.videoList) {
@@ -465,6 +474,13 @@ export default {
           } else {
             v.isFollow = false
           }
+          v.avatar = (await this.getUser(v.userid)).avatar
+          if (v.avatar !== null) {
+            await axios.get(`/image/getUrl/${v.avatar}`).then((response) => {
+              v.avatar = response.data.data
+            })
+          }
+
         }
       })
 
@@ -482,6 +498,13 @@ export default {
           newVideo.isFollow = await this.checkFollow(newVideo.userid)
         } else {
           newVideo.isFollow = false
+        }
+
+        newVideo.avatar = (await this.getUser(newVideo.userid)).avatar
+        if (newVideo.avatar !== null) {
+          await axios.get(`/image/getUrl/${newVideo.avatar}`).then((response) => {
+            newVideo.avatar = response.data.data
+          })
         }
         //console.log(newVideo.isFollow)
       })
