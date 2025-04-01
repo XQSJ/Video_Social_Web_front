@@ -2,12 +2,15 @@
 import axios from "axios";
 import toLogin from '@/utils/toLogin'
 import Follow from '@/utils/follow'
+import Player from "xgplayer";
+
 export default {
   data() {
     return {
-      isSelf:false,
-      loading:true,
-      isFollower:0,
+      player: '',
+      isSelf: false,
+      loading: true,
+      isFollower: 0,
       userid: '',
       userinfo: {
         name: '',
@@ -16,7 +19,7 @@ export default {
         subscribeCount: 0,
         introduction: ''
       },
-      aboutVideos:{},
+      aboutVideos: {},
       editForm: {
         profile: '',
         name: '',
@@ -25,45 +28,50 @@ export default {
       },
       option: '',
       videoList: {},
-      userList: {
-
-      },
+      userList: {},
       dialogVisible: {
         fans: false,
         editIntro: false,
-        video:false
+        video: false,
+        videoEdit :false
       },
-
+      test: '',
       input_searchUser: ''
     }
   },
-  beforeMount(){
-   /* if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
-      if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
-        this.toUserView('self')
-      }
-    }*/
+  beforeMount() {
+    /* if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
+       if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
+         this.toUserView('self')
+       }
+     }*/
   },
   mounted() {
 
-    if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
-      if(this.$route.query.id === String(JSON.parse(localStorage.getItem('userInfo')).userId)){
+    if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
+      if (this.$route.query.id === String(JSON.parse(localStorage.getItem('userInfo')).userId)) {
         this.toUserView('self')
       }
     }
     this.initInfo()
-    Follow.$on('follow',(data)=>{
-      this.handleFollow(data)
-    })
-    Follow.$on('unfollow',(data)=>{
-      this.handleUnFollow(data)
-    })
+    //this.$refs.dialog.rendered = true;
+    /*    this.player = new Player({
+          id: 'video',
+          url: '',
+          plugins: [],
+          poster: '',
+          width: '100%',
+          height: '100%',
+          autoplay: false,
+        })*/
 
   },
+  beforeCreate() {
+  },
   created() {
-   /* if(localStorage.getItem('userInfo')===null){
-      this.toLoginView();
-    }*/
+    /* if(localStorage.getItem('userInfo')===null){
+       this.toLoginView();
+     }*/
   },
   watch: {
     //监听路由更改时将id赋值
@@ -71,8 +79,8 @@ export default {
       if (this.$route.name === 'user') {  //当路由为该界面时
         this.userid = newId.id //将传入的id赋值
 
-        if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
-          if(this.userid === JSON.parse(localStorage.getItem('userInfo')).userId){
+        if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
+          if (this.userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
             this.toUserView('self')
           }
         }
@@ -85,12 +93,38 @@ export default {
 
   },
   methods: {
-    toUser(userid){
+    handleCloseVideoEdit(){
+      this.dialogVisible.videoEdit = false
+    },
+    handleOpenVideoEdit(){
+
+    },
+    showVideo(item, index) {
+      this.dialogVisible.video = true
+
+
+      this.player = new Player({
+        id: 'video',
+        url: '',
+        plugins: [],
+        poster: '',
+        width: '100%',
+        height: '100%',
+        autoplay: false,
+      })
+
+
+    },
+    closeVideo() {
+      this.player.destroy()
+      this.dialogVisible.video = false
+    },
+    toUser(userid) {
       this.handleCloseFans()
       this.toUserView(userid)
     },
-    handleUnFollow(followid){
-      if(localStorage.getItem('userInfo')!==null) {
+    handleUnFollow(followid) {
+      if (localStorage.getItem('userInfo') !== null) {
         let userid = JSON.parse(localStorage.getItem('userInfo')).userId
         axios.delete(`/follow/${userid}/${followid}`)
             .then(response => {
@@ -104,31 +138,30 @@ export default {
               }
 
             })
-      }else{
+      } else {
         this.login()
       }
     },
-    handleFollow(followid){
-      if(localStorage.getItem('userInfo')!==null){
+    handleFollow(followid) {
+      if (localStorage.getItem('userInfo') !== null) {
         let userid = JSON.parse(localStorage.getItem('userInfo')).userId
 
         axios.post(`/follow/${userid}/${followid}`)
-            .then(response=>{
-              if(response.data.code===1){
-                this.$message(userid+"已关注"+followid)
+            .then(response => {
+              if (response.data.code === 1) {
+                this.$message(userid + "已关注" + followid)
                 this.isFollower = response.data.data
                 this.userinfo.fansCount++;
-              }else{
+              } else {
                 this.$message.error('response.data.data');
                 console.log(response.data.data)
               }
 
             })
-      }else{
+      } else {
         //console.log('未登录')
         this.login();
       }
-
 
 
     },
@@ -143,11 +176,11 @@ export default {
           this.userid = user.userId
           this.isSelf = true
           this.setinfo(this.userid)
-    /*      this.userinfo.name = user.userName
-          this.userinfo.profile = user.avatar
-          this.userinfo.introduction = user.userInfo
-          this.userinfo.fansCount = user.fans
-          this.userinfo.subscribeCount = user.subscriber*/
+          /*      this.userinfo.name = user.userName
+                this.userinfo.profile = user.avatar
+                this.userinfo.introduction = user.userInfo
+                this.userinfo.fansCount = user.fans
+                this.userinfo.subscribeCount = user.subscriber*/
 
         }
 
@@ -160,7 +193,7 @@ export default {
         this.setinfo(this.userid)
       }
     },
-    handleCloseVideos(){
+    handleCloseVideos() {
       this.dialogVisible.video = false
     },
     handleCloseFans() {
@@ -169,12 +202,12 @@ export default {
     },
     handleOpenFans(item) {
       let userid = this.userid
-      if(item==='关注'){
-        axios.get(`/follow/getsubs/${userid}`).then((response)=>{
-           this.userList = response.data.data;
+      if (item === '关注') {
+        axios.get(`/follow/getsubs/${userid}`).then((response) => {
+          this.userList = response.data.data;
         });
-      }else{
-        axios.get(`/follow/getfans/${userid}`).then((response)=>{
+      } else {
+        axios.get(`/follow/getfans/${userid}`).then((response) => {
           this.userList = response.data.data;
         });
       }
@@ -224,30 +257,30 @@ export default {
             }*/
 
     },
-    login(){
+    login() {
       toLogin.$emit('log')
     },
-    editVideo(video){
+    editVideo(video) {
       console.log(video)
-      this.dialogVisible.video = true
+      this.dialogVisible.videoEdit = true
     },
     async isFollow(followid) {
-        if(localStorage.getItem('userInfo')!==null){
-          let userid = JSON.parse(localStorage.getItem('userInfo')).userId
-          await axios.get(`/follow/${userid}/${followid}`)
-              .then((response)=>{
-                this.isFollower=response.data.data
-                return response.data.data
-              })
-        }
-        return false
+      if (localStorage.getItem('userInfo') !== null) {
+        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+        await axios.get(`/follow/${userid}/${followid}`)
+            .then((response) => {
+              this.isFollower = response.data.data
+              return response.data.data
+            })
+      }
+      return false
 
     },
 
     async setinfo(userId) {
-      await this.searchUserVideo('create',userId)
+      await this.searchUserVideo('create', userId)
       //根据id查询user基本信息
-      let user =await this.getUser(userId);
+      let user = await this.getUser(userId);
       //console.log(user)
 
       this.userinfo.name = user.userName
@@ -256,66 +289,66 @@ export default {
       this.userinfo.fansCount = user.fans
       this.userinfo.subscribeCount = user.subscriber
 
-      if(this.isSelf===false){
+      if (this.isSelf === false) {
         this.isFollow(userId)
       }
 
 
     },
-    searchUserVideo(option,userId) {
+    searchUserVideo(option, userId) {
 
-      this.aboutVideos={}
+      this.aboutVideos = {}
       this.loading = true
- //     if (option !== this.option) { //当当前选项不为所选选项时才执行
-        this.option = option
-        console.log('执行搜索' + option)
-        //执行搜索
-        if(this.isSelf===true){
-          switch(option){
-            case 'create' : {
-              axios.get(`/video/getSelf/${userId}`).then(async (response) => {
-                if (response.data.code === 1) {
-                  let videos  = response.data.data
-                  //console.log("aboutVideos",videos)
+      //     if (option !== this.option) { //当当前选项不为所选选项时才执行
+      this.option = option
+      console.log('执行搜索' + option)
+      //执行搜索
+      if (this.isSelf === true) {
+        switch (option) {
+          case 'create' : {
+            axios.get(`/video/getSelf/${userId}`).then(async (response) => {
+              if (response.data.code === 1) {
+                let videos = response.data.data
+                //console.log("aboutVideos",videos)
 
-                  for (let v of videos) {
-                    //console.log(v)
-                    v.coverUrl = await this.getCover(v.path)
-                  }
-                  this.aboutVideos = videos
-                  this.loading= false
+                for (let v of videos) {
+                  //console.log(v)
+                  v.coverUrl = await this.getCover(v.path)
                 }
-              })
-            }
-          }
-        }else{
-          switch(option){
-            case 'create' : {
-              axios.get(`/video/getSelf/${userId}`).then(async (response) => {
-                if (response.data.code === 1) {
-                  let videos  = response.data.data
-                  //console.log("aboutVideos",videos)
-
-                  for (let v of videos) {
-                    //console.log(v)
-                    v.coverUrl = await this.getCover(v.path)
-                  }
-                  this.aboutVideos = videos
-                  this.loading= false
-                }
-              })
-            }
+                this.aboutVideos = videos
+                this.loading = false
+              }
+            })
           }
         }
+      } else {
+        switch (option) {
+          case 'create' : {
+            axios.get(`/video/getSelf/${userId}`).then(async (response) => {
+              if (response.data.code === 1) {
+                let videos = response.data.data
+                //console.log("aboutVideos",videos)
 
-   //   }
+                for (let v of videos) {
+                  //console.log(v)
+                  v.coverUrl = await this.getCover(v.path)
+                }
+                this.aboutVideos = videos
+                this.loading = false
+              }
+            })
+          }
+        }
+      }
+
+      //   }
     },
-    async getCover(videoId){
-      return await axios.get(`/video/getUrl/${videoId}`).then((response)=>{
-        if(response.data.code===1){
+    async getCover(videoId) {
+      return await axios.get(`/video/getUrl/${videoId}`).then((response) => {
+        if (response.data.code === 1) {
           //console.log('resoponse',response.data.data)
           return response.data.data.coverUrl;
-        }else{
+        } else {
           return ''
         }
       })
@@ -329,8 +362,30 @@ export default {
 </script>
 
 <template>
-  <div style="height: 100%" >
-    <el-dialog :visible="this.dialogVisible.video" :before-close="handleCloseVideos" :destroy-on-close="true">
+  <div style="height: 100%">
+
+    <!--    <el-dialog style="width: 100%;height: 100%" @opened="showVideo" :visible.sync="this.dialogVisible.video" :before-close="handleCloseVideos" :destroy-on-close="true">
+          <div>
+            eee
+          </div>
+          <div>
+            {{test}}
+          </div>-->
+<!--
+    <el-dialog style="width: 100%;height: 100%" @opened="showVideo" :visible.sync="this.dialogVisible.video" :before-close="handleCloseVideos" :destroy-on-close="true">
+-->
+
+    <div v-show="this.dialogVisible.video" >
+      <el-button @click="closeVideo">关闭</el-button>
+      <div id="video" class="video-container" style="width: 100%;height: 500px" v-show="this.dialogVisible.video">
+        <div>
+        </div>
+      </div>
+       <el-button @click="editVideo(item)" v-if="isSelf">编辑</el-button>
+    </div>
+
+<!--    </el-dialog>-->
+    <el-dialog :visible.sync="this.dialogVisible.videoEdit" :before-close="handleCloseVideoEdit">
 
     </el-dialog>
     <el-dialog :visible="this.dialogVisible.fans" :before-close="handleCloseFans" :destroy-on-close=true>
@@ -417,13 +472,16 @@ export default {
           </el-header>
           <el-main>
             <div class="video-grid" v-loading="loading">
-            <div v-for="(item, index) in aboutVideos" :key="item.videoId" class="video-item">
-              <img v-if="item.coverUrl" :src="item.coverUrl" alt="视频封面" class="video-cover" />
-              <div v-else class="placeholder-cover">封面加载中...</div>
-              <h3>{{ item.title }}</h3>
-               点赞数 {{item.likeCount}}
-              <el-button @click="editVideo(item)" v-if="isSelf">编辑</el-button>
-            </div>
+              <div v-for="(item, index) in aboutVideos" :key="item.videoId" class="video-item">
+                <el-button style="height: 100%;width: 100%" @click="showVideo(item,index)">
+                  <img v-if="item.coverUrl" :src="item.coverUrl" alt="视频封面" class="video-cover"/>
+                  <div v-else class="placeholder-cover">封面加载中...</div>
+                  <h3>{{ item.title }}</h3>
+                  点赞数 {{ item.likeCount }}
+                  <!--                <el-button @click="editVideo(item)" v-if="isSelf">编辑</el-button>-->
+                </el-button>
+
+              </div>
             </div>
           </el-main>
         </el-container>
@@ -439,54 +497,86 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  position: relative; // 添加相对定位
+  position: relative;
+  background-color: #f9f9f9; // Light background for better contrast
 }
+
 .about-video-header {
-  position: sticky; // 使用 sticky 定位
-  top: 0; // 固定在顶部
-  z-index: 10; // 确保在其他内容之上
-  //background-color: #fff; // 添加背景色防止内容穿透
-  height: 50px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #fff; // White background for header
+  height: 60px; // Increased height for better spacing
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); // 可选：添加轻微阴影
+  padding: 0 20px; // Increased padding for better spacing
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); // Slightly darker shadow for more depth
 }
+
 .video-grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between; /* 分散对齐 */
-
+  justify-content: flex-start;
+  gap: 20px; // Increased gap for better spacing
+  padding: 20px; // Increased padding for breathing space
+  overflow-y: auto;
+  max-height: calc(100vh - 120px); // Adjusted maximum height
+  background-color: #ffffff; // Set a white background for video grid
+  border-radius: 8px; // Rounded corners for the grid
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); // Shadow for the grid
 }
 
 .video-item {
-  width: calc(25% - 10px); /* 四列布局，减去间距 */
-  margin-bottom: 20px; /* 底部间距 */
-  background-color: #fff; /* 背景颜色 */
-  border: 1px solid #ddd; /* 边框 */
-  border-radius: 5px; /* 圆角 */
-  overflow: hidden; /* 防止内容溢出 */
-  position: relative; /* 位置相对 */
+  width: calc(25% - 15px); // Four-column layout with adjusted margin
+  background-color: #fff;
+  border: 1px solid #e0e0e0; // Softer border color
+  border-radius: 8px; // Increased roundness
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s; // Smooth transition for hover effects
+  cursor: pointer; // Pointer cursor for better UX
+}
+
+.video-item:hover {
+  transform: scale(1.05); // Slightly increase size on hover
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); // Shadow effect on hover
 }
 
 .video-cover {
-  width: 100%; /* 宽度100% */
-  height: 150px; /* 固定高度 */
-  object-fit: cover; /* 保持比例 */
+  width: 100%;
+  height: 180px; // Increased height for better visibility
+  object-fit: cover;
+  border-bottom: 3px solid #007bff; // Add a colored bottom border for effect
 }
 
 .placeholder-cover {
-  width: 100%; /* 占位符宽度 */
-  height: 150px; /* 固定高度 */
-  background-color: #f0f0f0; /* 占位符背景色 */
+  width: 100%;
+  height: 180px;
+  background-color: #e0e0e0; // Softer placeholder color
   display: flex;
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
-  color: #999; /* 占位符字体颜色 */
+  justify-content: center;
+  align-items: center;
+  color: #999;
+  font-size: 18px; // Larger font size for better visibility
 }
 
 .video-title {
-  font-size: 14px; /* 标题字体大小 */
-  margin: 10px; /* 标题间距 */
+  font-size: 16px; // Increased title size
+  margin: 10px;
+  font-weight: bold; // Bold title for emphasis
+  color: #333; // Darker text color for contrast
+}
+
+.el-button {
+  background-color: #007bff; // Primary button color
+  color: white; // Button text color
+  border: none; // Remove border for a cleaner look
+  border-radius: 5px; // Rounded button corners
+  padding: 8px 12px; // Button padding
+  transition: background-color 0.3s; // Smooth transition for hover effect
+}
+
+.el-button:hover {
+  background-color: #0056b3; // Darker shade on hover
 }
 </style>

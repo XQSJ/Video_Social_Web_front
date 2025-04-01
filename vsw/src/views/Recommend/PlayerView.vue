@@ -2,26 +2,32 @@
   <div style="height: 100%">
 
     <div class="swiper-container">
-      <div class="swiper-wrapper" ref="mySwiper" >
+      <div class="swiper-wrapper" ref="mySwiper">
         <div class="swiper-slide" v-for="(item,index) in videoList" :key="index" ref="swiperSlides">
           <div :ref="`video${index}`" class="video-container">
-              <div>
-              </div>
+            <div>
+            </div>
           </div>
           <div class="control-buttons">
             <el-button @click="toUserPage(item.userid)">
               头像
+              <br>
+              {{ item.userid }}
             </el-button>
 
-            <el-button @click="handleFollow(item.userid)" v-if="!item.isFollow">
-              关注
-            </el-button>
-            <el-button @click="handleUnFollow(item.userid)" v-if="item.isFollow">
-              已关注
-            </el-button>
-            <el-button>
-              {{item.userid}}
-            </el-button>
+            <!--            <el-button>
+                          {{ item.isFollow ? '已关注' : '关注' }}
+                        </el-button>-->
+            <div v-show="!isSelf(item.userid)">
+              <el-button @click="handleFollow(index)" v-show="item.isFollow===false">
+                关注
+              </el-button>
+              <el-button @click="handleUnFollow(index)" v-show="item.isFollow===true">
+                已关注
+              </el-button>
+            </div>
+
+
             <el-button @click="test(666)">
               点赞
             </el-button>
@@ -41,14 +47,14 @@
 
 
     </div>
-<!--    <div>
-      <el-button>
-        up
-      </el-button>
-      <el-button>
-        down
-      </el-button>
-    </div>-->
+    <!--    <div>
+          <el-button>
+            up
+          </el-button>
+          <el-button>
+            down
+          </el-button>
+        </div>-->
 
   </div>
 
@@ -59,6 +65,7 @@
   height: 100%
 
 }
+
 /* 添加以下样式 */
 .control-buttons {
   position: absolute;
@@ -86,26 +93,21 @@ import Player from 'xgplayer';
 import 'xgplayer/dist/index.min.css';
 import Middle from '@/utils/RecommendVIewToPlayerView.js';
 import axios from "axios";
-import Follow from '@/utils/follow'
+
 export default {
   data() {
     return {
       videoList: [],
       page: 0,
-      players:[],
-      mySwiper:{},
-
+      players: [],
+      mySwiper: {},
     }
   },
-  watch:{
-
-
-  },
-  beforeRouteEnter(){
+  watch: {},
+  beforeRouteEnter() {
 
   },
-  created(){
-
+  created() {
 
 
   },
@@ -126,22 +128,99 @@ export default {
     await this.initPlayer()
 
 
-
   },
   methods: {
-    async isFollow(followid) {
+    isSelf(userid) {
+      if (localStorage.getItem('userInfo') !== null) {
+
+        if (userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
+          return true
+        } else {
+          return false
+        }
+      } else {
+        return false;
+      }
+    },
+    async checkFollow(followid) {
+      let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+      return await axios.get(`/follow/${userid}/${followid}`)
+          .then((response) => {
+            let result = response.data.data
+            if (!result)
+              return false
+            return true
+          }).catch((error) => {
+            return false
+          })
+    },
+    handleFollow(index) {
+      //console.log(this.videoList[index].isFollow)
+      let v = this.videoList[index]
+      v.isFollow = true
+      // this.videoList[index].isFollow = true
+      //console.log(this.videoList[index].isFollow)
+      this.$set(this.videoList, index, v);
+      let followid = v.userid
+      // let followid = this.videoList[index].userid;
+
+      // 遍历 videoList，修改所有匹配的项
+      this.videoList.forEach((video) => {
+        if (video.userid === followid) {
+          this.$set(video, 'isFollow', true); // 使用 $set 确保响应式更新
+        }
+      });
+      if (localStorage.getItem('userInfo') !== null) {
         let userid = JSON.parse(localStorage.getItem('userInfo')).userId
-      return  await axios.get(`/follow/${userid}/${followid}`)
-            .then((response) => {
-              this.isFollower = response.data.data
-              return response.data.data
+        axios.post(`/follow/${userid}/${followid}`)
+            .then(response => {
+              if (response.data.code === 1) {
+                this.$message(userid + "已关注" + followid)
+
+              } else {
+                this.$message.error('response.data.data');
+                console.log(response.data.data)
+              }
+
             })
+      } else {
+        //console.log('未登录')
+        //this.login();
+      }
+
     },
-    handleFollow(followid){
-      Follow.$emit('follow',followid)
-    },
-    handleUnFollow(followid) {
-      Follow.$emit('unfollow',followid)
+    handleUnFollow(index) {
+      //console.log(this.videoList[index].isFollow)
+      let v = this.videoList[index]
+      v.isFollow = false
+      // this.videoList[index].isFollow = true
+      //console.log(this.videoList[index].isFollow)
+      this.$set(this.videoList, index, v);
+      let followid = v.userid
+      // let followid = this.videoList[index].userid;
+
+      // 遍历 videoList，修改所有匹配的项
+      this.videoList.forEach((video) => {
+        if (video.userid === followid) {
+          this.$set(video, 'isFollow', false); // 使用 $set 确保响应式更新
+        }
+      });
+      if (localStorage.getItem('userInfo') !== null) {
+        let userid = JSON.parse(localStorage.getItem('userInfo')).userId
+        axios.delete(`/follow/${userid}/${followid}`)
+            .then(response => {
+              if (response.data.code === 1) {
+                this.$message(userid + "已取消关注" + followid)
+
+              } else {
+                this.$message.error('response.data.data');
+                console.log(response.data.data)
+              }
+
+            })
+      } else {
+        //this.login()
+      }
     },
     createFirstVideo() { //生成第一个组件
 
@@ -162,65 +241,65 @@ export default {
     pausePlay(data, index) { //暂停视频
 
     },
-    toUserPage(userid){
+    toUserPage(userid) {
       this.toUserView(userid)
     },
-    test(a){
-      console.log('test',a)
+    test(a) {
+      console.log('test', a)
     },
-    async getUrl(videoId){
-      return await axios.get(`/video/getUrl/${videoId}`).then((response)=>{
-        if(response.data.code===1){
+    async getUrl(videoId) {
+      return await axios.get(`/video/getUrl/${videoId}`).then((response) => {
+        if (response.data.code === 1) {
           //console.log('resoponse',response.data.data)
           return response.data.data.videoUrl;
-        }else{
+        } else {
           return ''
         }
       })
     },
-    async initPlayer(){
+    async initPlayer() {
       let that = this;
-     // console.log("videoList",this.videoList)
+      // console.log("videoList",this.videoList)
       // 等待获取第一个视频的 URL
       let firstVideoUrl = await this.getUrl(that.videoList[0].videoId);
       let secondVideoUrl = await this.getUrl(this.videoList[1].videoId);
 
-      this.player_now=new Player({
-        el:this.$refs['video'+0][0],
+      this.player_now = new Player({
+        el: this.$refs['video' + 0][0],
         url: firstVideoUrl,
         plugins: [],
         poster: '',
         width: '100%',
         height: '100%',
-        autoplay:false,
+        autoplay: false,
         /*      controls: false,  // 禁用默认控制栏
               disableControls: true  // 禁用默认控制按钮*/
       });
-      this.player_down=new Player({
-        el:this.$refs['video'+1][0],
+      this.player_down = new Player({
+        el: this.$refs['video' + 1][0],
         url: secondVideoUrl,
         plugins: [],
         poster: '',
         width: '100%',
         height: '100%',
-        autoplay:false,
+        autoplay: false,
         /*      controls: false,  // 禁用默认控制栏
               disableControls: true  // 禁用默认控制按钮*/
       });
       this.mySwiper = new Swiper('.swiper-container', { //swiper配置
-        observeParents:true,
-        observer:true,
+        observeParents: true,
+        observer: true,
         navigation: {
           nextEl: '.swiper-button-next',
           prevEl: '.swiper-button-prev',
         },
 
-        allowTouchMove:true,
+        allowTouchMove: true,
         // 添加以下配置
-    /*    touchStartPreventDefault: false, // 不阻止默认触摸事件
-        passiveListeners: false, // 不使用被动监听器
-        preventClicks: false, // 不阻止点击
-        preventClicksPropagation: false, // 不阻止点击传播*/
+        /*    touchStartPreventDefault: false, // 不阻止默认触摸事件
+            passiveListeners: false, // 不使用被动监听器
+            preventClicks: false, // 不阻止点击
+            preventClicksPropagation: false, // 不阻止点击传播*/
         on: {
           /*   click:function (){
                console.log("click")
@@ -231,17 +310,17 @@ export default {
              touchEnd:function (){
 
              },*/
-          slideChangeTransitionEnd: async function (){
+          slideChangeTransitionEnd: async function () {
 
             let now = this.activeIndex
             let prev = this.previousIndex
             let next
 
-/*            // 确保 videoList 已加载，并且至少有两个元素
-            if (that.videoList.length < 2) {
-              console.warn('视频列表至少需要两个视频');
-              return; // 如果视频数量不足，直接返回
-            }*/
+            /*            // 确保 videoList 已加载，并且至少有两个元素
+                        if (that.videoList.length < 2) {
+                          console.warn('视频列表至少需要两个视频');
+                          return; // 如果视频数量不足，直接返回
+                        }*/
             //将目标设置为播放状态
             that.videoList[now].player = 1
             that.page = now
@@ -271,7 +350,7 @@ export default {
               that.player_now = that.player_down
               that.player_now.play()
               let newVideoUrl     //let newVideoUrl = await that.getUrl(that.videoList[next].videoId);
-             // let url = 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4'
+              // let url = 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4'
               newVideoUrl = await that.getUrl(that.videoList[next].videoId)
               that.player_down = new Player({
                 el: that.$refs['video' + next][0],
@@ -290,11 +369,11 @@ export default {
 
               next = now - 1;
 
-/*              // 检查 next 是否在 videoList 的范围内
-              if (next < 0) {
-                console.warn('没有上一个视频可播放');
-                return; // 如果没有上一个视频，直接返回
-              }*/
+              /*              // 检查 next 是否在 videoList 的范围内
+                            if (next < 0) {
+                              console.warn('没有上一个视频可播放');
+                              return; // 如果没有上一个视频，直接返回
+                            }*/
               that.videoList[prev].player = 0;
               that.videoList[prev + 1].player = -1;
               if (next >= 0) {
@@ -333,7 +412,7 @@ export default {
             // this.setupPlayerEvents(this.player_now);
           },
 
-      },
+        },
         direction: 'vertical'
       })
 
@@ -364,35 +443,47 @@ export default {
         this.controlsVisible = true;
       });
     },
-    initVideos(){ //初始化视频列表
-
+    initVideos() { //初始化视频列表
       Middle.$emit('getInitVideos', async (result) => {
-
         //console.log("result:",result)
         this.videoList = result
         //console.log("r",this.videoList)
+        for (let i = 0; i < this.videoList.length; i++) {
+          let v = this.videoList[i]
+          let isfollow
+          if (localStorage.getItem('userInfo') !== null) {
+            isfollow = await this.checkFollow(v.userid)
+          } else {
+            isfollow = false
+          }
+          v.isFollow = isfollow
+          this.$set(this.videoList, i, v)
+        }
         for (let v of this.videoList) {
           if (localStorage.getItem('userInfo') !== null) {
-            v.isFollow = await this.isFollow(v.userid)
-          }else{
+            v.isFollow = await this.checkFollow(v.userid)
+          } else {
             v.isFollow = false
           }
-          console.log("outresult",v.isFollow)
         }
       })
 
 
     },
-    addNewVideos(){ //拉取新视频
+    addNewVideos() { //拉取新视频
       let newVideo = {}
       //1.拉取
-      Middle.$emit('getNewVideo',this.videoList.length,async (result) => {
-
+      Middle.$emit('getNewVideo', this.videoList.length, async (result) => {
         newVideo = result
         newVideo.player = -1
         newVideo.id = this.videoList.length
-       // newVideo.isFollow = await this.isFollow(this.videoList.userid)
-        console.log(newVideo.isFollow)
+        // newVideo.isFollow = await this.isFollow(this.videoList.userid)
+        if (localStorage.getItem('userInfo') !== null) {
+          newVideo.isFollow = await this.checkFollow(newVideo.userid)
+        } else {
+          newVideo.isFollow = false
+        }
+        //console.log(newVideo.isFollow)
       })
       //2.放入视频列表
 

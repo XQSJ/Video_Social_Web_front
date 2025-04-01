@@ -213,78 +213,87 @@ import loginView from "@/views/LoginView.vue";
 </template>
 
 <style scoped lang="stylus">
- //引入图标
-  @import "~@/assets/css/icons.styl";
- //搜索按钮渲染
-  .search-button{
-    //禁用鼠标点击
-    pointer-events: none;
+//引入图标
+@import "~@/assets/css/icons.styl";
+
+//搜索按钮渲染
+.search-button {
+  pointer-events: none; // 禁用鼠标点击
+}
+
+.xth {
+  display: inline;
+  float: right;
+}
+
+.left {
+  width: 200px !important;
+  //根据计算得出左侧栏布局
+  --iconsheight: 100px; // 通过此变量根据左上角 logo 大小控制 header 大小
+  --bottomheight: 100px;
+
+  .el-header {
+    height: var(--iconsheight) !important;
+    background-color: #f0f0f0; // 背景色为浅灰色
   }
 
-  .xth{
-    display: inline;
-    float: right;
-  }
-  .left{
-    width:200px !important;
-    //根据计算得出左侧栏布局
-    --iconsheight: 100px;         //通过此变量根据左上角logo大小控制header大小
-    --bottomheight:100px;
-    .el-header{
-
-      height:var(--iconsheight) !important;
-    }
-    .el-main{
-      height:calc(100vh - var(--iconsheight) - var(--bottomheight)) !important;
-    }
-    .el-footer{
-      height:var(--bottomheight) !important;
-    }
+  .el-main {
+    height: calc(100vh - var(--iconsheight) - var(--bottomheight)) !important;
+    background-color: #ffffff; // 主体区域背景色
   }
 
-
-  .ui{
-    height: 100%;
-    margin: 0;
-    padding: 0;
-
+  .el-footer {
+    height: var(--bottomheight) !important;
+    background-color: #f0f0f0; // 背景色为浅灰色
   }
-  //隐藏滚动条
- .demo::-webkit-scrollbar {
-   display: none; /* Chrome Safari */
- }
- .demo {
-   scrollbar-width: none; /* firefox */
-   -ms-overflow-style: none; /* IE 10+ */
-   overflow-x: hidden;
-   overflow-y: auto;
- }
+}
 
-  .operate{
+.ui {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
 
-    display:flex;
-    flex-wrap:wrap;
-    //justify-content: flex-start;
-    align-items: center;
-  }
+//隐藏滚动条
+.demo::-webkit-scrollbar {
+  display: none; /* Chrome Safari */
+}
 
-  .operate-button{
-    width: 100%;
-    height: 100px;
-    margin: 10px;
-  }
-  //按钮选中时颜色
-  .operate-button:focus{
-    background-color: rgb(128, 128, 128);
-    color: white;
-  }
-  .operate-button:hover{
-    background-color: rgb(128, 128, 128);
-    color: white;
-  }
+.demo {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 
+.operate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px; // 添加内边距
+}
 
-  
+.operate-button {
+  width: 100%;
+  height: 100px;
+  margin: 10px;
+  background-color: #007bff; // 初始背景色为蓝色
+  color: white; // 按钮文字颜色
+  border: none; // 去掉边框
+  border-radius: 5px; // 圆角按钮
+  transition: background-color 0.3s, transform 0.2s; // 添加过渡效果
+}
 
+//按钮选中时颜色
+.operate-button:focus {
+  background-color: #0056b3; // 聚焦时颜色为深蓝色
+  outline: none; // 去掉默认聚焦轮廓
+}
 
+.operate-button:hover {
+  background-color: #0056b3; // 悬停时颜色为深蓝色
+  transform: translateY(-2px); // 悬停时轻微上移
+}
 </style>
+
+
