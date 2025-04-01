@@ -100,7 +100,6 @@ export default {
                   let uploadAuth = data.uploadAuth
                   let uploadAddress =data.uploadAddress
                   let videoId = data.videoId
-                  console.log(uploadAddress)
                   uploader.setUploadAuthAndAddress(uploadInfo, uploadAuth, uploadAddress, videoId)
                 }
               })

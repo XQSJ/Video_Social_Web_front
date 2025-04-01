@@ -56,7 +56,7 @@ import loginView from "@/views/LoginView.vue";
       })
       if(localStorage.getItem('userInfo')!==null){
         this.userinfo = JSON.parse(localStorage.getItem('userInfo'))
-        console.log(this.userinfo)
+        //console.log(this.userinfo)
       }
     },
     methods:{
@@ -460,10 +460,10 @@ import loginView from "@/views/LoginView.vue";
         <el-main class="main-content">
           <!-- 使用 keep-alive 缓存路由 -->
           <keep-alive>
-            <router-view v-if="$route.meta.keepAlive" />
+            <router-view v-if="$route.meta.keepAlive" :key="$route.fullPath"/>
           </keep-alive>
           <!-- 不缓存的路由 -->
-          <router-view v-if="!$route.meta.keepAlive" />
+          <router-view v-if="!$route.meta.keepAlive" :key="$route.fullPath"/>
         </el-main>
       </el-container>
     </el-container>

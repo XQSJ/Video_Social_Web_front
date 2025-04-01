@@ -106,11 +106,16 @@ export default {
     },
 
     async getLoginUser(userId) {
-      let userInfo = await this.getUser(userId);
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+      let user = await this.getUser(userId);
+      if (user.avatar !== null) {
+        await axios.get(`/image/getUrl/${user.avatar}`).then((response) => {
+          user.avatar = response.data.data
+        })
+      }
+      localStorage.setItem("userInfo", JSON.stringify(user));
       localStorage.setItem("isLogin", "1");
       this.$router.go(0)
-      this.$store.state.userInfo = userInfo;
+      this.$store.state.userInfo = user;
     }
   },
   watch: {

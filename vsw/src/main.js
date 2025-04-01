@@ -32,11 +32,15 @@ Vue.config.silent = true;
 Vue.prototype.getUser=function (userId){
   return  axios
       .get(`/users/${userId}`)
-      .then((response)=>{
+      .then(async (response) => {
         if (response.data.code === 1) {
           //console.log(response.data.data)
-          return response.data.data
-        }else {
+          let user = response.data.data
+          //console.log('user a:', user)
+
+          //console.log('user b:', user)
+          return user
+        } else {
           this.$message.error(response.data.data);
           //console.log(response.data.data)
           return null

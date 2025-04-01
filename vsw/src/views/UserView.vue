@@ -7,9 +7,11 @@ import Player from "xgplayer";
 export default {
   data() {
     return {
+      imageUpList:[],
       player: '',
       isSelf: false,
-      loading: true,
+      searchVideoLoading: true,
+      upAvatarLoading:false,
       isFollower: 0,
       userid: '',
       userinfo: {
@@ -35,25 +37,27 @@ export default {
         video: false,
         videoEdit :false
       },
+      imageUploader:null,
+      input_searchUser: '',
+      avatarInfo : {
 
-      input_searchUser: ''
+      }
     }
   },
   beforeMount() {
-    /* if(localStorage.getItem('userInfo')!==null){ //若为自己则重定向到self
-       if(this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId){
-         this.toUserView('self')
-       }
-     }*/
-  },
-  mounted() {
 
     if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
-      if (this.$route.query.id === String(JSON.parse(localStorage.getItem('userInfo')).userId)) {
+
+      if (this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId) {
+
         this.toUserView('self')
       }
     }
+  },
+  mounted() {
+
     this.initInfo()
+    this.initAcsClintImage()
     //this.$refs.dialog.rendered = true;
     /*    this.player = new Player({
           id: 'video',
@@ -73,6 +77,7 @@ export default {
        this.toLoginView();
      }*/
   },
+
   watch: {
     //监听路由更改时将id赋值
     '$route.query'(newId) {
@@ -93,8 +98,113 @@ export default {
 
   },
   methods: {
+    uploadImage(file){
+      console.log("上传文件")
+
+
+    },
+    initAcsClintImage(){
+      let _this = this;
+      let imageUploader = new AliyunUpload.Vod({
+        userId:1229526364672621,
+        region:"cn-shanghai",
+        // 分片大小默认1 MB，不能小于100 KB（100*1024）
+        partSize: 1048576,
+        // 并行上传分片个数，默认5
+        parallel: 5,
+        // 网络原因失败时，重新上传次数，默认为3
+        retryCount: 3,
+        // 网络原因失败时，重新上传间隔时间，默认为2秒
+        retryDuration: 2,
+        // 添加文件成功
+        addFileSuccess: function (uploadInfo) {
+          console.log("addFileSuccess: " )
+          console.log(uploadInfo)
+
+        },
+        // 开始上传
+        'onUploadstarted':  function(uploadInfo) {
+          console.log('startupimage:')
+          console.log(uploadInfo)
+          if(!uploadInfo.imageId){
+            let createUrl = "/image/create"
+            let imageInfo = {
+              "title" :  '' ,
+              "type" : 'cover'
+            }
+
+            axios.post(createUrl,imageInfo).then((response)=>{
+              if(response.data.code === 1){
+                let data = response.data.data
+                console.log("uploadInfo",uploadInfo);
+                console.log(data)
+                imageUploader.setUploadAuthAndAddress(uploadInfo, data.uploadAuth, data.uploadAddress, data.imageId);
+                _this.avatarInfo=null;
+                _this.avatarInfo = data;
+              }
+            })
+          }else{
+
+          }
+
+
+        },
+        // 文件上传成功
+        'onUploadSucceed': function (uploadInfo) {
+          console.log(uploadInfo.file.name+'上传成功')
+
+          _this.editForm.profile = _this.avatarInfo.imageURL;
+
+        },
+        // 文件上传失败
+        'onUploadFailed': function (uploadInfo, code, message) {
+          console.log(uploadInfo.file.name+'上传失败')
+        },
+        // 文件上传进度，单位：字节
+        'onUploadProgress': function (uploadInfo, totalSize, loadedPercent) {
+          console.log("onUploadProgress:file:" + uploadInfo.file.name + ", fileSize:" + totalSize + ", percent:" + Math.ceil(loadedPercent * 100) + "%");
+        },
+        // 上传凭证或STS token超时
+        'onUploadTokenExpired': function (uploadInfo) {
+          console.log("上传凭证或STS token超时")
+         /* let refreshUrl = `/video/refresh/${uploadInfo.videoId}`
+          axios.get(refreshUrl).then((response) => {
+            if (response.data.code === 1) {
+              let data = response.data.data
+              let uploadAuth = data.uploadAuth
+              let uploadAddress = data.uploadAddress
+              let videoId = data.videoId
+              uploader.resumeUploadWithAuth(uploadAuth)
+            }
+          })*/
+        },
+        // 全部文件上传结束
+        'onUploadEnd':function(uploadInfo){
+          console.log("onUploadEnd: uploaded all the files")
+          _this.upAvatarLoading = false
+         // _this.editForm.profile = uploadInfo.
+         // _this.toUserView('self')
+        }
+
+      })
+      return imageUploader
+    },
     test(a){
       console.log(a)
+    },
+    handleChangeImage(file,fileList){
+      this.upAvatarLoading =  true
+      this.imageUpList=[];
+      this.imageUpList = fileList;
+    },
+    reUploadImage(){
+      //之前的文件删除
+      //this.imageUpList=[];
+      //初始化上传器
+      this.imageUploader =  this.initAcsClintImage()
+      this.imageUploader.addFile(this.imageUpList[0].raw,null,null,null)
+      this.imageUploader.startUpload()
+     // this.imageUploader.startUpload()
     },
     handleCloseVideoEdit(){
       this.dialogVisible.videoEdit = false
@@ -137,7 +247,7 @@ export default {
                 this.userinfo.fansCount--;
               } else {
                 this.$message.error('response.data.data');
-                console.log(response.data.data)
+                //console.log(response.data.data)
               }
 
             })
@@ -157,7 +267,7 @@ export default {
                 this.userinfo.fansCount++;
               } else {
                 this.$message.error('response.data.data');
-                console.log(response.data.data)
+                //console.log(response.data.data)
               }
 
             })
@@ -218,6 +328,7 @@ export default {
       this.dialogVisible.fans = true
     },
     handleCloseEdit() {
+      this.imageUpList = []
       this.dialogVisible.editIntro = false
     },
     handleOpenEdit() {
@@ -225,12 +336,14 @@ export default {
       this.editForm.name = this.userinfo.name
       this.editForm.introduction = this.userinfo.introduction
       this.editForm.profile = this.userinfo.profile
+
+
     },
     async editUserInfo() {
       let userInfo = {
         "userId": this.userid,
         "userName": this.editForm.name,
-        "avatar": this.editForm.profile,
+        "avatar": this.avatarInfo.imageId,
         "userInfo": this.editForm.introduction
       }
 
@@ -264,7 +377,7 @@ export default {
       toLogin.$emit('log')
     },
     editVideo(video) {
-      console.log(video)
+      //console.log(video)
       this.dialogVisible.videoEdit = true
     },
     async isFollow(followid) {
@@ -284,6 +397,12 @@ export default {
       await this.searchUserVideo('create', userId)
       //根据id查询user基本信息
       let user = await this.getUser(userId);
+      this.avatarInfo.imageId = user.avatar
+      if (user.avatar !== null) {
+        await axios.get(`/image/getUrl/${user.avatar}`).then((response) => {
+          user.avatar = response.data.data
+        })
+      }
       //console.log(user)
 
       this.userinfo.name = user.userName
@@ -301,7 +420,7 @@ export default {
     searchUserVideo(option, userId) {
 
       this.aboutVideos = {}
-      this.loading = true
+      this.searchVideoLoading = true
       //     if (option !== this.option) { //当当前选项不为所选选项时才执行
       this.option = option
       console.log('执行搜索' + option)
@@ -319,13 +438,13 @@ export default {
                   v.coverUrl = await this.getCover(v.path)
                 }
                 this.aboutVideos = videos
-                this.loading = false
+                this.searchVideoLoading = false
               }
             })
             break;
           }
           default:{
-            this.loading = false
+            this.searchVideoLoading = false
           }
         }
       } else {
@@ -341,13 +460,13 @@ export default {
                   v.coverUrl = await this.getCover(v.path)
                 }
                 this.aboutVideos = videos
-                this.loading = false
+                this.searchVideoLoading = false
               }
             })
             break;
           }
           default:{
-            this.loading = false
+            this.searchVideoLoading = false
           }
         }
       }
@@ -670,9 +789,9 @@ export default {
       </div>
 
       <!-- 视频网格显示区域 -->
-      <div class="video-grid-wrapper" v-loading="loading" element-loading-text="加载视频列表中...">
+      <div class="video-grid-wrapper" v-loading="searchVideoLoading" element-loading-text="加载视频列表中...">
         <!-- 如果没在加载且视频列表为空，显示提示 -->
-        <el-empty v-if="!loading && (!aboutVideos || (Array.isArray(aboutVideos) && aboutVideos.length === 0) || (typeof aboutVideos === 'object' && Object.keys(aboutVideos).length === 0))"
+        <el-empty v-if="!searchVideoLoading && (!aboutVideos || (Array.isArray(aboutVideos) && aboutVideos.length === 0) || (typeof aboutVideos === 'object' && Object.keys(aboutVideos).length === 0))"
                   :description="`${option === 'create' ? '还没有发布过作品哦' : '列表为空'}`">
         </el-empty>
         <!-- 否则，显示视频网格 -->
@@ -774,7 +893,7 @@ export default {
     </el-dialog>
 
     <!-- 粉丝/关注列表弹窗 -->
-    <el-dialog :title="fansDialogTitle || '用户列表'" :visible.sync="dialogVisible.fans" :before-close="handleCloseFans" width="450px" append-to-body>
+    <el-dialog :title="'用户列表'" :visible.sync="dialogVisible.fans" :before-close="handleCloseFans" width="450px" append-to-body>
       <!-- 弹窗顶部操作 -->
       <div class="fans-dialog-header">
         <el-button-group style="margin-bottom: 15px;">
@@ -793,8 +912,8 @@ export default {
         </el-input>
       </div>
       <!-- 用户列表容器 -->
-      <div class="user-list-container" v-loading="loading.fansList"> <!-- 假设有 loading.fansList 状态 -->
-        <el-empty v-if="!loading.fansList && (!userList || (Array.isArray(userList) && userList.length === 0) || (typeof userList === 'object' && Object.keys(userList).length === 0))" description="列表为空"></el-empty>
+      <div class="user-list-container" v-loading="searchVideoLoading.fansList"> <!-- 假设有 loading.fansList 状态 -->
+        <el-empty v-if="!searchVideoLoading.fansList && (!userList || (Array.isArray(userList) && userList.length === 0) || (typeof userList === 'object' && Object.keys(userList).length === 0))" description="列表为空"></el-empty>
         <!-- 过滤显示用户列表 -->
         <!-- 注意：原始脚本 userList 初始化为 {}，需要确保获取数据后变成数组才能 filter -->
         <div v-else class="user-list">
@@ -808,6 +927,7 @@ export default {
               <!-- 原始模板显示 userInfo，这里改为显示 ID 可能更常用 -->
               <span class="user-list-id">ID: {{ user.userId }}</span>
               <!-- <span class="user-list-intro">{{ user.userInfo }}</span> -->
+
             </div>
             <!-- 可以添加关注/取消关注按钮 -->
           </div>
@@ -819,28 +939,41 @@ export default {
     </el-dialog>
 
     <!-- 编辑个人资料弹窗 -->
-    <el-dialog title="编辑个人资料" :visible.sync="dialogVisible.editIntro" :before-close="handleCloseEdit" width="500px" :close-on-click-modal="false" append-to-body>
-      <!-- 使用 el-form 组织编辑表单 -->
-      <el-form :model="editForm" label-width="80px" class="edit-profile-form">
-        <el-form-item label="头像">
-          <!-- 头像显示与上传触发 -->
-          <el-avatar :size="60" :src="editForm.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-          <!-- 实际头像上传需要 <el-upload> 组件 -->
-          <el-button size="small" style="margin-left: 10px;" @click="triggerAvatarUpload">更换头像</el-button>
-          <!-- <el-upload action="..." :show-file-list="false" ... style="display:none" ref="avatarUploader"></el-upload> -->
-        </el-form-item>
-        <el-form-item label="昵称">
-          <el-input v-model="editForm.name" placeholder="请输入昵称" maxlength="20" show-word-limit></el-input>
-        </el-form-item>
-        <el-form-item label="简介">
-          <el-input type="textarea" v-model="editForm.introduction" placeholder="介绍一下你自己吧" rows="3" maxlength="100" show-word-limit></el-input>
-        </el-form-item>
-      </el-form>
-      <!-- 原始模板是 <el-row> 堆叠 -->
-      <span slot="footer" class="dialog-footer">
+    <el-dialog title="编辑个人资料"  :visible.sync="dialogVisible.editIntro" :before-close="handleCloseEdit" width="500px" :close-on-click-modal="false" append-to-body v-loading="upAvatarLoading" >
+
+        <!-- 使用 el-form 组织编辑表单 -->
+        <el-form :model="editForm" label-width="80px" class="edit-profile-form" >
+          <el-form-item label="头像">
+            <!-- 头像显示与上传触发 -->
+            <el-avatar :size="60" :src="editForm.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+            <!-- 实际头像上传需要 <el-upload> 组件 -->
+            <el-upload
+                class="video-uploader"
+                :limit="1"
+                :multiple="false"
+                :file-list="imageUpList"
+                :on-change="handleChangeImage"
+                :http-request=" reUploadImage"
+                :show-file-list="false">
+              <el-button size="small" style="margin-left: 10px;" >更换头像</el-button>
+            </el-upload>
+
+            <!-- <el-upload action="..." :show-file-list="false" ... style="display:none" ref="avatarUploader"></el-upload> -->
+          </el-form-item>
+          <el-form-item label="昵称">
+            <el-input v-model="editForm.name" placeholder="请输入昵称" maxlength="20" show-word-limit></el-input>
+          </el-form-item>
+          <el-form-item label="简介">
+            <el-input type="textarea" v-model="editForm.introduction" placeholder="介绍一下你自己吧" rows="3" maxlength="100" show-word-limit></el-input>
+          </el-form-item>
+        </el-form>
+        <!-- 原始模板是 <el-row> 堆叠 -->
+        <span slot="footer" class="dialog-footer" >
         <el-button @click="handleCloseEdit">取 消</el-button>
-        <el-button type="primary" @click="editUserInfo" :loading="loading.editing">保 存</el-button> <!-- 假设有 loading.editing 状态 -->
-      </span>
+        <el-button type="primary" @click="editUserInfo" :loading="searchVideoLoading.editing">保 存</el-button> <!-- 假设有 loading.editing 状态 -->
+        </span>
+
+
     </el-dialog>
 
   </div>
@@ -1099,6 +1232,8 @@ export default {
   border-top: 1px solid #e8eaec; // 弹窗底部加分割线
   padding: 10px 20px;
 }
+
+
 
 // --- 视频播放弹窗特定样式 ---
 .video-player-dialog >>> .el-dialog__header { // 深度选择器覆盖默认样式
