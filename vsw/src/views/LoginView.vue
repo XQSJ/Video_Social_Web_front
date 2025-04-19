@@ -108,9 +108,9 @@ export default {
     async getLoginUser(userId) {
       let user = await this.getUser(userId);
       if (user.avatar !== null) {
-        await axios.get(`/image/getUrl/${user.avatar}`).then((response) => {
+       /* await axios.get(`/image/getUrl/${user.avatar}`).then((response) => {
           user.avatar = response.data.data
-        })
+        })*/
       }
       localStorage.setItem("userInfo", JSON.stringify(user));
       localStorage.setItem("isLogin", "1");

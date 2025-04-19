@@ -57,7 +57,7 @@ export default {
   mounted() {
 
     this.initInfo()
-    this.initAcsClintImage()
+    //this.initAcsClintImage()
     //this.$refs.dialog.rendered = true;
     /*    this.player = new Player({
           id: 'video',
@@ -127,6 +127,7 @@ export default {
           console.log('startupimage:')
           console.log(uploadInfo)
           if(!uploadInfo.imageId){
+
             let createUrl = "/image/create"
             let imageInfo = {
               "title" :  '' ,
@@ -134,6 +135,7 @@ export default {
             }
 
             axios.post(createUrl,imageInfo).then((response)=>{
+              console.log(response)
               if(response.data.code === 1){
                 let data = response.data.data
                 console.log("uploadInfo",uploadInfo);
@@ -397,19 +399,26 @@ export default {
       await this.searchUserVideo('create', userId)
       //根据id查询user基本信息
       let user = await this.getUser(userId);
-      this.avatarInfo.imageId = user.avatar
-      if (user.avatar !== null) {
-        await axios.get(`/image/getUrl/${user.avatar}`).then((response) => {
-          user.avatar = response.data.data
-        })
-      }
-      //console.log(user)
+      if(user!==null){
+        if (user.avatar !== null) {
+          this.avatarInfo.imageId = user.avatar
 
-      this.userinfo.name = user.userName
-      this.userinfo.profile = user.avatar
-      this.userinfo.introduction = user.userInfo
-      this.userinfo.fansCount = user.fans
-      this.userinfo.subscribeCount = user.subscriber
+          await axios.get(`/image/getUrl/${user.avatar}`).then((response) => {
+            user.avatar = response.data.data
+          })
+        }
+        //console.log(user)
+
+        this.userinfo.name = user.userName
+        this.userinfo.profile = user.avatar
+        this.userinfo.introduction = user.userInfo
+        this.userinfo.fansCount = user.fans
+        this.userinfo.subscribeCount = user.subscriber
+      }else{
+
+      }
+
+
 
       if (this.isSelf === false) {
         this.isFollow(userId)

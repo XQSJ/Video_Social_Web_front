@@ -18,7 +18,8 @@ window.Promise = Promise*/
 register();*/
 //引入element组件
 import ElementUI from 'element-ui'; // 2.1引入结构
-import 'element-ui/lib/theme-chalk/index.css'; // 2.2引入样式
+import 'element-ui/lib/theme-chalk/index.css';
+
 
 axios.defaults.baseURL = url;
 Vue.use(ElementUI); // 3.安装
@@ -29,37 +30,6 @@ Vue.config.silent = true;
 
 
 
-Vue.prototype.getUser=function (userId){
-  return  axios
-      .get(`/users/${userId}`)
-      .then(async (response) => {
-        if (response.data.code === 1) {
-          //console.log(response.data.data)
-          let user = response.data.data
-          //console.log('user a:', user)
-
-          //console.log('user b:', user)
-          return user
-        } else {
-          this.$message.error(response.data.data);
-          //console.log(response.data.data)
-          return null
-        }
-      })
-};
-Vue.prototype.toLoginView=function (){
-  this.$router.push({
-    name:'login',
-  }, () => {});
-}
-Vue.prototype.toUserView=function (userid){
-  this.$router.push({
-    name:'user',
-    query:{
-      id:userid
-    },
-  }, () => {});
-}
 
 router.beforeEach((to,from,next)=>{
 
@@ -82,6 +52,36 @@ router.beforeEach((to,from,next)=>{
 
 })
 
+Vue.prototype.getUser=function (userId){
+  return  axios
+      .get(`/users/${userId}`)
+      .then(async (response) => {
+        if (response.data.code === 1) {
+          //console.log(response.data.data)
+          let user = response.data.data
+          //console.log('user a:', user)
+
+          //console.log('user b:', user)
+          return user
+        } else {
+          this.$message.error(response.data.data);
+          return null
+        }
+      })
+};
+Vue.prototype.toLoginView=function (){
+  this.$router.push({
+    name:'login',
+  }, () => {});
+}
+Vue.prototype.toUserView=function (userid){
+  this.$router.push({
+    name:'user',
+    query:{
+      id:userid
+    },
+  }, () => {});
+}
 new Vue({
   router,
   store,

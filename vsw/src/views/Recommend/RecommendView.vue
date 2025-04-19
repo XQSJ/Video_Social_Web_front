@@ -19,26 +19,26 @@ export default {
         {
           id: 0,
           player: 1,
-          videoId: '608798f40df971f08f7b6733a68f0102',
-          userid: 4
+          videoId: '80e48b690f6371f0bfbd6723a78f0102',
+          userid: 3
         },
         {
           id: 1,
           player: 0,
-          videoId: '608798f40df971f08f7b6733a68f0102',
-          userid: 5
+          videoId: '0090e9530f6371f0bff44531959d0102',
+          userid: 4
         },
         {
           id: 2,
           player: -1,
-          videoId: '608798f40df971f08f7b6733a68f0102',
-          userid: 3
+          videoId: '6054cf210f6371f080484531859c0102',
+          userid: 4
         },
         {
           id: 3,
           player: -1,
-          videoId: '608798f40df971f08f7b6733a68f0102',
-          userid: 9
+          videoId: '007faa1c0f6371f0bfb05107e0c90102',
+          userid: 3
         }
       ];
 /*      // 循环获取每个视频的URL
@@ -64,8 +64,8 @@ export default {
 
       return newVideo = {
         id:length,
-        userid:10,
-        videoId:'009529bc0e1171f0bffa5017f0f80102'
+        userid:4,
+        videoId:'80e48b690f6371f0bfbd6723a78f0102'
       }
     }
   },

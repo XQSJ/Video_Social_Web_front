@@ -352,7 +352,7 @@ import loginView from "@/views/LoginView.vue";
             <i class="el-icon-chat-dot-round"></i>
             <span slot="title">聊天</span>
           </el-menu-item> -->
-          <el-menu-item index="user" :route="{ name: 'user', query: { id: 'self' } }">
+          <el-menu-item  @click="clickUser('self')">
             <i class="el-icon-user"></i>
             <span slot="title">我的</span>
           </el-menu-item>

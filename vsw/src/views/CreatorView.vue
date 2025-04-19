@@ -196,6 +196,7 @@ export default {
       },
       uploadFile(file){
           console.log("上传文件")
+
           //console.log(file)
           this.uploader=this.initAcsClint()
           this.uploader.addFile(this.fileList[0].raw,null,null,null,null)
