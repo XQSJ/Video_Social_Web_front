@@ -6,6 +6,7 @@ import ChatView from "@/views/ChatView.vue";
 import MessageView from "@/views/MessageView.vue";
 import LoginView from "@/views/LoginView.vue";
 import loginView from "@/views/LoginView.vue";
+import axios from "axios";
 
 export default {
     computed: {
@@ -15,7 +16,7 @@ export default {
     data(){
       return{
         userinfo:{
-
+          profile:''
         },
         isLogin:false,
         input_search: '',
@@ -53,19 +54,30 @@ export default {
       }
 
     },
-    mounted(){
+    async mounted() {
       let _this = this
       //console.log("登陆状态"+localStorage.getItem("isLogin"))
-      fromLogin.$on('login',(data)=>{
+      fromLogin.$on('login', (data) => {
         _this.handleCloseLog();
         _this.isLogin = true;
       })
-      toLogin.$on('log',(data)=>{
+      toLogin.$on('log', (data) => {
         _this.login();
       })
-      if(localStorage.getItem('userInfo')!==null){
-        this.userinfo = JSON.parse(localStorage.getItem('userInfo'))
-        //console.log(this.userinfo)
+      if (localStorage.getItem('userInfo') !== null) {
+        _this.userinfo = JSON.parse(localStorage.getItem('userInfo'))
+
+        let avatar = this.userinfo.avatar
+
+        axios.get(`/image/getUrl/${avatar}`).then((response) => {
+
+          avatar = response.data.data
+
+          _this.userinfo.profile = avatar
+
+          this.$forceUpdate()
+        })
+
       }
     },
     methods:{
@@ -430,12 +442,17 @@ export default {
                   placement="bottom-end"
                   width="250"
                   trigger="hover"
-                  popper-class="user-popover">
+                  popper-class="user-popover"
+                  >
+                <template #reference>
+                  <el-avatar :size="45" :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" ></el-avatar>
+                </template>
                 <!-- Popover 内容 -->
                 <div class="user-popover-content">
                   <div class="user-info-header">
-                    <el-avatar :size="45" :src="userinfo.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+                    <el-avatar :size="45" :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" :key="userinfo.profile"></el-avatar>
                     <div class="user-info-text">
+
                       <span class="user-popover-name">{{ userinfo.userName || '未命名用户' }}</span>
                       <span class="user-popover-id">ID: {{ userinfo.userId || 'N/A' }}</span>
                     </div>

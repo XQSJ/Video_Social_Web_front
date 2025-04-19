@@ -464,6 +464,7 @@ export default {
           if (v.avatar !== null) {
             await axios.get(`/image/getUrl/${v.avatar}`).then((response) => {
               v.avatar = response.data.data
+
             })
           }
           this.$set(this.videoList, i, v)
@@ -478,6 +479,7 @@ export default {
           if (v.avatar !== null) {
             await axios.get(`/image/getUrl/${v.avatar}`).then((response) => {
               v.avatar = response.data.data
+
             })
           }
 
