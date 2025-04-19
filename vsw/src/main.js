@@ -42,11 +42,11 @@ router.beforeEach((to,from,next)=>{
   }
   if(to.name==='user'){
 
-    //当路由跳转到用户界面，通过钩子回调赋值
+    /*//当路由跳转到用户界面，通过钩子回调赋值
     next(vm=>{
 
       vm.$data.userid=to.query.user
-    })
+    })*/
   }
   next()
 
@@ -75,6 +75,11 @@ Vue.prototype.toLoginView=function (){
   }, () => {});
 }
 Vue.prototype.toUserView=function (userid){
+  if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
+    if (userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
+      userid = 'self'
+    }
+  }
   this.$router.push({
     name:'user',
     query:{

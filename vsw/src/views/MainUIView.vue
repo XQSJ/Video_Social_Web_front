@@ -7,7 +7,7 @@ import MessageView from "@/views/MessageView.vue";
 import LoginView from "@/views/LoginView.vue";
 import loginView from "@/views/LoginView.vue";
 
-  export default {
+export default {
     computed: {
 
     },
@@ -28,6 +28,42 @@ import loginView from "@/views/LoginView.vue";
       }
     },
     watch:{
+      '$route'(val){
+        if(val.name==='user' ) {
+          if (val.query.id !== 'self') {
+            console.log('feiwo')
+          /*  console.log(this.$refs.elMenu)
+            this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
+            this.$refs.elMenu.activeIndex = null*/
+          }
+        }
+
+      }
+     /* $route:{
+
+        handler(val,oldval){
+          console.log(this.$refs.elMenu)
+          //this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
+          this.$refs.elMenu.activeIndex = null
+          console.log(val);//新路由信息
+      /!*    if(val.name=='smViewer'){
+            this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
+            this.$refs.elMenu.activeIndex = null
+          }*!/
+          if(val.name==='user' ){
+            if(val.query.id !=='self'){
+              console.log(this.$refs.elMenu)
+
+              this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
+              this.$refs.elMenu.activeIndex = null
+            }
+
+          }
+        },
+
+        // 深度观察监听
+        deep: true
+      }*/
 
     },
     beforeMount(){
@@ -324,7 +360,7 @@ import loginView from "@/views/LoginView.vue";
         <!-- Logo 区域 -->
         <div class="aside-header">
           <!-- 可以放置 Logo 图片或文字 -->
-          <span class="logo-text">Your Logo</span>
+          <span class="logo-text">Logo</span>
           <!-- <img src="@/assets/logo.png" alt="Logo" class="logo-image"> -->
           <!-- 原始模板: <i class="el-icon-logo"></i> -->
         </div>
@@ -332,6 +368,7 @@ import loginView from "@/views/LoginView.vue";
         <!-- 导航菜单区域 -->
         <!-- 使用 el-menu 替代原始按钮组，更符合导航场景 -->
         <el-menu
+            ref = "elMenu"
             :default-active="$route.name"
             class="aside-menu"
             background-color="#ffffff"
@@ -352,7 +389,7 @@ import loginView from "@/views/LoginView.vue";
             <i class="el-icon-chat-dot-round"></i>
             <span slot="title">聊天</span>
           </el-menu-item> -->
-          <el-menu-item  @click="clickUser('self')">
+          <el-menu-item  index="user" :route="{ name: 'user',query:{id:'self'} }">
             <i class="el-icon-user"></i>
             <span slot="title">我的</span>
           </el-menu-item>

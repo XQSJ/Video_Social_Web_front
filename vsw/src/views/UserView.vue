@@ -46,13 +46,13 @@ export default {
   },
   beforeMount() {
 
-    if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
+/*    if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
 
       if (this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId) {
 
         this.toUserView('self')
       }
-    }
+    }*/
   },
   mounted() {
 
@@ -84,11 +84,11 @@ export default {
       if (this.$route.name === 'user') {  //当路由为该界面时
         this.userid = newId.id //将传入的id赋值
 
-        if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
+      /*  if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
           if (this.userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
             this.toUserView('self')
           }
-        }
+        }*/
         this.initInfo()//根据id查找其他值
 
       }
