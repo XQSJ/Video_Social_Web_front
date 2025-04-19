@@ -31,40 +31,13 @@ export default {
       '$route'(val){
         if(val.name==='user' ) {
           if (val.query.id !== 'self') {
-            console.log('feiwo')
-          /*  console.log(this.$refs.elMenu)
-            this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
-            this.$refs.elMenu.activeIndex = null*/
+            this.$refs.elMenu.activeIndex = null
+          }else{
+            this.$refs.elMenu.activeIndex = 'user'
           }
         }
 
       }
-     /* $route:{
-
-        handler(val,oldval){
-          console.log(this.$refs.elMenu)
-          //this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
-          this.$refs.elMenu.activeIndex = null
-          console.log(val);//新路由信息
-      /!*    if(val.name=='smViewer'){
-            this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
-            this.$refs.elMenu.activeIndex = null
-          }*!/
-          if(val.name==='user' ){
-            if(val.query.id !=='self'){
-              console.log(this.$refs.elMenu)
-
-              this.$refs.elMenu.closeMenu(this.$refs.elMenu.openedMenus[0]);
-              this.$refs.elMenu.activeIndex = null
-            }
-
-          }
-        },
-
-        // 深度观察监听
-        deep: true
-      }*/
-
     },
     beforeMount(){
       let _this = this
