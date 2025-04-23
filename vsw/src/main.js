@@ -42,6 +42,8 @@ router.beforeEach((to,from,next)=>{
   }
   if(to.name==='user'){
 
+
+    //this.$refs.elMenu.activeIndex = null
     /*//当路由跳转到用户界面，通过钩子回调赋值
     next(vm=>{
 

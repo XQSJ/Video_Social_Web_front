@@ -1,5 +1,6 @@
 <script >
 import Middle from '@/utils/middle.js';
+import handleMainMenu from "@/utils/handleMainMenu";
 import fromLogin from '@/utils/LoginViewToMainUIView';
 import toLogin from '@/utils/toLogin'
 import ChatView from "@/views/ChatView.vue";
@@ -29,16 +30,6 @@ export default {
       }
     },
     watch:{
-      '$route'(val){
-        if(val.name==='user' ) {
-          if (val.query.id !== 'self') {
-            this.$refs.elMenu.activeIndex = null
-          }else{
-            this.$refs.elMenu.activeIndex = 'user'
-          }
-        }
-
-      }
     },
     beforeMount(){
       let _this = this
@@ -63,6 +54,12 @@ export default {
       })
       toLogin.$on('log', (data) => {
         _this.login();
+      })
+      handleMainMenu.$on('cancel',()=>{
+        this.$refs.elMenu.activeIndex = null
+      })
+      handleMainMenu.$on('user',()=>{
+        this.$refs.elMenu.activeIndex = 'user'
       })
       if (localStorage.getItem('userInfo') !== null) {
         _this.userinfo = JSON.parse(localStorage.getItem('userInfo'))

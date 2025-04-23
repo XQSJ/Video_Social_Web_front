@@ -3,10 +3,11 @@ import axios from "axios";
 import toLogin from '@/utils/toLogin'
 import Follow from '@/utils/follow'
 import Player from "xgplayer";
-
+import handleMainMenu from "@/utils/handleMainMenu";
 export default {
   data() {
     return {
+      source:null,
       imageUpList:[],
       player: '',
       isSelf: false,
@@ -76,6 +77,7 @@ export default {
     /* if(localStorage.getItem('userInfo')===null){
        this.toLoginView();
      }*/
+
   },
 
   watch: {
@@ -83,12 +85,6 @@ export default {
     '$route.query'(newId) {
       if (this.$route.name === 'user') {  //当路由为该界面时
         this.userid = newId.id //将传入的id赋值
-
-      /*  if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
-          if (this.userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
-            this.toUserView('self')
-          }
-        }*/
         this.initInfo()//根据id查找其他值
 
       }
@@ -298,7 +294,6 @@ export default {
                 this.userinfo.subscribeCount = user.subscriber*/
 
         }
-
       } else {
         this.isSelf = false
         //将id赋值
@@ -307,6 +302,12 @@ export default {
         //根据id查找其他值
         this.setinfo(this.userid)
       }
+
+      if(this.isSelf===false)
+        handleMainMenu.$emit('cancel')
+      else
+        handleMainMenu.$emit('user')
+
     },
     handleCloseVideos() {
       this.dialogVisible.video = false
@@ -426,61 +427,68 @@ export default {
 
 
     },
-    searchUserVideo(option, userId) {
+    handleCancel(){
+      this.source.cancel('取消请求')
+      this.searchVideoLoading =false
 
+    },
+    searchUserVideo(option, userId) {
+      let _this = this;
+      if(this.source!==null){
+        this.handleCancel()
+      }
       this.aboutVideos = {}
       this.searchVideoLoading = true
-      //     if (option !== this.option) { //当当前选项不为所选选项时才执行
       this.option = option
-      console.log('执行搜索' + option)
+      //console.log('执行搜索' + option)
+      const source = axios.CancelToken.source()
+      this.source = source
+      let url ;
+      let method = '';
       //执行搜索
-      if (this.isSelf === true) {
-        switch (option) {
-          case 'create' : {
-            axios.get(`/video/getSelf/${userId}`).then(async (response) => {
-              if (response.data.code === 1) {
-                let videos = response.data.data
-                //console.log("aboutVideos",videos)
-
-                for (let v of videos) {
-                  //console.log(v)
-                  v.coverUrl = await this.getCover(v.path)
-                }
-                this.aboutVideos = videos
-                this.searchVideoLoading = false
-              }
-            })
-            break;
-          }
-          default:{
-            this.searchVideoLoading = false
-          }
+      switch (option){
+        case 'create':{
+          method = 'getSelf'
+          break;
         }
-      } else {
-        switch (option) {
-          case 'create' : {
-            axios.get(`/video/getSelf/${userId}`).then(async (response) => {
-              if (response.data.code === 1) {
-                let videos = response.data.data
-                //console.log("aboutVideos",videos)
+        case 'like':{
+          method = 'getLikeVideos'
+          break;
+        }
+        default:{
 
-                for (let v of videos) {
-                  //console.log(v)
-                  v.coverUrl = await this.getCover(v.path)
-                }
-                this.aboutVideos = videos
-                this.searchVideoLoading = false
-              }
-            })
-            break;
-          }
-          default:{
-            this.searchVideoLoading = false
-          }
         }
       }
+      if(method!==''){
+        url = '/video/'+method+'/'+userId
 
-      //   }
+        axios.get(url,{
+          cancelToken:source.token
+        }).then(async (response) => {
+          if (response.data.code === 1) {
+            let videos = response.data.data
+            let delay
+            if(videos.length===0)
+              delay = 500
+            else
+              delay = 0
+            setTimeout(() => {
+              this.aboutVideos = videos
+              this.searchVideoLoading = false
+            }, delay);
+
+
+          }
+          this.source=null;
+        }).catch(error => {
+
+        })
+      }else{
+        this.searchVideoLoading = false
+      }
+
+
+
     },
     async getCover(videoId) {
       return await axios.get(`/video/getUrl/${videoId}`).then((response) => {
@@ -761,7 +769,6 @@ export default {
           <el-row>{{ userinfo.introduction }}</el-row>
           -->
         </el-col>
-
         <!-- 操作按钮列 -->
         <el-col :xs="24" :sm="6" :md="6" class="action-col">
           <!-- 如果是用户本人，显示编辑资料按钮 -->
