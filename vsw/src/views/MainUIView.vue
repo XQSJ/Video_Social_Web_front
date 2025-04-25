@@ -16,6 +16,8 @@ export default {
     components: {LoginView, ChatView, MessageView},
     data(){
       return{
+        userid:-1,
+        newMessage:false,
         userinfo:{
           profile:''
         },
@@ -30,6 +32,7 @@ export default {
       }
     },
     watch:{
+
     },
     beforeMount(){
       let _this = this
@@ -74,11 +77,30 @@ export default {
 
           this.$forceUpdate()
         })
+        this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
+      }
 
+      if(this.userid!==-1){ //若登录
+        //轮询 创建定时器
+        this.timer = window.setInterval(() => {
+          setTimeout(() => {
+
+            this.existNewMessages();
+          }, 0)
+        }, 3000);
       }
     },
     methods:{
+      existNewMessages(){
+        if(this.dialogVisible.messageView===false){
+          axios.get(`/message/exist/${this.userid}`).then((response)=>{
+            if(response.data.code===1){
+              this.newMessage=response.data.data
+            }
+          })
+        }
 
+      },
       test(a){console.log("test"+a)},
       toCreator(){
         this.$router.push({name:'creator'}, () => {});
@@ -94,12 +116,18 @@ export default {
       handleCloseLog(){
         this.dialogVisible.logView = false
       },
-     /* handleOpenMessageView(){
+     handleOpenMessageView(){
+        //console.log("openmessageview")
         this.dialogVisible.messageView=true
-      },
-      handleCloseMessageView(){
+        this.newMessage=false;
 
       },
+
+      handleCloseMessageView(){
+        this.dialogVisible.messageView=false
+
+      },
+      /*
       handleOpenChatView(){
         this.dialogVisible.chatView=true
       },
@@ -412,17 +440,18 @@ export default {
             <el-button type="primary" size="medium" icon="el-icon-upload2" @click="toCreator" class="action-button">投稿</el-button>
 
             <!-- 通知按钮 -->
-            <el-popover placement="bottom-end" width="350" trigger="click" popper-class="action-popover">
-              <div class="popover-content">
+            <el-popover  placement="bottom-end" width="350" trigger="hover" popper-class="action-popover" @show="handleOpenMessageView" @hide="handleCloseMessageView">
+              <div class="popover-content" v-if="dialogVisible.messageView">
                 <MessageView style="max-height: 400px; overflow-y: auto;"></MessageView>
               </div>
-              <el-badge :value="12" :max="99" class="action-badge" slot="reference"> <!-- 示例 Badge -->
-                <el-button type="text" icon="el-icon-bell" class="action-icon-button" title="通知"></el-button>
+              <el-badge  class="action-badge" slot="reference" :is-dot="newMessage"> <!-- 示例 Badge -->
+                <el-button type="text" icon="el-icon-bell" class="action-icon-button" title="通知" ></el-button>
               </el-badge>
+
             </el-popover>
 
             <!-- 私信按钮 -->
-            <el-popover placement="bottom-end" width="380" trigger="click" popper-class="action-popover">
+            <el-popover placement="bottom-end" width="380" trigger="hover" popper-class="action-popover">
               <div class="popover-content">
                 <ChatView style="max-height: 450px;"></ChatView>
               </div>

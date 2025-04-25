@@ -15,6 +15,8 @@ import from 'ali-oss'*/
 import OSS from '../public/lib/aliyun-upload-sdk-1.5.6/lib/aliyun-oss-sdk-6.17.1.min'
 window.OSS = OSS;
 import '../public/lib/aliyun-upload-sdk-1.5.6/aliyun-upload-sdk-1.5.7.min'*/
+import dayjs from "dayjs";
+
 export default {
     data(){
       return{
@@ -86,11 +88,14 @@ export default {
             console.log(uploadInfo)
             if(!uploadInfo.videoId) {
               let createUrl = "/video/create"
+              const formattedTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
+              let createTime = formattedTime
               let videoInfo = {
                 "userId" : _this.userid,
                 "title" : _this.title,
                 "description" : _this.description,
-                "access" : _this.access
+                "access" : _this.access,
+                "createTime":createTime
               }
 
               axios.post(createUrl,videoInfo).then((response) => {

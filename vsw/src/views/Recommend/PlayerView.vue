@@ -4,15 +4,15 @@
     <div class="swiper-container">
       <div class="swiper-wrapper" ref="mySwiper">
         <div class="swiper-slide" v-for="(item,index) in videoList" :key="index" ref="swiperSlides">
-          <div :ref="`video${index}`" class="video-container">
+          <div :ref="`video${index}`" class="video-container" v-if="item.player!==-1">
             <div>
             </div>
           </div>
-          <div class="video-description">
+          <div class="video-description" v-if="item.player!==-1">
             {{item.title}}
             {{item.description}}
           </div>
-          <div class="control-buttons">
+          <div class="control-buttons" v-if="item.player!==-1" >
 
             <el-button @click="toUserPage(item.userId)">
               <el-avatar :size="60" :src=" item.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
