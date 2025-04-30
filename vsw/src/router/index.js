@@ -23,7 +23,10 @@ const routes = [
   {
     path: '/follow',
     name: 'follow',
-    component: FollowView
+    component: FollowView,
+    meta:{
+      keepAlive:true
+    }
   },
   {
     path: '/search',

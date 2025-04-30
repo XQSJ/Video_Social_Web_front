@@ -116,10 +116,14 @@ export default {
       handleCloseLog(){
         this.dialogVisible.logView = false
       },
+      checkNew(){
+        this.newMessage=false;
+      },
      handleOpenMessageView(){
         //console.log("openmessageview")
         this.dialogVisible.messageView=true
-        this.newMessage=false;
+
+
 
       },
 
@@ -442,7 +446,7 @@ export default {
             <!-- 通知按钮 -->
             <el-popover  placement="bottom-end" width="350" trigger="hover" popper-class="action-popover" @show="handleOpenMessageView" @hide="handleCloseMessageView">
               <div class="popover-content" v-if="dialogVisible.messageView">
-                <MessageView style="max-height: 400px; overflow-y: auto;"></MessageView>
+                <MessageView :existNewMessage="this.newMessage" v-on:checkNew="checkNew" style="max-height: 400px; overflow-y: auto;"></MessageView>
               </div>
               <el-badge  class="action-badge" slot="reference" :is-dot="newMessage"> <!-- 示例 Badge -->
                 <el-button type="text" icon="el-icon-bell" class="action-icon-button" title="通知" ></el-button>

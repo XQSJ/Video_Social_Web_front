@@ -8,16 +8,19 @@
             <div>
             </div>
           </div>
+
+<!--          <videoView :ref="`videoView${index}`" v-if="item.player!==-1"></videoView>-->
           <div class="video-description" v-if="item.player!==-1">
-            {{item.title}}
-            {{item.description}}
+            {{ item.title }}
+            {{ item.description }}
           </div>
-          <div class="control-buttons" v-if="item.player!==-1" >
+          <div class="control-buttons" v-if="item.player!==-1">
 
             <el-button @click="toUserPage(item.userId)">
-              <el-avatar :size="60" :src=" item.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-<!--
-              -->
+              <el-avatar :size="60"
+                         :src=" item.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+              <!--
+                            -->
               <br>
               {{ item.userId }}
             </el-button>
@@ -35,18 +38,18 @@
 
             <el-button @click="handleLike(index)" v-show="item.isLike===false">
               点赞
-              <br>{{item.likeCount}}
+              <br>{{ item.likeCount }}
             </el-button>
             <el-button @click="handleUnLike(index)" v-show="item.isLike===true">
               取消点赞<br>
-              {{item.likeCount}}
+              {{ item.likeCount }}
             </el-button>
             <el-button @click="test(index)">
               评论
             </el-button>
-<!--            <el-button>
-              收藏
-            </el-button>-->
+            <!--            <el-button>
+                          收藏
+                        </el-button>-->
             <el-button @click="test(videoList)">
               更多
             </el-button>
@@ -75,13 +78,15 @@
   height: 100%
 
 }
-.video-description{
+
+.video-description {
   position: absolute;
   z-index: 100; /* 确保高于播放器 */
   bottom: 20px; /* 距离底部20px */
   align-items: flex-start; /* 左对齐 */
   color: white
 }
+
 /* 添加以下样式 */
 .control-buttons {
   position: absolute;
@@ -111,13 +116,17 @@ import Middle from '@/utils/RecommendVIewToPlayerView.js';
 import axios from "axios";
 
 export default {
+
   data() {
     return {
       videoList: [],
       page: 0,
       players: [],
       mySwiper: {},
-      userid:'',
+      userid: '',
+      player_up: null,
+      player_down: null,
+      player_now: null
     }
   },
   watch: {},
@@ -145,24 +154,24 @@ export default {
     if (localStorage.getItem('userInfo') !== null) {
       this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
     }
-     await this.initVideos()
-     await this.initPlayer()
+    await this.initVideos()
+    await this.initPlayer()
 
 
-   },
+  },
   methods: {
- /*   isSelf(userid) {
-      if (localStorage.getItem('userInfo') !== null) {
+    /*   isSelf(userid) {
+         if (localStorage.getItem('userInfo') !== null) {
 
-        if (userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
-          return true
-        } else {
-          return false
-        }
-      } else {
-        return false;
-      }
-    },*/
+           if (userid === JSON.parse(localStorage.getItem('userInfo')).userId) {
+             return true
+           } else {
+             return false
+           }
+         } else {
+           return false;
+         }
+       },*/
     async checkFollow(followid) {
 
       return await axios.get(`/follow/${this.userid}/${followid}`)
@@ -175,71 +184,73 @@ export default {
             return false
           })
     },
-    handleLike(index){
-      if (this.userid!==-1) {
+
+    handleLike(index) {
+      if (this.userid !== -1) {
 
         let v = this.videoList[index]
 
         let like = {
-            userId:this.userid,
-            videoId:v.videoId
+          userId: this.userid,
+          videoId: v.videoId
         }
-        axios.post('/like/likeVideo',like).then(response=>{
+        axios.post('/like/likeVideo', like).then(response => {
           if (response.data.code === 1) {
             //将其设置为已喜欢
             v.isLike = true
             v.likeCount = v.likeCount + 1
             this.$set(this.videoList, index, v);
-          }else{
+          } else {
             this.$message.error(response.data.data);
 
           }
         })
-      }else{
+      } else {
         this.toLoginView();
       }
     },
-    handleUnLike(index){
-      if (this.userid!==-1) {
+    handleUnLike(index) {
+      if (this.userid !== -1) {
 
         let v = this.videoList[index]
         let like = {
-          userId:this.userid,
-          videoId:v.videoId
+          userId: this.userid,
+          videoId: v.videoId
         }
-        axios.post('/like/unlikeVideo',like).then(response=>{
+        axios.post('/like/unlikeVideo', like).then(response => {
           if (response.data.code === 1) {
             //将其设置为不喜欢
             v.isLike = false
             v.likeCount = v.likeCount - 1
             this.$set(this.videoList, index, v);
-          }else{
+          } else {
             this.$message.error(response.data.data);
+
 
           }
         })
-      }else{
+      } else {
         this.toLoginView();
       }
     },
-   handleFollow(index) {
+    handleFollow(index) {
 
       if (localStorage.getItem('userInfo') !== null) {
         let v = this.videoList[index]
         let followid = v.userId
 
-       axios.post(`/follow/${this.userid}/${followid}`)
+        axios.post(`/follow/${this.userid}/${followid}`)
             .then(response => {
               if (response.data.code === 1) {
                 this.$message(this.userid + "已关注" + followid)
 
-                for(let i in this.videoList){
+                for (let i in this.videoList) {
                   let temp = this.videoList[i]
-                  if(temp.userId === followid){
+                  if (temp.userId === followid) {
 
                     this.$delete(this.videoList[i], "isFollow")
                     this.$set(this.videoList[i], "isFollow", true);
-                    let relation= temp.relation+1
+                    let relation = temp.relation + 1
                     this.$delete(this.videoList[i], "relation")
                     this.$set(this.videoList[i], "relation", relation);
 
@@ -257,24 +268,24 @@ export default {
       }
 
     },
-   handleUnFollow(index) {
+    handleUnFollow(index) {
       //console.log(this.videoList[index].isFollow)
 
       if (localStorage.getItem('userInfo') !== null) {
         let v = this.videoList[index]
 
         let followid = v.userId
-      axios.delete(`/follow/${this.userid}/${followid}`)
+        axios.delete(`/follow/${this.userid}/${followid}`)
             .then(response => {
               if (response.data.code === 1) {
                 this.$message(this.userid + "已取消关注" + followid)
 
-                for(let i in this.videoList){
+                for (let i in this.videoList) {
                   let temp = this.videoList[i]
-                  if(temp.userId === followid){
+                  if (temp.userId === followid) {
                     this.$delete(this.videoList[i], "isFollow")
                     this.$set(this.videoList[i], "isFollow", false);
-                    let relation= temp.relation-1
+                    let relation = temp.relation - 1
                     this.$delete(this.videoList[i], "relation")
                     this.$set(this.videoList[i], "relation", relation);
 
@@ -315,8 +326,8 @@ export default {
     test(a) {
       console.log('test', a)
     },
-    async getUrl(videoId) {
-      return await axios.get(`/video/getUrl/${videoId}`).then((response) => {
+    async getUrl(path) {
+      return await axios.get(`/video/getUrl/${path}`).then((response) => {
         if (response.data.code === 1) {
           //console.log('resoponse',response.data.data)
           return response.data.data.videoUrl;
@@ -325,59 +336,53 @@ export default {
         }
       })
     },
-    async getVideo(videoId,userId){
-      return await axios.get(`/video/getVideo/${userId}/${videoId}`).then((response)=>{
-         if(response.data.code === 1) {
-           let video = response.data.data
-           return video
-         }
+    async getVideo(videoId, userId) {
+      return await axios.get(`/video/getVideo/${userId}/${videoId}`).then((response) => {
+        if (response.data.code === 1) {
+          let video = response.data.data
+          return video
+        }
       })
     },
     async setVideo(index, userid) {
       // 等待获取第一个视频的 URL
       let videoTemp = this.videoList[index]
-     // console.log('change',index)
+      // console.log('change',index)
       let v = await this.getVideo(this.videoList[index].videoId, userid);
-      v = {...v,...videoTemp}
-/*      v.player = videoTemp.player
-      v.id = videoTemp.id*/
-      v.isFollow =v.relation !== 0
-     // console.log('getvideo',v)
+      v = {...v, ...videoTemp}
+      /*      v.player = videoTemp.player
+            v.id = videoTemp.id*/
+      v.isFollow = v.relation !== 0
+      // console.log('getvideo',v)
       this.$set(this.videoList, index, v);
+    },
+    newPlayer(index,VideoUrl){
+
+      return new Player({
+        el: this.$refs['video' + index][0],
+        url: VideoUrl,
+        plugins: [],
+        poster: '',
+        width: '100%',
+        height: '100%',
+        autoplay: false,
+        /*      controls: false,  // 禁用默认控制栏
+              disableControls: true  // 禁用默认控制按钮*/
+      });
     },
     async initPlayer() {
       let that = this;
 
-
-        // 等待获取第一个视频的 URL
-        await that.setVideo(0, this.userid)
-        await that.setVideo(1, this.userid)
-
+      // 等待获取第一个视频的 URL
+      await that.setVideo(0, this.userid)
       let firstVideoUrl = await this.getUrl(that.videoList[0].path);
-      let secondVideoUrl = await this.getUrl(that.videoList[1].path);
+      this.player_now = this.newPlayer(0,firstVideoUrl);
+      if (this.videoList.length >= 2) { //只有当视频列表长度大于等于2时
+        await that.setVideo(1, this.userid)
+        let secondVideoUrl = await this.getUrl(that.videoList[1].path);
+        this.player_down = this.newPlayer(1,secondVideoUrl);
+      }
 
-      this.player_now = new Player({
-        el: this.$refs['video' + 0][0],
-        url: firstVideoUrl,
-        plugins: [],
-        poster: '',
-        width: '100%',
-        height: '100%',
-        autoplay: false,
-        /*      controls: false,  // 禁用默认控制栏
-              disableControls: true  // 禁用默认控制按钮*/
-      });
-      this.player_down = new Player({
-        el: this.$refs['video' + 1][0],
-        url: secondVideoUrl,
-        plugins: [],
-        poster: '',
-        width: '100%',
-        height: '100%',
-        autoplay: false,
-        /*      controls: false,  // 禁用默认控制栏
-              disableControls: true  // 禁用默认控制按钮*/
-      });
       this.mySwiper = new Swiper('.swiper-container', { //swiper配置
         observeParents: true,
         observer: true,
@@ -404,104 +409,77 @@ export default {
              },*/
           slideChangeTransitionEnd: async function () {
 
-            let now = this.activeIndex
-            let prev = this.previousIndex
-            let next
+            // 确保 videoList 已加载，并且至少有两个元素
+            if (that.videoList.length === 1) {
+              console.warn('视频列表至少需要两个视频');
 
-            /*            // 确保 videoList 已加载，并且至少有两个元素
-                        if (that.videoList.length < 2) {
-                          console.warn('视频列表至少需要两个视频');
-                          return; // 如果视频数量不足，直接返回
-                        }*/
-            //将目标设置为播放状态
-            that.videoList[now].player = 1
-            that.page = now
-            if (now > prev) {
-              //向下划
-
-
-              next = now + 1;
-              if (next + 2 >= that.videoList.length) {  //若视频数量不够，则拉取新视频
-                that.addNewVideos()
-                that.mySwiper.update()
-
-              }
-
-              that.videoList[prev].player = 0
-              if (prev - 1 >= 0) {    //若存在上上个组件
-                that.videoList[prev - 1].player = -1
-              }
-              that.videoList[next].player = 0
-              await that.setVideo(next, that.userid)
-
-              if (typeof (that.player_up) !== 'undefined') {
-                that.player_up.destroy()
-              }
-              that.player_up = that.player_now
-              that.player_up.pause()
-              that.player_now = that.player_down
-              that.player_now.play()
-              let newVideoUrl     //let newVideoUrl = await that.getUrl(that.videoList[next].videoId);
-              // let url = 'https://stream7.iqilu.com/10339/upload_transcode/202002/18/20200218093206z8V1JuPlpe.mp4'
-              newVideoUrl = await that.getUrl(that.videoList[next].path)
-              that.player_down = new Player({
-                el: that.$refs['video' + next][0],
-                url: newVideoUrl,
-                plugins: [],
-                poster: '',
-                width: '100%',
-                height: '100%',
-                autoplay: false,
-                controls: false,  // 禁用默认控制栏
-                disableControls: true  // 禁用默认控制按钮
-              });
-
-            } else if (now < prev) {
-              //向上划
-
-              next = now - 1;
-
-              /*              // 检查 next 是否在 videoList 的范围内
-                            if (next < 0) {
-                              console.warn('没有上一个视频可播放');
-                              return; // 如果没有上一个视频，直接返回
-                            }*/
-              that.videoList[prev].player = 0;
-
-
-              that.videoList[prev + 1].player = -1;
-              if (next >= 0) {
-                that.videoList[next].player = 0;
-                await that.setVideo(next, that.userid)
+            } else {
+              let now = this.activeIndex
+              let prev = this.previousIndex
+              let next
+              //将目标设置为播放状态
+              that.videoList[now].player = 1
+              that.page = now
+              if (now > prev) {
+                //向下划
+                next = now + 1;
+                if (next + 2 >= that.videoList.length) {  //若视频数量不够，则拉取新视频
+                  that.addNewVideos()
+                  that.mySwiper.update()
+                }
+                that.videoList[prev].player = 0
+                if (prev - 1 >= 0) {    //若存在上上个组件
+                  that.videoList[prev - 1].player = -1
+                }
+                if (that.player_up !== null) {
+                  that.player_up.destroy()
+                }
+                that.player_up = that.player_now
+                that.player_up.pause()
+                that.player_now = that.player_down
+                that.player_now.play()
+                if (next === that.videoList.length) {  //若是最后一个视频
+                  console.log("最后一个视频")
+                  that.player_down = null;
+                } else {
+                  that.videoList[next].player = 0
+                  await that.setVideo(next, that.userid)
+                  let newVideoUrl = await that.getUrl(that.videoList[next].path)
+                  that.player_down = that.newPlayer(next,newVideoUrl);
+                }
+              } else if (now < prev) {
+                //向上划
+                next = now - 1;
+                /*              // 检查 next 是否在 videoList 的范围内
+                              if (next < 0) {
+                                console.warn('没有上一个视频可播放');
+                                return; // 如果没有上一个视频，直接返回
+                              }*/
+                that.videoList[prev].player = 0;
+                if (prev + 1 < that.videoList.length) { //若存在上上个组件
+                  that.videoList[prev + 1].player = -1;
+                }
+                if (that.player_down !== null) {
+                  that.player_down.destroy()
+                }
+                that.player_down = that.player_now
+                that.player_down.pause()
+                that.player_now = that.player_up
+                that.player_now.play()
+                if (next >= 0) {
+                  that.videoList[next].player = 0;
+                  await that.setVideo(next, that.userid)
+                  let newVideoUrl = await that.getUrl(that.videoList[next].path)
+                  that.player_up = that.newPlayer(next,newVideoUrl)
+                } else {
+                  that.player_up = null;
+                }
               }
 
 
-              if (typeof (that.player_down) !== 'undefined') {
-                that.player_down.destroy()
-              }
-              that.player_down = that.player_now
-              that.player_down.pause()
-              that.player_now = that.player_up
-              that.player_now.play()
 
-              if (next >= 0) {
-                let newVideoUrl
-                newVideoUrl = await that.getUrl(that.videoList[next].path)
-                that.player_up = new Player({
-                  el: that.$refs['video' + next][0],
-                  url: newVideoUrl,
-                  plugins: [],
-                  poster: '',
-                  width: '100%',
-                  height: '100%',
-                  autoplay: false,
-                  /*      controls: false,  // 禁用默认控制栏
-                        disableControls: true  // 禁用默认控制按钮*/
-                })
-              }
 
             }
-
 
             // 监听播放器事件
             // this.setupPlayerEvents(this.player_now);
@@ -543,8 +521,14 @@ export default {
         Middle.$emit('getInitVideos', (result) => {
           try {
             if (result && Array.isArray(result)) {
-
-              this.videoList=result
+              let videos = result
+              for (let i = 0; i < videos.length; i++) {
+                videos[i].player = -1
+                videos[i].id = i;
+              }
+              videos[0].player = 1
+              videos[1].player = 0
+              this.videoList = videos
               console.log("PlayerView videoList updated:", this.videoList);
               resolve(result); // 成功时解决 Promise
             } else {
@@ -565,10 +549,16 @@ export default {
         Middle.$emit('getNewVideo', this.videoList.length, (result) => {
           try {
             if (result && Array.isArray(result)) {
-
-              this.videoList= this.videoList.concat(result);
+              let videos = result
+              if (videos.length !== 0) {
+                for (let i = 0; i < videos.length; i++) {
+                  videos[i].player = -1
+                  videos[i].id = i + length;
+                }
+                this.videoList = this.videoList.concat(result);
+              }
               //this.videoList.push(result)
-              console.log("PlayerView videoList updated:", this.videoList);
+              //console.log("PlayerView videoList updated:", this.videoList);
               resolve(result); // 成功时解决 Promise
             } else {
               console.error("Received invalid data for videoList:", result);

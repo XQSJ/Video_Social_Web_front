@@ -4,15 +4,18 @@ import toLogin from '@/utils/toLogin'
 import Follow from '@/utils/follow'
 import Player from "xgplayer";
 import handleMainMenu from "@/utils/handleMainMenu";
+import UserVideoDialog from "@/views/Dialog/UserVideoDialog.vue";
+
 export default {
+  components: {UserVideoDialog},
   data() {
     return {
-      source:null,
-      imageUpList:[],
+      source: null,
+      imageUpList: [],
       player: '',
       isSelf: false,
       searchVideoLoading: true,
-      upAvatarLoading:false,
+      upAvatarLoading: false,
       isFollower: 0,
       userid: '',
       userinfo: {
@@ -36,39 +39,26 @@ export default {
         fans: false,
         editIntro: false,
         video: false,
-        videoEdit :false
+        videoEdit: false
       },
-      imageUploader:null,
+      imageUploader: null,
       input_searchUser: '',
-      avatarInfo : {
-
-      }
+      avatarInfo: {}
     }
   },
   beforeMount() {
 
-/*    if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
+    /*    if (localStorage.getItem('userInfo') !== null) { //若为自己则重定向到self
 
-      if (this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId) {
+          if (this.$route.query.id === JSON.parse(localStorage.getItem('userInfo')).userId) {
 
-        this.toUserView('self')
-      }
-    }*/
+            this.toUserView('self')
+          }
+        }*/
   },
   mounted() {
 
     this.initInfo()
-    //this.initAcsClintImage()
-    //this.$refs.dialog.rendered = true;
-    /*    this.player = new Player({
-          id: 'video',
-          url: '',
-          plugins: [],
-          poster: '',
-          width: '100%',
-          height: '100%',
-          autoplay: false,
-        })*/
 
   },
   beforeCreate() {
@@ -94,16 +84,16 @@ export default {
 
   },
   methods: {
-    uploadImage(file){
+    uploadImage(file) {
       console.log("上传文件")
 
 
     },
-    initAcsClintImage(){
+    initAcsClintImage() {
       let _this = this;
       let imageUploader = new AliyunUpload.Vod({
-        userId:1229526364672621,
-        region:"cn-shanghai",
+        userId: 1229526364672621,
+        region: "cn-shanghai",
         // 分片大小默认1 MB，不能小于100 KB（100*1024）
         partSize: 1048576,
         // 并行上传分片个数，默认5
@@ -114,34 +104,34 @@ export default {
         retryDuration: 2,
         // 添加文件成功
         addFileSuccess: function (uploadInfo) {
-          console.log("addFileSuccess: " )
+          console.log("addFileSuccess: ")
           console.log(uploadInfo)
 
         },
         // 开始上传
-        'onUploadstarted':  function(uploadInfo) {
+        'onUploadstarted': function (uploadInfo) {
           console.log('startupimage:')
           console.log(uploadInfo)
-          if(!uploadInfo.imageId){
+          if (!uploadInfo.imageId) {
 
             let createUrl = "/image/create"
             let imageInfo = {
-              "title" :  '' ,
-              "type" : 'cover'
+              "title": '',
+              "type": 'cover'
             }
 
-            axios.post(createUrl,imageInfo).then((response)=>{
+            axios.post(createUrl, imageInfo).then((response) => {
               console.log(response)
-              if(response.data.code === 1){
+              if (response.data.code === 1) {
                 let data = response.data.data
-                console.log("uploadInfo",uploadInfo);
+                console.log("uploadInfo", uploadInfo);
                 console.log(data)
                 imageUploader.setUploadAuthAndAddress(uploadInfo, data.uploadAuth, data.uploadAddress, data.imageId);
-                _this.avatarInfo=null;
+                _this.avatarInfo = null;
                 _this.avatarInfo = data;
               }
             })
-          }else{
+          } else {
 
           }
 
@@ -149,14 +139,14 @@ export default {
         },
         // 文件上传成功
         'onUploadSucceed': function (uploadInfo) {
-          console.log(uploadInfo.file.name+'上传成功')
+          console.log(uploadInfo.file.name + '上传成功')
 
           _this.editForm.profile = _this.avatarInfo.imageURL;
 
         },
         // 文件上传失败
         'onUploadFailed': function (uploadInfo, code, message) {
-          console.log(uploadInfo.file.name+'上传失败')
+          console.log(uploadInfo.file.name + '上传失败')
         },
         // 文件上传进度，单位：字节
         'onUploadProgress': function (uploadInfo, totalSize, loadedPercent) {
@@ -165,70 +155,61 @@ export default {
         // 上传凭证或STS token超时
         'onUploadTokenExpired': function (uploadInfo) {
           console.log("上传凭证或STS token超时")
-         /* let refreshUrl = `/video/refresh/${uploadInfo.videoId}`
-          axios.get(refreshUrl).then((response) => {
-            if (response.data.code === 1) {
-              let data = response.data.data
-              let uploadAuth = data.uploadAuth
-              let uploadAddress = data.uploadAddress
-              let videoId = data.videoId
-              uploader.resumeUploadWithAuth(uploadAuth)
-            }
-          })*/
+          /* let refreshUrl = `/video/refresh/${uploadInfo.videoId}`
+           axios.get(refreshUrl).then((response) => {
+             if (response.data.code === 1) {
+               let data = response.data.data
+               let uploadAuth = data.uploadAuth
+               let uploadAddress = data.uploadAddress
+               let videoId = data.videoId
+               uploader.resumeUploadWithAuth(uploadAuth)
+             }
+           })*/
         },
         // 全部文件上传结束
-        'onUploadEnd':function(uploadInfo){
+        'onUploadEnd': function (uploadInfo) {
           console.log("onUploadEnd: uploaded all the files")
           _this.upAvatarLoading = false
-         // _this.editForm.profile = uploadInfo.
-         // _this.toUserView('self')
+          // _this.editForm.profile = uploadInfo.
+          // _this.toUserView('self')
         }
 
       })
       return imageUploader
     },
-    test(a){
+    test(a) {
       console.log(a)
     },
-    handleChangeImage(file,fileList){
-      this.upAvatarLoading =  true
-      this.imageUpList=[];
+    handleChangeImage(file, fileList) {
+      this.upAvatarLoading = true
+      this.imageUpList = [];
       this.imageUpList = fileList;
     },
-    reUploadImage(){
+    reUploadImage() {
       //之前的文件删除
       //this.imageUpList=[];
       //初始化上传器
-      this.imageUploader =  this.initAcsClintImage()
-      this.imageUploader.addFile(this.imageUpList[0].raw,null,null,null)
+      this.imageUploader = this.initAcsClintImage()
+      this.imageUploader.addFile(this.imageUpList[0].raw, null, null, null)
       this.imageUploader.startUpload()
-     // this.imageUploader.startUpload()
+      // this.imageUploader.startUpload()
     },
-    handleCloseVideoEdit(){
+    handleCloseVideoEdit() {
       this.dialogVisible.videoEdit = false
     },
-    handleOpenVideoEdit(){
+    handleOpenVideoEdit() {
 
     },
-    showVideo(item, index) {
-      this.dialogVisible.video = true
+    showVideo(item) {
+      this.$refs.videoDialog.showDialog(item.videoId)
 
-
-      this.player = new Player({
-        id: 'video',
-        url: '',
-        plugins: [],
-        poster: '',
-        width: '100%',
-        height: '100%',
-        autoplay: false,
-      })
+      //console.log("item:", item)
 
 
     },
     closeVideo() {
-      this.player.destroy()
-      this.dialogVisible.video = false
+      /*    this.player.destroy()
+          this.dialogVisible.video = false*/
     },
     toUser(userid) {
       this.handleCloseFans()
@@ -303,14 +284,14 @@ export default {
         this.setinfo(this.userid)
       }
 
-      if(this.isSelf===false)
+      if (this.isSelf === false)
         handleMainMenu.$emit('cancel')
       else
         handleMainMenu.$emit('user')
 
     },
     handleCloseVideos() {
-      this.dialogVisible.video = false
+      // this.dialogVisible.video = false
     },
     handleCloseFans() {
       this.dialogVisible.fans = false
@@ -400,7 +381,7 @@ export default {
       await this.searchUserVideo('create', userId)
       //根据id查询user基本信息
       let user = await this.getUser(userId);
-      if(user!==null){
+      if (user !== null) {
         if (user.avatar !== null) {
           this.avatarInfo.imageId = user.avatar
 
@@ -415,10 +396,9 @@ export default {
         this.userinfo.introduction = user.userInfo
         this.userinfo.fansCount = user.fans
         this.userinfo.subscribeCount = user.subscriber
-      }else{
+      } else {
 
       }
-
 
 
       if (this.isSelf === false) {
@@ -427,14 +407,14 @@ export default {
 
 
     },
-    handleCancel(){
+    handleCancel() {
       this.source.cancel('取消请求')
-      this.searchVideoLoading =false
+      this.searchVideoLoading = false
 
     },
     searchUserVideo(option, userId) {
       let _this = this;
-      if(this.source!==null){
+      if (this.source !== null) {
         this.handleCancel()
       }
       this.aboutVideos = {}
@@ -443,32 +423,32 @@ export default {
       //console.log('执行搜索' + option)
       const source = axios.CancelToken.source()
       this.source = source
-      let url ;
+      let url;
       let method = '';
       //执行搜索
-      switch (option){
-        case 'create':{
+      switch (option) {
+        case 'create': {
           method = 'getSelf'
           break;
         }
-        case 'like':{
+        case 'like': {
           method = 'getLikeVideos'
           break;
         }
-        default:{
+        default: {
 
         }
       }
-      if(method!==''){
-        url = '/video/'+method+'/'+userId
+      if (method !== '') {
+        url = '/video/' + method + '/' + userId
 
-        axios.get(url,{
-          cancelToken:source.token
+        axios.get(url, {
+          cancelToken: source.token
         }).then(async (response) => {
           if (response.data.code === 1) {
             let videos = response.data.data
             let delay
-            if(videos.length===0)
+            if (videos.length === 0)
               delay = 500
             else
               delay = 0
@@ -479,14 +459,13 @@ export default {
 
 
           }
-          this.source=null;
+          this.source = null;
         }).catch(error => {
 
         })
-      }else{
+      } else {
         this.searchVideoLoading = false
       }
-
 
 
     },
@@ -740,7 +719,8 @@ export default {
         <!-- 头像列 -->
         <el-col :xs="24" :sm="4" :md="3" class="avatar-col">
           <!-- 使用 el-avatar 显示头像 -->
-          <el-avatar :size="80" :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
+          <el-avatar :size="80"
+                     :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"/>
           <!-- 原始模板: <el-col :span="4">头像</el-col> -->
         </el-col>
 
@@ -751,7 +731,9 @@ export default {
           <!-- 用户ID -->
           <p class="user-id">ID: {{ userid || 'N/A' }}</p>
           <!-- 用户简介 -->
-          <p class="user-intro" :title="userinfo.introduction">{{ userinfo.introduction || '这位用户很神秘，什么也没留下...' }}</p>
+          <p class="user-intro" :title="userinfo.introduction">{{
+              userinfo.introduction || '这位用户很神秘，什么也没留下...'
+            }}</p>
           <!-- 关注/粉丝统计 -->
           <div class="user-stats">
             <el-button type="text" @click="handleOpenFans('关注')">
@@ -772,13 +754,20 @@ export default {
         <!-- 操作按钮列 -->
         <el-col :xs="24" :sm="6" :md="6" class="action-col">
           <!-- 如果是用户本人，显示编辑资料按钮 -->
-          <el-button v-if="isSelf" type="primary" plain round icon="el-icon-edit" @click="handleOpenEdit">编辑资料</el-button>
+          <el-button v-if="isSelf" type="primary" plain round icon="el-icon-edit" @click="handleOpenEdit">编辑资料
+          </el-button>
           <!-- 如果不是用户本人，显示关注/私信按钮 -->
           <div v-else>
             <!-- 根据 isFollower 状态显示不同关注按钮 -->
-            <el-button v-if="isFollower === 0" type="primary" round icon="el-icon-plus" @click="handleFollow(userid)">关注</el-button>
-            <el-button v-if="isFollower === 1" type="info" plain round icon="el-icon-check" @click="handleUnFollow(userid)">已关注</el-button>
-            <el-button v-if="isFollower === 2" type="success" plain round icon="el-icon-refresh" @click="handleUnFollow(userid)">互相关注</el-button>
+            <el-button v-if="isFollower === 0" type="primary" round icon="el-icon-plus" @click="handleFollow(userid)">
+              关注
+            </el-button>
+            <el-button v-if="isFollower === 1" type="info" plain round icon="el-icon-check"
+                       @click="handleUnFollow(userid)">已关注
+            </el-button>
+            <el-button v-if="isFollower === 2" type="success" plain round icon="el-icon-refresh"
+                       @click="handleUnFollow(userid)">互相关注
+            </el-button>
             <!-- 可以添加私信按钮 -->
             <!-- <el-button type="info" round icon="el-icon-message" style="margin-left: 10px;">私信</el-button> -->
           </div>
@@ -788,17 +777,27 @@ export default {
         </el-col>
       </el-row>
     </el-card>
-<!--    <el-button @click="test(isSelf)">test</el-button>-->
+    <!--    <el-button @click="test(isSelf)">test</el-button>-->
     <!-- 视频内容区域 -->
     <el-card class="content-card" shadow="never">
       <!-- 视频分类 Tab 头 -->
       <div class="tabs-header">
         <!-- 点击按钮调用 searchUserVideo 方法，传入分类和用户ID -->
-        <el-button :type="option === 'create' ? 'primary' : 'default'" plain @click="searchUserVideo('create', userid)">作品</el-button>
-        <el-button :type="option === 'like' ? 'primary' : 'default'" plain @click="searchUserVideo('like', userid)">喜欢</el-button>
-        <el-button :type="option === 'favorite' ? 'primary' : 'default'" plain @click="searchUserVideo('favorite', userid)">收藏</el-button>
-        <el-button v-show="isSelf" :type="option === 'history' ? 'primary' : 'default'" plain @click="searchUserVideo('history', userid)">观看历史</el-button>
-        <el-button v-show="isSelf" :type="option === 'later' ? 'primary' : 'default'" plain @click="searchUserVideo('later', userid)">稍后再看</el-button>
+        <el-button :type="option === 'create' ? 'primary' : 'default'" plain @click="searchUserVideo('create', userid)">
+          作品
+        </el-button>
+        <el-button :type="option === 'like' ? 'primary' : 'default'" plain @click="searchUserVideo('like', userid)">
+          喜欢
+        </el-button>
+        <el-button :type="option === 'favorite' ? 'primary' : 'default'" plain
+                   @click="searchUserVideo('favorite', userid)">收藏
+        </el-button>
+        <el-button v-show="isSelf" :type="option === 'history' ? 'primary' : 'default'" plain
+                   @click="searchUserVideo('history', userid)">观看历史
+        </el-button>
+        <el-button v-show="isSelf" :type="option === 'later' ? 'primary' : 'default'" plain
+                   @click="searchUserVideo('later', userid)">稍后再看
+        </el-button>
         <!-- 原始模板对应内容:
         <el-header class="about-video-header"> <el-button @click="searchUserVideo('create',userid)">作品</el-button> ... </el-header>
         -->
@@ -807,8 +806,9 @@ export default {
       <!-- 视频网格显示区域 -->
       <div class="video-grid-wrapper" v-loading="searchVideoLoading" element-loading-text="加载视频列表中...">
         <!-- 如果没在加载且视频列表为空，显示提示 -->
-        <el-empty v-if="!searchVideoLoading && (!aboutVideos || (Array.isArray(aboutVideos) && aboutVideos.length === 0) || (typeof aboutVideos === 'object' && Object.keys(aboutVideos).length === 0))"
-                  :description="`${option === 'create' ? '还没有发布过作品哦' : '列表为空'}`">
+        <el-empty
+            v-if="!searchVideoLoading && (!aboutVideos || (Array.isArray(aboutVideos) && aboutVideos.length === 0) || (typeof aboutVideos === 'object' && Object.keys(aboutVideos).length === 0))"
+            :description="`${option === 'create' ? '还没有发布过作品哦' : '列表为空'}`">
         </el-empty>
         <!-- 否则，显示视频网格 -->
         <div v-else class="video-grid">
@@ -863,41 +863,56 @@ export default {
 
     <!-- 视频播放弹窗 -->
     <!-- 使用 el-dialog 实现视频播放弹窗 -->
-    <!-- 原始模板是 <div v-show="this.dialogVisible.video">...</div> -->
-
-<!--      <div v-show="this.dialogVisible.video" >-->
-<!--        <el-button @click="closeVideo">关闭</el-button>-->
-        <div id="video" class="video-container" style="width: 100%;height: 500px" v-show="this.dialogVisible.video"/>
 
 
+    <!--
+        <el-dialog :visible.sync="dialogVisible.video" ref="dialog" width="70%"
+                   top="5vh">
 
-<!--      </div>-->
+          &lt;!&ndash; 设置标题 &ndash;&gt;
+          <span slot="title" class="dialog-title">{{
+              /* currentVideo ? currentVideo.title : */
+              '视频播放'
+            }}</span>
+          &lt;!&ndash; 播放器容器 &ndash;&gt;
+          <div :ref="'video'" class="video-container" style="width: 100%;height: 500px" v-show="this.dialogVisible.video"/>
+          &lt;!&ndash; 可以添加加载提示 &ndash;&gt;
+          <div v-if="!player" class="player-loading-placeholder">
+            <i class="el-icon-loading"></i> 视频加载中...
+          </div>
+        </el-dialog>
+    -->
+    <user-video-dialog ref="videoDialog"></user-video-dialog>
 
 
-    <el-dialog
-        :visible.sync="dialogVisible.video"
-        :before-close="handleCloseVideos"
-        custom-class="video-player-dialog"
-        width="70%"
-        top="5vh"
-        :destroy-on-close="true"
-        append-to-body>
-      <!-- 设置标题 -->
-      <span slot="title" class="dialog-title">{{ /* currentVideo ? currentVideo.title : */ '视频播放' }}</span>
-      <!-- 播放器容器 -->
-      <!-- ** ID 必须与 showVideo 方法中 Player 初始化的 id 匹配！** -->
-      <div id="video" class="video-player-container">
-        <!-- 播放器将挂载到这里 -->
-        <!-- 可以添加加载提示 -->
-        <div v-if="!player" class="player-loading-placeholder">
-          <i class="el-icon-loading"></i> 视频加载中...
-        </div>
-      </div>
-      <!-- 原始模板对应内容: <div v-show="this.dialogVisible.video"> <el-button @click="closeVideo">关闭</el-button> <div id="video">...</div> ... </div> -->
-    </el-dialog>
+    <!--
+        <el-dialog
+            ref="dialog"
+            :visible.sync="dialogVisible.video"
+            :before-close="handleCloseVideos"
+            custom-class="video-player-dialog"
+            width="70%"
+            top="5vh"
+            :destroy-on-close="true"
+            append-to-body>
+          &lt;!&ndash; 设置标题 &ndash;&gt;
+          <span slot="title" class="dialog-title">{{ /* currentVideo ? currentVideo.title : */ '视频播放' }}</span>
+          &lt;!&ndash; 播放器容器 &ndash;&gt;
+          &lt;!&ndash; ** ID 必须与 showVideo 方法中 Player 初始化的 id 匹配！** &ndash;&gt;
+          <div :ref="'video'" class="video-container">
+            &lt;!&ndash; 播放器将挂载到这里 &ndash;&gt;
+            &lt;!&ndash; 可以添加加载提示 &ndash;&gt;
+    &lt;!&ndash;        <div v-if="!player" class="player-loading-placeholder">
+              <i class="el-icon-loading"></i> 视频加载中...
+            </div>&ndash;&gt;
+          </div>
+          &lt;!&ndash; 原始模板对应内容: <div v-show="this.dialogVisible.video"> <el-button @click="closeVideo">关闭</el-button> <div id="video">...</div> ... </div> &ndash;&gt;
+        </el-dialog>
+    -->
 
     <!-- 编辑视频信息弹窗 -->
-    <el-dialog title="编辑视频信息" :visible.sync="dialogVisible.videoEdit" :before-close="handleCloseVideoEdit" width="50%" append-to-body>
+    <el-dialog title="编辑视频信息" :visible.sync="dialogVisible.videoEdit" :before-close="handleCloseVideoEdit"
+               width="50%" append-to-body>
       <!-- 编辑表单 -->
       <p>在这里放置编辑视频信息的表单元素...</p>
       <p>例如：标题、简介、封面等</p>
@@ -909,7 +924,8 @@ export default {
     </el-dialog>
 
     <!-- 粉丝/关注列表弹窗 -->
-    <el-dialog :title="'用户列表'" :visible.sync="dialogVisible.fans" :before-close="handleCloseFans" width="450px" append-to-body>
+    <el-dialog :title="'用户列表'" :visible.sync="dialogVisible.fans" :before-close="handleCloseFans" width="450px"
+               append-to-body>
       <!-- 弹窗顶部操作 -->
       <div class="fans-dialog-header">
         <el-button-group style="margin-bottom: 15px;">
@@ -929,15 +945,19 @@ export default {
       </div>
       <!-- 用户列表容器 -->
       <div class="user-list-container" v-loading="searchVideoLoading.fansList"> <!-- 假设有 loading.fansList 状态 -->
-        <el-empty v-if="!searchVideoLoading.fansList && (!userList || (Array.isArray(userList) && userList.length === 0) || (typeof userList === 'object' && Object.keys(userList).length === 0))" description="列表为空"></el-empty>
+        <el-empty
+            v-if="!searchVideoLoading.fansList && (!userList || (Array.isArray(userList) && userList.length === 0) || (typeof userList === 'object' && Object.keys(userList).length === 0))"
+            description="列表为空"></el-empty>
         <!-- 过滤显示用户列表 -->
         <!-- 注意：原始脚本 userList 初始化为 {}，需要确保获取数据后变成数组才能 filter -->
         <div v-else class="user-list">
-          <div v-for="(user) in (Array.isArray(userList) ? userList.filter(u => String(u.userName || '').toLowerCase().includes(input_searchUser.toLowerCase()) || String(u.userId || '').includes(input_searchUser)) : [])"
-               :key="user.userId"
-               class="user-list-item"
-               @click="toUser(user.userId)">
-            <el-avatar :size="40" :src="user.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+          <div
+              v-for="(user) in (Array.isArray(userList) ? userList.filter(u => String(u.userName || '').toLowerCase().includes(input_searchUser.toLowerCase()) || String(u.userId || '').includes(input_searchUser)) : [])"
+              :key="user.userId"
+              class="user-list-item"
+              @click="toUser(user.userId)">
+            <el-avatar :size="40"
+                       :src="user.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
             <div class="user-list-info">
               <span class="user-list-name">{{ user.userName }}</span>
               <!-- 原始模板显示 userInfo，这里改为显示 ID 可能更常用 -->
@@ -955,38 +975,42 @@ export default {
     </el-dialog>
 
     <!-- 编辑个人资料弹窗 -->
-    <el-dialog title="编辑个人资料"  :visible.sync="dialogVisible.editIntro" :before-close="handleCloseEdit" width="500px" :close-on-click-modal="false" append-to-body v-loading="upAvatarLoading" >
+    <el-dialog title="编辑个人资料" :visible.sync="dialogVisible.editIntro" :before-close="handleCloseEdit"
+               width="500px" :close-on-click-modal="false" append-to-body v-loading="upAvatarLoading">
 
-        <!-- 使用 el-form 组织编辑表单 -->
-        <el-form :model="editForm" label-width="80px" class="edit-profile-form" >
-          <el-form-item label="头像">
-            <!-- 头像显示与上传触发 -->
-            <el-avatar :size="60" :src="editForm.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-            <!-- 实际头像上传需要 <el-upload> 组件 -->
-            <el-upload
-                class="video-uploader"
-                :limit="1"
-                :multiple="false"
-                :file-list="imageUpList"
-                :on-change="handleChangeImage"
-                :http-request=" reUploadImage"
-                :show-file-list="false">
-              <el-button size="small" style="margin-left: 10px;" >更换头像</el-button>
-            </el-upload>
+      <!-- 使用 el-form 组织编辑表单 -->
+      <el-form :model="editForm" label-width="80px" class="edit-profile-form">
+        <el-form-item label="头像">
+          <!-- 头像显示与上传触发 -->
+          <el-avatar :size="60"
+                     :src="editForm.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+          <!-- 实际头像上传需要 <el-upload> 组件 -->
+          <el-upload
+              class="video-uploader"
+              :limit="1"
+              :multiple="false"
+              :file-list="imageUpList"
+              :on-change="handleChangeImage"
+              :http-request=" reUploadImage"
+              :show-file-list="false">
+            <el-button size="small" style="margin-left: 10px;">更换头像</el-button>
+          </el-upload>
 
-            <!-- <el-upload action="..." :show-file-list="false" ... style="display:none" ref="avatarUploader"></el-upload> -->
-          </el-form-item>
-          <el-form-item label="昵称">
-            <el-input v-model="editForm.name" placeholder="请输入昵称" maxlength="20" show-word-limit></el-input>
-          </el-form-item>
-          <el-form-item label="简介">
-            <el-input type="textarea" v-model="editForm.introduction" placeholder="介绍一下你自己吧" rows="3" maxlength="100" show-word-limit></el-input>
-          </el-form-item>
-        </el-form>
-        <!-- 原始模板是 <el-row> 堆叠 -->
-        <span slot="footer" class="dialog-footer" >
+          <!-- <el-upload action="..." :show-file-list="false" ... style="display:none" ref="avatarUploader"></el-upload> -->
+        </el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model="editForm.name" placeholder="请输入昵称" maxlength="20" show-word-limit></el-input>
+        </el-form-item>
+        <el-form-item label="简介">
+          <el-input type="textarea" v-model="editForm.introduction" placeholder="介绍一下你自己吧" rows="3"
+                    maxlength="100" show-word-limit></el-input>
+        </el-form-item>
+      </el-form>
+      <!-- 原始模板是 <el-row> 堆叠 -->
+      <span slot="footer" class="dialog-footer">
         <el-button @click="handleCloseEdit">取 消</el-button>
-        <el-button type="primary" @click="editUserInfo" :loading="searchVideoLoading.editing">保 存</el-button> <!-- 假设有 loading.editing 状态 -->
+        <el-button type="primary" @click="editUserInfo" :loading="searchVideoLoading.editing">保 存</el-button>
+        <!-- 假设有 loading.editing 状态 -->
         </span>
 
 
@@ -1060,6 +1084,7 @@ export default {
     color: #606266;
     font-size: 14px;
     padding: 0 5px;
+
     strong { // 数字加粗加大
       font-size: 17px;
       font-weight: 600;
@@ -1067,6 +1092,7 @@ export default {
       margin-right: 3px;
     }
   }
+
   .el-divider--vertical {
     margin: 0 12px; // 分隔线左右间距
   }
@@ -1079,13 +1105,17 @@ export default {
     text-align: center;
     margin-top: 15px;
   }
+
   .el-button { // 按钮间距
     margin-left: 10px;
+
     &:first-child {
       margin-left: 0;
     }
   }
+
   // 调整按钮大小和内边距
+
   .el-button--round {
     padding: 8px 18px;
   }
@@ -1096,16 +1126,19 @@ export default {
   padding-bottom: 15px; // 底部留白
   border-bottom: 1px solid #e4e7ed; // 分割线
   margin-bottom: 20px; // 与下方网格间距
+
   .el-button {
     margin-right: 8px; // 按钮间距
     // 调整按钮样式，plain 效果更好
     // padding: 8px 15px; // 调整内边距
   }
+
   .el-button--primary.is-plain { // 主题色 plain 按钮样式调整
     color: #409EFF;
     background: #ecf5ff;
     border-color: #b3d8ff;
   }
+
   .el-button--primary.is-plain:hover {
     background: #409EFF;
     border-color: #409EFF;
@@ -1145,6 +1178,7 @@ export default {
   &:hover {
     transform: translateY(-4px); // 轻微上移
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1); // 阴影加深
+
     .edit-video-btn { // 悬停时显示编辑按钮
       opacity: 1;
       visibility: visible;
@@ -1179,10 +1213,12 @@ export default {
   justify-content: center;
   align-items: center;
   color: #c0c4cc;
+
   i {
     font-size: 36px;
     margin-bottom: 6px;
   }
+
   span {
     font-size: 13px;
   }
@@ -1213,10 +1249,12 @@ export default {
   color: #909399;
   display: flex;
   align-items: center;
+
   i { // 图标右边距
     margin-right: 4px;
     font-size: 14px; // 图标大小
   }
+
   span + span { // 同级 span 之间加间距
     margin-left: 12px;
   }
@@ -1237,32 +1275,37 @@ export default {
   border-bottom: 1px solid #e8eaec; // 弹窗头部加分割线
   padding: 14px 20px;
 }
+
 .el-dialog__title {
   font-size: 16px; // 弹窗标题字号
   font-weight: 500;
 }
+
 .el-dialog__body {
   padding: 20px; // 弹窗内容区内边距
 }
+
 .el-dialog__footer {
   border-top: 1px solid #e8eaec; // 弹窗底部加分割线
   padding: 10px 20px;
 }
 
 
-
 // --- 视频播放弹窗特定样式 ---
 .video-player-dialog >>> .el-dialog__header { // 深度选择器覆盖默认样式
   padding: 10px 15px; // 减小头部内边距
 }
+
 .video-player-dialog >>> .el-dialog__body {
   padding: 0; // 视频播放器区域不要内边距
   background-color: #000; // 播放器背景为黑色
 }
+
 .video-player-dialog >>> .el-dialog__headerbtn { // 关闭按钮位置
   top: 12px;
   right: 15px;
 }
+
 .video-player-dialog >>> .el-dialog__close { // 关闭按钮图标
   font-size: 20px;
   color: #909399;
@@ -1279,11 +1322,15 @@ export default {
   justify-content: center;
   align-items: center;
 }
+
 // 如果播放器初始化需要时间，显示加载提示
 .player-loading-placeholder {
   color: #ccc;
   font-size: 16px;
-  i { margin-right: 5px; }
+
+  i {
+    margin-right: 5px;
+  }
 }
 
 // --- 粉丝/关注弹窗样式 ---
@@ -1306,9 +1353,11 @@ export default {
   border-bottom: 1px solid #f0f0f0; // 分割线
   cursor: pointer;
   transition: background-color 0.2s ease;
+
   &:last-child {
     border-bottom: none; // 最后一项无分割线
   }
+
   &:hover {
     background-color: #f7f8fa; // 悬停背景色
   }
@@ -1339,6 +1388,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .user-list-intro { // 如果要显示简介
   font-size: 12px;
   color: #606266;
@@ -1352,6 +1402,7 @@ export default {
 .edit-profile-form {
   // 表单本身无需特殊样式
 }
+
 .edit-profile-form .el-form-item .el-avatar {
   vertical-align: middle; // 头像和按钮垂直对齐
 }
@@ -1360,10 +1411,12 @@ export default {
 .user-list-container::-webkit-scrollbar {
   width: 5px;
 }
+
 .user-list-container::-webkit-scrollbar-thumb {
   background: #dcdfe6;
   border-radius: 3px;
 }
+
 .user-list-container::-webkit-scrollbar-track {
   background: transparent; // 背景透明
 }
