@@ -114,6 +114,7 @@ import Player from 'xgplayer';
 import 'xgplayer/dist/index.min.css';
 import Middle from '@/utils/RecommendVIewToPlayerView.js';
 import axios from "axios";
+import { Events } from 'xgplayer'
 
 export default {
 
@@ -121,30 +122,37 @@ export default {
     return {
       videoList: [],
       page: 0,
+      lastPage:null,
       players: [],
-      mySwiper: {},
+      mySwiper: null,
       userid: '',
       player_up: null,
       player_down: null,
       player_now: null
     }
   },
-  watch: {},
+  watch: {
+    page(newValue){
+      console.log(newValue)
+    }
+  },
   beforeRouteEnter() {
 
   },
   created() {
-
 
   },
   destroyed() {
 
   },
   activated() {
-    //this.player_now.play()
+
+    window.addEventListener('keydown', this.handleKeyDown);
+    if(this.player_now!==null)
+      this.player_now.play()
   },
   deactivated() {
-
+    window.removeEventListener('keydown', this.handleKeyDown);
   },
   updated() {
     //this.mySwiper.updated();
@@ -159,6 +167,7 @@ export default {
 
 
   },
+
   methods: {
     /*   isSelf(userid) {
          if (localStorage.getItem('userInfo') !== null) {
@@ -184,7 +193,45 @@ export default {
             return false
           })
     },
+    handleKeyDown(event){ //监听按键
 
+      if (event.key === ' ') {
+        // 处理空格键按下事件
+        if(this.player_now.paused){
+          this.player_now.play()
+        }
+        else{
+          this.player_now.pause()
+        }
+       // console.log(this.player_now)
+        //this.player_now.play();
+      }else if(event.key==='ArrowUp') {
+        if(this.mySwiper!==null){
+          this.mySwiper.slidePrev();
+          this.mySwiper.allowSlidePrev=false;
+          setTimeout(()=>{
+            this.mySwiper.allowSlidePrev=true;
+          },500)
+        }
+      }else if(event.key==='ArrowDown'){
+        if(this.mySwiper!==null){
+          this.mySwiper.slideNext();
+            this.mySwiper.allowSlideNext=false;
+          setTimeout(()=>{
+            this.mySwiper.allowSlideNext=true;
+          },500)
+        }
+
+      }
+
+
+      else if (event.key === 'Enter') {
+
+        console.log('Enter键被按下');
+      } else if (event.key === 'Escape') {
+        console.log('Esc键被按下');
+      }
+    },
     handleLike(index) {
       if (this.userid !== -1) {
 
@@ -358,7 +405,7 @@ export default {
     },
     newPlayer(index,VideoUrl){
 
-      return new Player({
+      const player= new Player({
         el: this.$refs['video' + index][0],
         url: VideoUrl,
         plugins: [],
@@ -366,9 +413,24 @@ export default {
         width: '100%',
         height: '100%',
         autoplay: false,
+        keyShortcut: false,
+        //autoplayMuted: true
         /*      controls: false,  // 禁用默认控制栏
               disableControls: true  // 禁用默认控制按钮*/
       });
+      player.on(Events.PLAY,(data)=>{
+       /* console.log("play",index)
+        console.log(data)*/
+      })
+      player.on(Events.PAUSE,(data)=>{
+     /*   console.log("pause",index)
+        console.log(data)*/
+      })
+
+      player.on(Events.SHORTCUT,(data)=>{
+        console.log("down",index)
+      })
+      return player;
     },
     async initPlayer() {
       let that = this;
@@ -390,7 +452,10 @@ export default {
           nextEl: '.swiper-button-next',
           prevEl: '.swiper-button-prev',
         },
-
+        keyboard: {
+          enabled: false,
+          onlyInViewport: false,
+        },
         allowTouchMove: true,
         // 添加以下配置
         /*    touchStartPreventDefault: false, // 不阻止默认触摸事件
@@ -419,7 +484,7 @@ export default {
               let next
               //将目标设置为播放状态
               that.videoList[now].player = 1
-              that.page = now
+
               if (now > prev) {
                 //向下划
                 next = now + 1;
@@ -437,7 +502,15 @@ export default {
                 that.player_up = that.player_now
                 that.player_up.pause()
                 that.player_now = that.player_down
+
+           /*     that.player_now.on(Events.PlAY, () => {
+                  // TODO
+                  console.log('kaishibofang')
+                })*/
+                that.lastPage = that.page
+                that.page = now
                 that.player_now.play()
+
                 if (next === that.videoList.length) {  //若是最后一个视频
                   console.log("最后一个视频")
                   that.player_down = null;
@@ -465,7 +538,15 @@ export default {
                 that.player_down = that.player_now
                 that.player_down.pause()
                 that.player_now = that.player_up
+
+/*
+                that.player_now.on(Events.PlAY, () => {
+                  // TODO
+                  console.log('kaishibofang')
+                })*/
+
                 that.player_now.play()
+
                 if (next >= 0) {
                   that.videoList[next].player = 0;
                   await that.setVideo(next, that.userid)
@@ -476,8 +557,8 @@ export default {
                 }
               }
 
-
-
+              that.lastPage = that.page
+              that.page = now
 
             }
 
