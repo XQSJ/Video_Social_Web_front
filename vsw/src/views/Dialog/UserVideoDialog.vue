@@ -56,7 +56,7 @@
 </template>
 
 <script>
-    import Player from "xgplayer";
+import Player, {Events} from "xgplayer";
     import axios from "axios";
 
     export default {
@@ -76,6 +76,9 @@
         }
       },
       methods:{
+        saveHistory(){
+          console.log('baocunshipin',this.video)
+        },
         handleLike(v) {
           if (this.userid !== -1) {
 
@@ -184,28 +187,48 @@
           }
         },
           closeDialog(){
+           // this.video.playTime = this.video.playTime+(this.player.currentTime-this.video.currentTime);
+            this.video.currentTime=this.player.currentTime;
 
-            this.dialogFormVisible = false;
+           // console.log("record:",this.video.playTime)
+            this.saveHistory();
             this.player.destroy();
             this.player=null;
+            this.dialogFormVisible = false;
           },
         async showDialog(videoId){
             this.video =  await this.getVideo(videoId, this.userid);
 
             let videoUrl = await this.getUrl(this.video.path);
-            this.player = new Player({
-              el: this.$refs.video,
-              url: videoUrl,
-              plugins: [],
-              poster: '',
-              width: '100%',
-              height: '100%',
-              autoplay: false,
-            })
+            this.player = this.initPlayer(videoUrl)
 
 
             this.dialogFormVisible = true
           },
+        initPlayer(videoUrl){
+          const player = new Player({
+            el: this.$refs.video,
+            url: videoUrl,
+            startTime:this.video.currentTime,
+            plugins: [],
+            poster: '',
+            width: '100%',
+            height: '100%',
+            autoplay: false,
+          })
+
+          player.on(Events.PAUSE,(data)=>{
+            /*console.log("pause",index)*/
+           /* console.log(data.currentTime)*/
+           // this.video.playTime = this.video.playTime+(data.currentTime-this.video.currentTime);
+            this.video.currentTime=data.currentTime;
+            this.saveHistory();
+          })
+          player.on(Events.ENDED,(data)=>{
+              this.player.play()
+          })
+          return player;
+        },
         async getUrl(path) {
           return await axios.get(`/video/getUrl/${path}`).then((response) => {
             if (response.data.code === 1) {
@@ -226,7 +249,9 @@
             if (response.data.code === 1) {
 
               let video = response.data.data
-              video .isFollow = video.relation !== 0
+              video.isFollow = video.relation !== 0
+
+              //video.playTime=0;
               return video
             }
           })

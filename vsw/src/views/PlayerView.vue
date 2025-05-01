@@ -132,9 +132,7 @@ export default {
     }
   },
   watch: {
-    page(newValue){
-      console.log(newValue)
-    }
+
   },
   beforeRouteEnter() {
 
@@ -163,7 +161,9 @@ export default {
       this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
     }
     await this.initVideos()
-    await this.initPlayer()
+    await this.initPlayer().then(()=>{
+      this.player_now.play()
+    })
 
 
   },
@@ -193,6 +193,7 @@ export default {
             return false
           })
     },
+
     handleKeyDown(event){ //监听按键
 
       if (event.key === ' ') {
@@ -387,6 +388,7 @@ export default {
       return await axios.get(`/video/getVideo/${userId}/${videoId}`).then((response) => {
         if (response.data.code === 1) {
           let video = response.data.data
+
           return video
         }
       })
@@ -403,11 +405,15 @@ export default {
       // console.log('getvideo',v)
       this.$set(this.videoList, index, v);
     },
+    saveHistory(index){
+      console.log('baocunshipin',index)
+    },
     newPlayer(index,VideoUrl){
 
       const player= new Player({
         el: this.$refs['video' + index][0],
         url: VideoUrl,
+        startTime:this.videoList[index].currentTime,
         plugins: [],
         poster: '',
         width: '100%',
@@ -418,17 +424,24 @@ export default {
         /*      controls: false,  // 禁用默认控制栏
               disableControls: true  // 禁用默认控制按钮*/
       });
-      player.on(Events.PLAY,(data)=>{
-       /* console.log("play",index)
-        console.log(data)*/
-      })
+
+
+
+
+
       player.on(Events.PAUSE,(data)=>{
-     /*   console.log("pause",index)
-        console.log(data)*/
+        /*console.log("pause",index)*/
+
+        //this.videoList[index].playTime = this.videoList[index].playTime+(data.currentTime-this.videoList[index].currentTime);
+        this.videoList[index].currentTime=data.currentTime;
+        this.saveHistory(index);
       })
 
-      player.on(Events.SHORTCUT,(data)=>{
-        console.log("down",index)
+      player.on(Events.ENDED,(data)=>{
+        if(this.page===index){
+          this.player_now.play()
+        }
+
       })
       return player;
     },
@@ -597,6 +610,7 @@ export default {
         this.controlsVisible = true;
       });
     },
+
     initVideos() {
       return new Promise((resolve, reject) => {
         Middle.$emit('getInitVideos', (result) => {
@@ -606,6 +620,8 @@ export default {
               for (let i = 0; i < videos.length; i++) {
                 videos[i].player = -1
                 videos[i].id = i;
+
+                //videos[i].playTime=0;
               }
               videos[0].player = 1
               videos[1].player = 0

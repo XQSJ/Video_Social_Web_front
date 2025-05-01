@@ -435,6 +435,10 @@ export default {
           method = 'getLikeVideos'
           break;
         }
+        case 'history':{
+          method = 'getHistoryVideos'
+          break;
+        }
         default: {
 
         }
