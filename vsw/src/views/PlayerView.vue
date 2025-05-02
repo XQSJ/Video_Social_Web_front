@@ -109,12 +109,12 @@
 import Swiper from 'swiper';
 import 'swiper/css/swiper.min.css';
 
-import Player from 'xgplayer';
+import Player, {Events} from 'xgplayer';
 
 import 'xgplayer/dist/index.min.css';
 import Middle from '@/utils/RecommendVIewToPlayerView.js';
 import axios from "axios";
-import { Events } from 'xgplayer'
+import dayjs from "dayjs";
 
 export default {
 
@@ -405,8 +405,19 @@ export default {
       // console.log('getvideo',v)
       this.$set(this.videoList, index, v);
     },
-    saveHistory(index){
-      console.log('baocunshipin',index)
+    saveHistory(index,duration){
+
+      let video = this.videoList[index]
+      let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+      let interest = video.currentTime/duration
+      let history={
+        'userId':this.userid,
+        'videoId':video.videoId,
+        'currentTime':video.currentTime,
+        'createTime':createTime,
+       // 'interest':interest
+      }
+      axios.post('/history/create',history)
     },
     newPlayer(index,VideoUrl){
 
@@ -434,7 +445,11 @@ export default {
 
         //this.videoList[index].playTime = this.videoList[index].playTime+(data.currentTime-this.videoList[index].currentTime);
         this.videoList[index].currentTime=data.currentTime;
-        this.saveHistory(index);
+        if(this.userid!==-1 ){
+          if(data.ended===false)
+            this.saveHistory(index);
+        }
+
       })
 
       player.on(Events.ENDED,(data)=>{

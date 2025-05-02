@@ -57,9 +57,10 @@
 
 <script>
 import Player, {Events} from "xgplayer";
-    import axios from "axios";
+import axios from "axios";
+import dayjs from "dayjs";
 
-    export default {
+export default {
         name:'UserVideoDialog',
         data(){
             return{
@@ -77,7 +78,18 @@ import Player, {Events} from "xgplayer";
       },
       methods:{
         saveHistory(){
-          console.log('baocunshipin',this.video)
+
+          let video = this.video
+          let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+          let interest = video.currentTime/this.player.duration
+          let history={
+            'userId':this.userid,
+            'videoId':video.videoId,
+            'currentTime':video.currentTime,
+            'createTime':createTime,
+            //'interest':interest
+          }
+          axios.post('/history/create',history)
         },
         handleLike(v) {
           if (this.userid !== -1) {
@@ -190,7 +202,7 @@ import Player, {Events} from "xgplayer";
            // this.video.playTime = this.video.playTime+(this.player.currentTime-this.video.currentTime);
             this.video.currentTime=this.player.currentTime;
 
-           // console.log("record:",this.video.playTime)
+
             this.saveHistory();
             this.player.destroy();
             this.player=null;
@@ -222,7 +234,10 @@ import Player, {Events} from "xgplayer";
            /* console.log(data.currentTime)*/
            // this.video.playTime = this.video.playTime+(data.currentTime-this.video.currentTime);
             this.video.currentTime=data.currentTime;
-            this.saveHistory();
+            if(this.userid!==-1 ){
+              if(data.ended===false)
+                this.saveHistory();
+            }
           })
           player.on(Events.ENDED,(data)=>{
               this.player.play()
@@ -251,7 +266,7 @@ import Player, {Events} from "xgplayer";
               let video = response.data.data
               video.isFollow = video.relation !== 0
 
-              //video.playTime=0;
+
               return video
             }
           })
