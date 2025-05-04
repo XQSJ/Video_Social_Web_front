@@ -78,17 +78,17 @@ export default {
       },
       methods:{
         saveHistory(){
-
           let video = this.video
+
           let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-          let interest = video.currentTime/this.player.duration
           let history={
             'userId':this.userid,
             'videoId':video.videoId,
             'currentTime':video.currentTime,
             'createTime':createTime,
-            //'interest':interest
+
           }
+          console.log(history)
           axios.post('/history/create',history)
         },
         handleLike(v) {
@@ -200,10 +200,8 @@ export default {
         },
           closeDialog(){
            // this.video.playTime = this.video.playTime+(this.player.currentTime-this.video.currentTime);
-            this.video.currentTime=this.player.currentTime;
 
 
-            this.saveHistory();
             this.player.destroy();
             this.player=null;
             this.dialogFormVisible = false;
@@ -217,6 +215,10 @@ export default {
 
             this.dialogFormVisible = true
           },
+        interestVideo(player){
+              let video = this.video
+
+        },
         initPlayer(videoUrl){
           const player = new Player({
             el: this.$refs.video,
@@ -229,18 +231,34 @@ export default {
             autoplay: false,
           })
 
+          player.once(Events.PLAY,(data)=>{
+            this.saveHistory();
+          })
+
+          player.on(Events.PLAY,(data)=>{
+            this.video.currentTime=data.currentTime;
+
+          })
+
           player.on(Events.PAUSE,(data)=>{
             /*console.log("pause",index)*/
            /* console.log(data.currentTime)*/
-           // this.video.playTime = this.video.playTime+(data.currentTime-this.video.currentTime);
+            this.video.playTime = this.video.playTime+(data.currentTime-this.video.currentTime);
+
             this.video.currentTime=data.currentTime;
-            if(this.userid!==-1 ){
+     /*       if(this.userid!==-1 ){
               if(data.ended===false)
                 this.saveHistory();
-            }
+            }*/
           })
           player.on(Events.ENDED,(data)=>{
               this.player.play()
+          })
+
+          player.once(Events.DESTROY,(data)=>{
+            this.video.currentTime=this.player.currentTime;
+            this.interestVideo(data);
+            this.saveHistory();
           })
           return player;
         },
@@ -266,7 +284,8 @@ export default {
               let video = response.data.data
               video.isFollow = video.relation !== 0
 
-
+              video.playTime = 0;
+              video.startTime = video.currentTime;
               return video
             }
           })

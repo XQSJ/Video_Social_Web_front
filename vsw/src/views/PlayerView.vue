@@ -388,7 +388,8 @@ export default {
       return await axios.get(`/video/getVideo/${userId}/${videoId}`).then((response) => {
         if (response.data.code === 1) {
           let video = response.data.data
-
+          video.playTime = 0;
+          video.startTime = video.currentTime;
           return video
         }
       })
@@ -405,19 +406,55 @@ export default {
       // console.log('getvideo',v)
       this.$set(this.videoList, index, v);
     },
-    saveHistory(index,duration){
+    saveHistory(index){
+      if (this.userid === -1 ) {
+        // 未登录用户或播放器无效，不上报
+        return;
+      }
 
       let video = this.videoList[index]
       let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-      let interest = video.currentTime/duration
       let history={
         'userId':this.userid,
         'videoId':video.videoId,
         'currentTime':video.currentTime,
         'createTime':createTime,
-       // 'interest':interest
+
       }
       axios.post('/history/create',history)
+    },
+    interestVideo(index,player){
+      if (this.userid === -1 ) {
+        // 未登录用户或播放器无效，不上报
+        return;
+      }
+      let video = this.videoList[index]
+      if(video.watchTime!==null){ //old video
+
+    /*    let nowTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+/!*        // 初始化兴趣分
+        if (!video.interestScore) video.interestScore = 0;*!/
+
+        // 时间衰减计算（示例：λ=0.1）
+        const timeDiff = dayjs(nowTime).diff(video.watchTime, 'day');
+        const timeFactor = Math.exp(-0.1 * timeDiff);
+        // 播放完成度
+        let actionFactor = video.playTime/(player.duration-video.startTime)
+        if(actionFactor>=1){
+          actionFactor = 1;
+        }
+        // 综合兴趣分
+        const newInterest = timeFactor*actionFactor;
+        console.log(newInterest)*/
+
+      }else{
+        // 新视频
+
+ /*       const playProgress = (player.currentTime - video.startTime) / player.duration;
+        console.log("new",playProgress)*/
+      }
+
     },
     newPlayer(index,VideoUrl){
 
@@ -436,19 +473,29 @@ export default {
               disableControls: true  // 禁用默认控制按钮*/
       });
 
+      player.on(Events.TIME_UPDATE,(data)=>{
 
+      })
 
+      player.once(Events.PLAY,(data)=>{
+        //this.saveHistory(index);
+      })
+      player.on(Events.PLAY,(data)=>{
+        this.videoList[index].currentTime=data.currentTime;
+      })
 
+/*      player.on(Events.DESTROY,(data)=>{
+        console.log(data)
+        this.interestVideo(index,data);
+        this.saveHistory(index);
+      })*/
 
       player.on(Events.PAUSE,(data)=>{
         /*console.log("pause",index)*/
-
-        //this.videoList[index].playTime = this.videoList[index].playTime+(data.currentTime-this.videoList[index].currentTime);
+        this.videoList[index].playTime = this.videoList[index].playTime+(data.currentTime-this.videoList[index].currentTime);
         this.videoList[index].currentTime=data.currentTime;
-        if(this.userid!==-1 ){
-          if(data.ended===false)
-            this.saveHistory(index);
-        }
+
+
 
       })
 
@@ -459,6 +506,12 @@ export default {
 
       })
       return player;
+    },
+    leaveVideo(player,index){
+        this.saveHistory(index)
+        this.interestVideo(index,data);
+
+
     },
     async initPlayer() {
       let that = this;
@@ -508,6 +561,8 @@ export default {
 
             } else {
               let now = this.activeIndex
+              that.lastPage = that.page
+              that.page = now
               let prev = this.previousIndex
               let next
               //将目标设置为播放状态
@@ -548,6 +603,7 @@ export default {
                   let newVideoUrl = await that.getUrl(that.videoList[next].path)
                   that.player_down = that.newPlayer(next,newVideoUrl);
                 }
+                that.leaveVideo(that.player_up,prev)
               } else if (now < prev) {
                 //向上划
                 next = now - 1;
@@ -583,10 +639,11 @@ export default {
                 } else {
                   that.player_up = null;
                 }
+
+                that.leaveVideo(that.player_down,prev)
               }
 
-              that.lastPage = that.page
-              that.page = now
+
 
             }
 

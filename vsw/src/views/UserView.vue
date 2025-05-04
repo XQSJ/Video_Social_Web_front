@@ -57,6 +57,16 @@ export default {
         }*/
   },
   mounted() {
+    if (localStorage.getItem('userInfo') !== null) {
+      let id = JSON.parse(localStorage.getItem('userInfo')).userId;
+      if(this.$route.query.id==id){
+        this.toUser('self')
+      }
+    }else{
+      if(this.$route.query.id==='self'){
+        console.log('未登录')
+      }
+    }
 
     this.initInfo()
 
@@ -75,6 +85,12 @@ export default {
     '$route.query'(newId) {
       if (this.$route.name === 'user') {  //当路由为该界面时
         this.userid = newId.id //将传入的id赋值
+/*        if (localStorage.getItem('userInfo') !== null) {
+          let id = JSON.parse(localStorage.getItem('userInfo')).userId;
+          if(this.$route.query.id==id){
+            this.toUser('self')
+          }
+        }*/
         this.initInfo()//根据id查找其他值
 
       }
@@ -284,8 +300,19 @@ export default {
         this.setinfo(this.userid)
       }
 
-      if (this.isSelf === false)
+      if (this.isSelf === false){
         handleMainMenu.$emit('cancel')
+        if(JSON.parse(localStorage.getItem('userInfo'))!==null){
+          let id = JSON.parse(localStorage.getItem('userInfo')).userId;
+          let visit={
+            'visiterId': id,
+            'showerId': this.userid
+          }
+          console.log(visit)
+          axios.post('/action/visit',visit)
+        }
+
+      }
       else
         handleMainMenu.$emit('user')
 
