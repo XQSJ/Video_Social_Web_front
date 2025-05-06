@@ -308,8 +308,7 @@ export default {
             'visiterId': id,
             'showerId': this.userid
           }
-          console.log(visit)
-          axios.post('/action/visit',visit)
+          axios.post('/history/visit',visit)
         }
 
       }

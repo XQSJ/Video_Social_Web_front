@@ -422,6 +422,10 @@ export default {
         'createTime':createTime,
         'interest':interest
       }
+      if(video.startTime===0){
+        let interest = video.currentTime/player.duration
+        history.interest = interest
+      }
       axios.post('/history/create',history)
     },
     interestVideo(index,player){
@@ -510,8 +514,6 @@ export default {
     },
     leaveVideo(player,index){
         this.saveHistory(index,player)
-
-
 
     },
     async initPlayer() {
