@@ -77,16 +77,17 @@ export default {
         }
       },
       methods:{
-        saveHistory(){
+        saveHistory(player){
           let video = this.video
 
           let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+          let interest = video.currentTime/player.duration
           let history={
             'userId':this.userid,
             'videoId':video.videoId,
             'currentTime':video.currentTime,
             'createTime':createTime,
-
+            'interest':interest
           }
           console.log(history)
           axios.post('/history/create',history)
@@ -257,8 +258,8 @@ export default {
 
           player.once(Events.DESTROY,(data)=>{
             this.video.currentTime=this.player.currentTime;
-            this.interestVideo(data);
-            this.saveHistory();
+
+            this.saveHistory(data);
           })
           return player;
         },

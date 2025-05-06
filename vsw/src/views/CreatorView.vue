@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 export default {
     data(){
       return{
-        userid:"1",
+        userid:-1,
         fileType:["mp4","jpg"],
         fileList:[],
         fileLimit:1,
@@ -31,11 +31,12 @@ export default {
         access:'0',
         client:'',
         uploader:null,
+        tagContent:''
       }
     },
     mounted() {
+      console.log("creator")
       this.initInfo()
-      this.initAcsClint()
     },
     created(){
       if(localStorage.getItem('userInfo')===null){
@@ -83,7 +84,6 @@ export default {
            },
           // 开始上传
           'onUploadstarted':  function(uploadInfo) {
-
             console.log('startupvideo:')
             console.log(uploadInfo)
             if(!uploadInfo.videoId) {
@@ -95,13 +95,15 @@ export default {
                 "title" : _this.title,
                 "description" : _this.description,
                 "access" : _this.access,
-                "createTime":createTime
+                "createTime":createTime,
+                "tagContent":_this.tagContent
               }
 
               axios.post(createUrl,videoInfo).then((response) => {
+                console.log(response)
                 if (response.data.code === 1) {
                   let data = response.data.data
-                  console.log(data)
+                  console.log("axios:",data)
                   let uploadAuth = data.uploadAuth
                   let uploadAddress =data.uploadAddress
                   let videoId = data.videoId
@@ -113,11 +115,6 @@ export default {
               let refreshUrl = `/video/refresh/${uploadInfo.videoId}`
               axios.get(refreshUrl).then((response) => {
                 if (response.data.code === 1) {
-                  let data = response.data.data
-                  let uploadAuth = data.uploadAuth
-                  let uploadAddress = data.uploadAddress
-                  let videoId = data.videoId
-
                   uploader.setUploadAuthAndAddress(uploadInfo, uploadAuth, uploadAddress, videoId)
                 }
               })
@@ -158,13 +155,8 @@ export default {
             _this.toUserView('self')
           }
         })
-         /*this.client = new AliyunUpload.Vod({
-          region: "cn-shanghai",
-          accessKeyId: "LTAI5tEdXUnEBu5V7sQVnkJs",
-          accessKeySecret: "PRYEoatScwy8LlRROPbaRJ0DYxtdr9",
 
-        })*/
-        return uploader
+          return uploader
       },
 
 
@@ -198,13 +190,13 @@ export default {
       },
       delFile(){  //点击上传文件触发的额外事件,清空fileList
         this.fileList=[];
+        this.uploader.cancel;
+        this.uploader=null;
       },
       uploadFile(file){
-          console.log("上传文件")
-
-          //console.log(file)
+          if (this.fileList.length === 0) return
           this.uploader=this.initAcsClint()
-          this.uploader.addFile(this.fileList[0].raw,null,null,null,null)
+          this.uploader.addFile(this.fileList[0].raw)
       },
 
       submitVideo(){
@@ -218,7 +210,7 @@ export default {
       },
       reUpload(){
         this.delFile()
-        document.querySelector(".el-upload .el-upload").click();
+        //document.querySelector(".el-upload .el-upload").click();
       }
     }
   }
@@ -310,6 +302,14 @@ export default {
               placeholder="添加作品简介 (选填)"
               rows="3"
               maxlength="300"
+              show-word-limit>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-input
+              v-model="tagContent"
+              placeholder="添加作品标签 (选填)"
+              maxlength="10"
               show-word-limit>
           </el-input>
         </el-form-item>

@@ -406,7 +406,7 @@ export default {
       // console.log('getvideo',v)
       this.$set(this.videoList, index, v);
     },
-    saveHistory(index){
+    saveHistory(index,player){
       if (this.userid === -1 ) {
         // 未登录用户或播放器无效，不上报
         return;
@@ -414,12 +414,13 @@ export default {
 
       let video = this.videoList[index]
       let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+      let interest = video.currentTime/player.duration
       let history={
         'userId':this.userid,
         'videoId':video.videoId,
         'currentTime':video.currentTime,
         'createTime':createTime,
-
+        'interest':interest
       }
       axios.post('/history/create',history)
     },
@@ -508,8 +509,8 @@ export default {
       return player;
     },
     leaveVideo(player,index){
-        this.saveHistory(index)
-        this.interestVideo(index,data);
+        this.saveHistory(index,player)
+
 
 
     },
