@@ -414,17 +414,14 @@ export default {
 
       let video = this.videoList[index]
       let createTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
-      let interest = video.currentTime/player.duration
+      let newVideo = (video.startTime===0)
       let history={
         'userId':this.userid,
         'videoId':video.videoId,
         'currentTime':video.currentTime,
         'createTime':createTime,
-        'interest':interest
-      }
-      if(video.startTime===0){
-        let interest = video.currentTime/player.duration
-        history.interest = interest
+        'duration':player.duration,
+        'newVideo': newVideo
       }
       axios.post('/history/create',history)
     },
