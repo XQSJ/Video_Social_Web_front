@@ -313,7 +313,8 @@ export default {
       userid: '',
       player_up: null,
       player_down: null,
-      player_now: null
+      player_now: null,
+
     }
   },
   watch: {
@@ -380,6 +381,7 @@ export default {
         return value;
       }
     },
+
     handleMoreButton(data){
       console.log("morebutton")
     },

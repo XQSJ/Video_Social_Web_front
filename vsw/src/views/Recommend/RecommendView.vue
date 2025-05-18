@@ -55,12 +55,14 @@ export default {
 
     })
 
+    this.$refs.playerView.setParent(Middle)
+
   }
 }
 </script>
 
 <template>
-  <PlayerView></PlayerView>
+  <PlayerView ref="playerView" ></PlayerView>
 </template>
 
 

@@ -8,7 +8,7 @@ import handleMainMenu from "@/utils/handleMainMenu";
 import UserVideoPlayerDialog from "@/views/Dialog/UserVideoPlayerDialog.vue";
 
 export default {
-  components: {UserVideoPlayerDialog, UserVideoDialog},
+  components: {UserVideoPlayerDialog},
   data() {
     return {
       source: null,

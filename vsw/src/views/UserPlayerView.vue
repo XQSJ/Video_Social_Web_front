@@ -296,7 +296,7 @@ import 'swiper/css/swiper.min.css';
 import Player, {Events} from 'xgplayer';
 
 import 'xgplayer/dist/index.min.css';
-import GetRecVideo from '@/utils/RecommendVIewToPlayerView.js';
+
 import GetUserViewVideo from "@/utils/GetUserViewVideo";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -313,7 +313,8 @@ export default {
       userid: '',
       player_up: null,
       player_down: null,
-      player_now: null
+      player_now: null,
+      parentView:null,
     }
   },
   watch: {
@@ -355,7 +356,7 @@ export default {
     //this.mySwiper.updated();
   },
   async mounted() {
-    console.log("playerShow?")
+
     this.userid = -1
     if (localStorage.getItem('userInfo') !== null) {
       this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
