@@ -85,7 +85,7 @@ export default {
         this.timer = window.setInterval(() => {
           setTimeout(() => {
 
-            this.existNewMessages();
+            //this.existNewMessages();
           }, 0)
         }, 3000);
       }

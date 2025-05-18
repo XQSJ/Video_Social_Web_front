@@ -11,9 +11,8 @@ export default {
   },
   methods:{
     LoadInitVideos() {
-      return  axios.get(`/video/getRecVideoList/${this.userid}/3`).then((response) => {
+      return  axios.get(`/video/getRecVideoList/${this.userid}/10`).then((response) => {
        let videos = response.data.data
-
         return videos
       }).catch(error=>{
         console.error("Error fetching videos in LoadInitVideos:", error);
@@ -22,7 +21,7 @@ export default {
     },
 
     LoadNewVideo(length){
-      return axios.get(`/video/getRecVideoList/${this.userid}/1`).then((response)=>{
+      return axios.get(`/video/getRecVideoList/${this.userid}/2`).then((response)=>{
         let videos = response.data.data
         return videos
 

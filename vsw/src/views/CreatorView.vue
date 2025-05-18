@@ -31,7 +31,9 @@ export default {
         access:'0',
         client:'',
         uploader:null,
-        tagContent:''
+        tagContent:'',
+        loadedPercent:0,
+        uploading:false
       }
     },
     mounted() {
@@ -86,14 +88,20 @@ export default {
           'onUploadstarted':  function(uploadInfo) {
             console.log('startupvideo:')
             console.log(uploadInfo)
+
             if(!uploadInfo.videoId) {
               let createUrl = "/video/create"
               const formattedTime = dayjs().format('YYYY-MM-DD HH:mm:ss');
               let createTime = formattedTime
+              let description = ""
+              if(_this.tagContent!==''){
+                description = description +"#"+_this.tagContent+" "
+              }
+              description = description +_this.description
               let videoInfo = {
                 "userId" : _this.userid,
                 "title" : _this.title,
-                "description" : _this.description,
+                "description" :description,
                 "access" : _this.access,
                 "createTime":createTime,
                 "tagContent":_this.tagContent
@@ -108,6 +116,7 @@ export default {
                   let uploadAddress =data.uploadAddress
                   let videoId = data.videoId
                   uploader.setUploadAuthAndAddress(uploadInfo, uploadAuth, uploadAddress, videoId)
+                  _this.uploading = true;
                 }
               })
             }
@@ -134,6 +143,7 @@ export default {
           // 文件上传进度，单位：字节
           'onUploadProgress': function (uploadInfo, totalSize, loadedPercent) {
             console.log("onUploadProgress:file:" + uploadInfo.file.name + ", fileSize:" + totalSize + ", percent:" + Math.ceil(loadedPercent * 100) + "%");
+            _this.loadedPercent = Math.round(loadedPercent*100);
           },
           // 上传凭证或STS token超时
           'onUploadTokenExpired': function (uploadInfo) {
@@ -195,12 +205,15 @@ export default {
       },
       uploadFile(file){
           if (this.fileList.length === 0) return
+        //初始化上传类
           this.uploader=this.initAcsClint()
+        //添加文件
           this.uploader.addFile(this.fileList[0].raw)
       },
 
       submitVideo(){
         if(this.title!==''){
+          //开始上传
           this.uploader.startUpload()
         }else{
           this.$message.error('标题不能为空')
@@ -324,6 +337,7 @@ export default {
 
         <!-- 操作按钮区域 -->
         <el-form-item class="action-buttons">
+          <el-progress :percentage="loadedPercent" v-if="uploading"></el-progress>
           <el-button
               type="primary"
               icon="el-icon-upload2"

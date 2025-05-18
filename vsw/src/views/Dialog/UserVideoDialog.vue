@@ -88,7 +88,8 @@ export default {
             'currentTime':video.currentTime,
             'createTime':createTime,
             'duration':this.player.duration,
-            'newVideo': newVideo
+            'newVideo': newVideo,
+            'playTime': video.playTime
           }
           axios.post('/history/create',history)
         },

@@ -4,10 +4,11 @@ import toLogin from '@/utils/toLogin'
 import Follow from '@/utils/follow'
 import Player from "xgplayer";
 import handleMainMenu from "@/utils/handleMainMenu";
-import UserVideoDialog from "@/views/Dialog/UserVideoDialog.vue";
+
+import UserVideoPlayerDialog from "@/views/Dialog/UserVideoPlayerDialog.vue";
 
 export default {
-  components: {UserVideoDialog},
+  components: {UserVideoPlayerDialog, UserVideoDialog},
   data() {
     return {
       source: null,
@@ -217,6 +218,7 @@ export default {
 
     },
     showVideo(item) {
+
       this.$refs.videoDialog.showDialog(item.videoId)
 
       //console.log("item:", item)
@@ -912,8 +914,8 @@ export default {
           </div>
         </el-dialog>
     -->
-    <user-video-dialog ref="videoDialog"></user-video-dialog>
-
+<!--    <user-video-dialog ref="videoDialog"></user-video-dialog>-->
+    <user-video-player-dialog ref="videoDialog"></user-video-player-dialog>
 
     <!--
         <el-dialog
