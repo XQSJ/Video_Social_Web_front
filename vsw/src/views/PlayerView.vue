@@ -12,7 +12,7 @@
                 <div :ref="`video${index}`" class="video-container"></div>
                 <div class="video-info-overlay">
                   <div class="video-description">
-                    <p class="author-name">@{{ item.userId }}</p>
+                    <p class="author-name">@{{ item.userName }}</p>
                     <p class="video-title">{{ item.title }}</p>
                     <p class="video-detail-desc">{{ item.description }}</p>
                   </div>
@@ -25,11 +25,11 @@
                       <i class="el-icon-plus"></i>
                     </div>
                   </div>
-                  <div class="control-button-item" v-if="item.relation!==-1 && item.isFollow===true">
+<!--                  <div class="control-button-item" v-if="item.relation!==-1 && item.isFollow===true">
                     <el-button type="text" @click="handleUnFollow(index)" class="unfollow-button">
                       已关注
                     </el-button>
-                  </div>
+                  </div>-->
                   <div class="control-button-item">
                     <el-button
                         type="text"
@@ -296,13 +296,24 @@ import 'swiper/css/swiper.min.css';
 import Player, {Events} from 'xgplayer';
 
 import 'xgplayer/dist/index.min.css';
-import GetRecVideo from '@/utils/RecommendVIewToPlayerView.js';
-import GetUserViewVideo from "@/utils/GetUserViewVideo";
+
 import axios from "axios";
 import dayjs from "dayjs";
 import videoSideCard from "@/views/VideoCard/VideoSideCard.vue";
 export default {
   components:{videoSideCard},
+  props: {
+    // Prop 用于接收一个返回 Promise 的函数，该函数负责加载初始视频列表
+    loadInitialVideosFunction: {
+      type: Function,
+      required: true // 设为必需，确保父组件提供
+    },
+    // Prop 用于接收一个返回 Promise 的函数，该函数负责加载更多视频
+    loadMoreVideosFunction: {
+      type: Function,
+      required: true // 设为必需
+    }
+  },
   data() {
     return {
       videoList: [],
@@ -314,7 +325,8 @@ export default {
       player_up: null,
       player_down: null,
       player_now: null,
-
+      isLoadingInitial: false,
+      isLoadingMore: false,
     }
   },
   watch: {
@@ -356,7 +368,7 @@ export default {
     //this.mySwiper.updated();
   },
   async mounted() {
-    console.log("playerShow?")
+
     this.userid = -1
     if (localStorage.getItem('userInfo') !== null) {
       this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
@@ -381,9 +393,9 @@ export default {
         return value;
       }
     },
-
     handleMoreButton(data){
       console.log("morebutton")
+      console.log(this.videoList)
     },
     handleKeyDown(event){ //监听按键
       console.log("keybutton")
@@ -395,7 +407,7 @@ export default {
         else{
           this.player_now.pause()
         }
-       // console.log(this.player_now)
+        // console.log(this.player_now)
         //this.player_now.play();
       }else if(event.key==='ArrowUp') {
         if(this.mySwiper!==null){
@@ -408,7 +420,7 @@ export default {
       }else if(event.key==='ArrowDown'){
         if(this.mySwiper!==null){
           this.mySwiper.slideNext();
-            this.mySwiper.allowSlideNext=false;
+          this.mySwiper.allowSlideNext=false;
           setTimeout(()=>{
             this.mySwiper.allowSlideNext=true;
           },500)
@@ -429,7 +441,7 @@ export default {
       //let s = this.$refs.swiperSlides[index].children[2].children[0].showDialog(1);
       /*this.$refs['commentDialog'+index][0].showDialog(1)*/
 
-      this.$refs['videoSideCard' + index][0].changeCardShow(this.videoList[index].videoId,this.videoList[index].commentCount);
+      this.$refs['videoSideCard' + index][0].changeCardShow(this.videoList[index].videoId,this.videoList[index].commentCount,index);
 
     },
     handleLikeButton(index) {
@@ -548,6 +560,9 @@ export default {
         this.toLoginView();
       }
     },
+    setCommentCount(index,count){
+      this.videoList[index].commentCount=count
+    },
     toUserPage(userid) {
       this.toUserView(userid)
     },
@@ -613,28 +628,28 @@ export default {
       let video = this.videoList[index]
       if(video.watchTime!==null){ //old video
 
-    /*    let nowTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
+        /*    let nowTime = dayjs().format('YYYY-MM-DD HH:mm:ss')
 
-/!*        // 初始化兴趣分
-        if (!video.interestScore) video.interestScore = 0;*!/
+    /!*        // 初始化兴趣分
+            if (!video.interestScore) video.interestScore = 0;*!/
 
-        // 时间衰减计算（示例：λ=0.1）
-        const timeDiff = dayjs(nowTime).diff(video.watchTime, 'day');
-        const timeFactor = Math.exp(-0.1 * timeDiff);
-        // 播放完成度
-        let actionFactor = video.playTime/(player.duration-video.startTime)
-        if(actionFactor>=1){
-          actionFactor = 1;
-        }
-        // 综合兴趣分
-        const newInterest = timeFactor*actionFactor;
-        console.log(newInterest)*/
+            // 时间衰减计算（示例：λ=0.1）
+            const timeDiff = dayjs(nowTime).diff(video.watchTime, 'day');
+            const timeFactor = Math.exp(-0.1 * timeDiff);
+            // 播放完成度
+            let actionFactor = video.playTime/(player.duration-video.startTime)
+            if(actionFactor>=1){
+              actionFactor = 1;
+            }
+            // 综合兴趣分
+            const newInterest = timeFactor*actionFactor;
+            console.log(newInterest)*/
 
       }else{
         // 新视频
 
- /*       const playProgress = (player.currentTime - video.startTime) / player.duration;
-        console.log("new",playProgress)*/
+        /*       const playProgress = (player.currentTime - video.startTime) / player.duration;
+               console.log("new",playProgress)*/
       }
 
     },
@@ -666,11 +681,11 @@ export default {
         this.videoList[index].currentTime=data.currentTime;
       })
 
-/*      player.on(Events.DESTROY,(data)=>{
-        console.log(data)
-        this.interestVideo(index,data);
-        this.saveHistory(index);
-      })*/
+      /*      player.on(Events.DESTROY,(data)=>{
+              console.log(data)
+              this.interestVideo(index,data);
+              this.saveHistory(index);
+            })*/
 
       player.on(Events.PAUSE,(data)=>{
         /*console.log("pause",index)*/
@@ -690,219 +705,8 @@ export default {
       return player;
     },
     leaveVideo(player,index){
-        this.saveHistory(index,player)
+      this.saveHistory(index,player)
     },
-/*    async initPlayer() {
-      let that = this;
-
-      // 确保 videoList 至少有一个视频
-      if (!that.videoList || that.videoList.length === 0) {
-        console.warn('视频列表为空，无法初始化播放器');
-        return;
-      }
-
-      // 初始化当前播放器
-      await that.setVideo(0, this.userid);
-      let firstVideoUrl = await this.getUrl(that.videoList[0].path);
-      this.player_now = this.newPlayer(0, firstVideoUrl);
-      this.videoList[0].player = 1; // 标记为当前播放
-
-      // 如果有第二个视频，才初始化 player_down
-      if (that.videoList.length >= 2) {
-        await that.setVideo(1, this.userid);
-        let secondVideoUrl = await this.getUrl(that.videoList[1].path);
-        this.player_down = this.newPlayer(1, secondVideoUrl);
-        this.videoList[1].player = 0; // 标记为预加载
-      } else {
-        this.player_down = null; // 明确设置为 null
-      }
-      this.player_up = null; // 初始时没有上一个播放器
-
-      this.mySwiper = new Swiper('.swiper-container', {
-        // ... (您原有的 Swiper 配置)
-        on: {
-          slideChangeTransitionEnd: async function () {
-            // 确保 videoList 已加载
-            if (!that.videoList || that.videoList.length === 0) {
-              return;
-            }
-
-            let now = this.activeIndex;
-            let prevActiveIndex = this.previousIndex; // Swiper 提供的上一个激活的 slide 索引
-
-            // 如果只有一个视频，大部分滑动逻辑可以跳过
-            if (that.videoList.length === 1) {
-              if (that.player_now && that.player_now.paused) {
-                // that.player_now.play(); // 如果希望单视频滑动也触发播放
-              }
-              // 可能需要拉取新视频
-              if (that.videoList.length < 3) { // 或者其他你希望的预加载数量阈值
-                that.addNewVideos().then(() => {
-                  if(that.mySwiper) that.mySwiper.update(); // 更新 Swiper
-                  // 如果 addNewVideos 后有了第二个视频且 player_down 为空，则初始化
-                  if (that.videoList.length >= 2 && !that.player_down) {
-                    that.setVideo(1, that.userid).then(async () => {
-                      let secondVideoUrl = await that.getUrl(that.videoList[1].path);
-                      that.player_down = that.newPlayer(1, secondVideoUrl);
-                      if (that.videoList[1]) that.videoList[1].player = 0;
-                    });
-                  }
-                });
-              }
-              return; // 单视频时，大部分切换逻辑不需要执行
-            }
-
-            // --- 原有的多视频切换逻辑开始 (稍作调整以处理边界) ---
-            that.lastPage = that.page; // 假设 page 变量还在使用
-            that.page = now;           // 假设 page 变量还在使用
-
-            // 销毁/暂停逻辑
-            if (prevActiveIndex !== now && that.videoList[prevActiveIndex]) {
-              that.videoList[prevActiveIndex].player = -1; // 标记为不活跃
-              if (now > prevActiveIndex) { // 向下滑动
-                if (that.player_up) { // player_up 是之前 current (prevActiveIndex)
-                  that.leaveVideo(that.player_up, prevActiveIndex);
-                  that.player_up.pause();
-                }
-              } else { // 向上滑动
-                if (that.player_down) { // player_down 是之前 current (prevActiveIndex)
-                  that.leaveVideo(that.player_down, prevActiveIndex);
-                  that.player_down.pause();
-                }
-              }
-            }
-
-
-            // 设置当前播放器
-            that.videoList[now].player = 1; // 标记当前播放的视频
-            if (that.player_now) { // 如果之前的 player_now 存在
-              if (now > prevActiveIndex) { // 向下滑动，之前的 player_now 变成 player_up
-                if (that.player_up && that.player_up !== that.player_now) that.player_up.destroy(); // 销毁更老的上一个
-                that.player_up = that.player_now;
-              } else if (now < prevActiveIndex) { // 向上滑动，之前的 player_now 变成 player_down
-                if (that.player_down && that.player_down !== that.player_now) that.player_down.destroy(); // 销毁更老的下一个
-                that.player_down = that.player_now;
-              }
-            }
-            // 根据当前 now 索引，找到对应的播放器实例 (可能需要从 players 数组或 refs 获取)
-            // 或者依赖下面 player_up, player_now, player_down 的重新赋值
-            // 这里简化为直接使用 player_now, player_up, player_down 的轮转
-
-
-            // --- 核心切换逻辑 ---
-            if (now > prevActiveIndex) { // 向下滑动
-              // player_now 应该是之前预加载的 player_down
-              that.player_now = that.player_down;
-              if (that.player_now) {
-                that.player_now.play();
-              } else { // 如果 player_down 不存在（例如，之前只有一个视频，现在刚加载了第二个）
-                await that.setVideo(now, that.userid);
-                let currentVideoUrl = await that.getUrl(that.videoList[now].path);
-                that.player_now = that.newPlayer(now, currentVideoUrl);
-                that.player_now.play();
-              }
-
-
-              // 预加载下一个 (now + 1)
-              const nextIndexForPreload = now + 1;
-              if (that.player_down && that.player_down !== that.player_now) that.player_down.destroy(); // 销毁老的 player_down
-              that.player_down = null; // 先清空
-
-              if (nextIndexForPreload < that.videoList.length) {
-                if (that.videoList[nextIndexForPreload]) that.videoList[nextIndexForPreload].player = 0;
-                await that.setVideo(nextIndexForPreload, that.userid);
-                let nextVideoUrl = await that.getUrl(that.videoList[nextIndexForPreload].path);
-                that.player_down = that.newPlayer(nextIndexForPreload, nextVideoUrl);
-              }
-
-              // 拉取更多视频
-              if (now + 2 >= that.videoList.length) {
-                that.addNewVideos().then(() => {
-                  if(that.mySwiper) that.mySwiper.update();
-                  // 如果拉取后 player_down 仍为空且有下一个视频，则初始化
-                  if(!that.player_down && nextIndexForPreload < that.videoList.length) {
-                    that.setVideo(nextIndexForPreload, that.userid).then(async () => {
-                      let nextVideoUrl = await that.getUrl(that.videoList[nextIndexForPreload].path);
-                      that.player_down = that.newPlayer(nextIndexForPreload, nextVideoUrl);
-                      if (that.videoList[nextIndexForPreload]) that.videoList[nextIndexForPreload].player = 0;
-                    });
-                  }
-                });
-              }
-
-            } else if (now < prevActiveIndex) { // 向上滑动
-              // player_now 应该是之前预加载的 player_up
-              that.player_now = that.player_up;
-              if (that.player_now) {
-                that.player_now.play();
-              } else { // 如果 player_up 不存在
-                await that.setVideo(now, that.userid);
-                let currentVideoUrl = await that.getUrl(that.videoList[now].path);
-                that.player_now = that.newPlayer(now, currentVideoUrl);
-                that.player_now.play();
-              }
-
-              // 预加载上一个 (now - 1)
-              const prevIndexForPreload = now - 1;
-              if (that.player_up && that.player_up !== that.player_now) that.player_up.destroy(); // 销毁老的 player_up
-              that.player_up = null; // 先清空
-
-              if (prevIndexForPreload >= 0) {
-                if (that.videoList[prevIndexForPreload]) that.videoList[prevIndexForPreload].player = 0;
-                await that.setVideo(prevIndexForPreload, that.userid);
-                let prevVideoUrl = await that.getUrl(that.videoList[prevIndexForPreload].path);
-                that.player_up = that.newPlayer(prevIndexForPreload, prevVideoUrl);
-              }
-            } else { // 没有滑动，或者 prevActiveIndex undefined (首次)
-              if (that.player_now && that.player_now.paused) {
-                // that.player_now.play(); // 首次加载已在 mounted 中播放
-              }
-            }
-
-            // 清理更远处的播放器实例，保留 now-1, now, now+1
-            that.videoList.forEach((video, index) => {
-              if (index < now - 1 || index > now + 1) {
-                if (video.player !== -1) { // 如果它曾经是活跃或预加载的
-                  // 找到对应的播放器实例并销毁
-                  // 这个需要更完善的播放器管理，例如一个 players 数组
-                  // 暂时简化：依赖 player_up/player_down 的销毁逻辑
-                  // 也可以在这里根据 video.player 状态和索引来决定是否销毁
-                  // 例如，如果有一个 this.players[index] 的映射
-                  if (index !== now && index !== now -1 && index !== now + 1) {
-                    const playerToDestroy = (index === (now-2) && that.players_cache_map && that.players_cache_map[index]) ? that.players_cache_map[index] : null; // 假设你有这样的缓存
-                    if(playerToDestroy && playerToDestroy !== that.player_up && playerToDestroy !== that.player_now && playerToDestroy !== that.player_down){
-                      playerToDestroy.destroy();
-                      if(that.players_cache_map) delete that.players_cache_map[index];
-                    }
-                    video.player = -1; // 标记为不活跃
-                  }
-                }
-              }
-            });
-
-            // 更新上一个和下一个视频的 player 状态
-            if(now > 0 && that.videoList[now-1]) that.videoList[now-1].player = 0;
-            if(now < that.videoList.length -1 && that.videoList[now+1]) that.videoList[now+1].player = 0;
-
-
-          }
-        }
-        // ... (其他 Swiper 配置)
-      });
-      // 如果只有一个视频，禁用Swiper的滑动，直到有更多视频
-      if (this.videoList.length <= 1) {
-        if (this.mySwiper) {
-          this.mySwiper.allowSlideNext = false;
-          this.mySwiper.allowSlidePrev = false;
-        }
-      } else {
-        if (this.mySwiper) {
-          this.mySwiper.allowSlideNext = true;
-          this.mySwiper.allowSlidePrev = true;
-        }
-      }
-      if (this.player_now) this.player_now.play(); // 确保首次加载时播放
-    },*/
     async initPlayer() {
       let that = this;
 
@@ -980,10 +784,10 @@ export default {
                 that.player_up.pause()
                 that.player_now = that.player_down
 
-           /*     that.player_now.on(Events.PlAY, () => {
-                  // TODO
-                  console.log('kaishibofang')
-                })*/
+                /*     that.player_now.on(Events.PlAY, () => {
+                       // TODO
+                       console.log('kaishibofang')
+                     })*/
                 that.lastPage = that.page
                 that.page = now
                 that.player_now.play()
@@ -1017,11 +821,11 @@ export default {
                 that.player_down.pause()
                 that.player_now = that.player_up
 
-/*
-                that.player_now.on(Events.PlAY, () => {
-                  // TODO
-                  console.log('kaishibofang')
-                })*/
+                /*
+                                that.player_now.on(Events.PlAY, () => {
+                                  // TODO
+                                  console.log('kaishibofang')
+                                })*/
 
                 that.player_now.play()
 
@@ -1094,73 +898,65 @@ export default {
       });
     },
 
-    initVideos() {
-      return new Promise((resolve, reject) => {
-        GetRecVideo.$emit('getInitVideos', (result) => {
-          try {
-            if (result && Array.isArray(result)) {
-              let videos = result
-              for (let i = 0; i < videos.length; i++) {
-                videos[i].player = -1
-                videos[i].id = i;
+    async initVideos() {
+      if (this.isLoadingInitial) return;
+      this.isLoadingInitial = true;
+      try {
+        const result = await this.loadInitialVideosFunction(); // 调用prop函数
+        if (result && Array.isArray(result)) {
+          let videos = result
+          for (let i = 0; i < videos.length; i++) {
+            videos[i].player = -1
+            videos[i].id = i;
 
-                //videos[i].playTime=0;
-                if(i===0){
-                  videos[0].player = 1
-                }
-                if(i===1){
-                  videos[1].player = 0
-                }
-              }
-
-              this.videoList = videos
-              console.log("PlayerView videoList updated:", this.videoList);
-              resolve(result); // 成功时解决 Promise
-            } else {
-              console.error("Received invalid data for videoList:", result);
-              this.videoList = [];
-              reject(new Error("Received invalid data")); // 失败时拒绝 Promise
+            //videos[i].playTime=0;
+            if(i===0){
+              videos[0].player = 1
             }
-          } catch (error) {
-            console.error("Error processing received video data:", error);
-            reject(error);
+            if(i===1){
+              videos[1].player = 0
+            }
           }
-        });
-      });
+          this.videoList = videos
+          /*console.log("PlayerView videoList updated:", this.videoList);*/
+          /*  resolve(result); // 成功时解决 Promise*/
+        } else {
+          console.error("Received invalid data for videoList:", result);
+          this.videoList = [];
+        }
+      } catch (error) {
+        console.error("Error processing received video data:", error);
+        this.videoList = [];
+      } finally {
+        this.isLoadingInitial = false;
+      }
+
     },
 
-    addNewVideos() { //拉取新视频
-      return new Promise((resolve, reject) => {
-        //1.拉取
-        GetRecVideo.$emit('getNewVideo', this.videoList.length, (result) => {
-          try {
-            if (result && Array.isArray(result)) {
-              let videos = result
-              if (videos.length !== 0) {
-                for (let i = 0; i < videos.length; i++) {
-                  videos[i].player = -1
-                  videos[i].id = i + length;
-                }
-                this.videoList = this.videoList.concat(result);
-              }
-              //this.videoList.push(result)
-              //console.log("PlayerView videoList updated:", this.videoList);
-              resolve(result); // 成功时解决 Promise
-            } else {
-              console.error("Received invalid data for videoList:", result);
-              this.videoList = [];
-              reject(new Error("Received invalid data")); // 失败时拒绝 Promise
+    async addNewVideos() { //拉取新视频
+      if (this.isLoadingMore) return;
+      this.isLoadingMore = true;
+      try {
+        const result = await this.loadMoreVideosFunction(this.videoList.length);
+        if (result && Array.isArray(result)) {
+          let videos = result
+          if (videos.length !== 0) {
+            for (let i = 0; i < videos.length; i++) {
+              videos[i].player = -1
+              videos[i].id = i + length;
             }
-          } catch (error) {
-            console.error("Error processing received video data:", error);
-            reject(error);
+            this.videoList = this.videoList.concat(result);
           }
+        } else {
+          console.error("Received invalid data for videoList:", result);
+        }
+      } catch (error) {
+        console.error("Error processing received video data:", error);
+      } finally {
+        this.isLoadingMore = false;
+      }
 
 
-        })
-
-
-      })
 
     }
   }

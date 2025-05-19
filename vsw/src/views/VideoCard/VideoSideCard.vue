@@ -6,6 +6,7 @@ export default {
   name:'CommentDialog',
   data(){
     return{
+      videoIndex:null,
       cardFormVisible: false,
       commentList: {},
       videoId:null,
@@ -17,18 +18,20 @@ export default {
       userId:-1,
       isReplying:false,
       replyComment:null,
+      replyIndex:null
     }
   },
   mounted() {
 
   },
   methods:{
-    changeCardShow(data,count){
-      this.totalCount = count
+    changeCardShow(videoId,Commentcount,index){
+      this.totalCount = Commentcount
+      this.videoIndex = index
       if(this.cardFormVisible){
         this.closeCard()
       }else{
-        this.showCard(data,count)
+        this.showCard(videoId,Commentcount)
       }
     },
     InitData(data,count){
@@ -59,7 +62,9 @@ export default {
       return axios.post("/comment/getByVideoId",data).then((response)=>{
         if (response.data.code === 1) {
           //this.totalCount
-          console.log("getCommentList:",response.data.data)
+         /* console.log("getCommentList:",response.data.data)*/
+          this.totalCount = response.data.data.totalCount
+          this.$parent.setCommentCount(this.videoIndex,this.totalCount)
           return response.data.data.commentList
         } else {
           return ''
@@ -80,7 +85,6 @@ export default {
     },
     getChildComments(index){
       let rootComment = this.commentList[index]
-      console.log(rootComment)
       let data ={
         'rootCommentId':rootComment.commentId,
         'pageSize': 3,
@@ -88,11 +92,11 @@ export default {
       }
       axios.post("/comment/getChildComments",data).then((response)=>{
         if (response.data.code === 1) {
-          console.log("getChildCommentList:",response.data.data)
           rootComment.childComment = response.data.data
           rootComment.childShow = true
           rootComment.childLoading = false
           this.$set(this.commentList,index,rootComment)
+
 
         }
       })
@@ -101,7 +105,7 @@ export default {
       this.replyComment = null
       this.isReplying = false
       this.commentList = await this.getRootComments()
-      console.log(this.commentList)
+
       this.loading = false
     },
     loadNewComments(){
@@ -115,7 +119,9 @@ export default {
       "content":this.sendText,
       "createTime":createTime
       }
+      let isRootComment = true
       if(this.isReplying){
+        isRootComment = false
         let reply = this.replyComment
         if(reply.rootCommentId!==null){
           data.rootCommentId = reply.rootCommentId
@@ -127,22 +133,44 @@ export default {
         data.getterName = reply.userName
       }
       axios.post("/comment/send",data).then((response)=>{
-          this.sendText=""
-          this.closeReply()
-          this.totalCount = this.totalCount + 1
+            if (response.data.code === 1) {
+              this.sendText = ""
+              this.totalCount = this.totalCount + 1
+              this.$parent.setCommentCount(this.videoIndex, this.totalCount)
+              if(isRootComment){
+                this.commentList.unshift(response.data.data)
+              }else{
+                let rootComment = this.commentList[this.replyIndex]
+                rootComment.childCommentCount+=1
+                if(rootComment.childComment===undefined){
+                  rootComment.childComment={
+                    'commentList':[],
+                    'rootCommentId':rootComment.commentId
+                  }
+                }
+                rootComment.childComment.commentList.push(response.data.data)
+                this.$set(this.commentList,this.replyIndex,rootComment)
+
+              }
+              this.closeReply()
+            }
       })
     },
-    handleReplyCommentButton(comment){
+    handleReplyCommentButton(comment,index){
       this.isReplying=!this.isReplying
       if(this.isReplying===true){
         this.replyComment = comment
+        this.replyIndex = index
       }else{
         this.replyComment = null;
+        this.replyIndex = null;
+
       }
     },
     closeReply(){
       this.isReplying = false;
       this.replyComment = null;
+      this.replyIndex = null;
     },
     formatDisplayTime(dateTime) {
       // 简单的友好时间显示，可以根据需要使用 dayjs().fromNow()
@@ -205,7 +233,7 @@ export default {
                   <div class="comment-meta">
                     <span class="comment-time">{{ formatDisplayTime(item_root.createTime) }}</span>
                     <div class="comment-actions">
-                      <el-button type="text" icon="el-icon-chat-dot-round" @click="handleReplyCommentButton(item_root)">
+                      <el-button type="text" icon="el-icon-chat-dot-round" @click="handleReplyCommentButton(item_root,index_root)">
                         {{ isReplying && replyComment && replyComment.commentId === item_root.commentId ? '取消回复' : '回复' }}
                       </el-button>
                       <el-button type="text" icon="el-icon-thumb">赞 {{ item_root.likeCount > 0 ? item_root.likeCount : '' }}</el-button>
@@ -239,7 +267,7 @@ export default {
                           <div class="comment-meta">
                             <span class="comment-time">{{ formatDisplayTime(item_child.createTime) }}</span>
                             <div class="comment-actions">
-                              <el-button type="text" icon="el-icon-chat-dot-round" @click="handleReplyCommentButton(item_child)">
+                              <el-button type="text" icon="el-icon-chat-dot-round" @click="handleReplyCommentButton(item_child,index_root)">
                                 {{ isReplying && replyComment && replyComment.commentId === item_child.commentId ? '取消回复' : '回复' }}
                               </el-button>
                               <el-button type="text" icon="el-icon-thumb">赞 {{ item_child.likeCount > 0 ? item_child.likeCount : '' }}</el-button>

@@ -1,66 +1,65 @@
 <script >
 import PlayerView from "@/views/PlayerView.vue";
-import Middle from '@/utils/RecommendVIewToPlayerView.js';
 import axios from "axios";
 export default {
   components: {PlayerView},
-  data(){
-    return{
-      userid:-1
+  data() {
+    return {
+      userid: -1
     }
   },
-  methods:{
-    LoadInitVideos() {
-      return  axios.get(`/video/getRecVideoList/${this.userid}/5`).then((response) => {
-        let videos = response.data.data
-        return videos
-      }).catch(error=>{
-        console.error("Error fetching videos in LoadInitVideos:", error);
-        return []; // 或者 throw error;
-      })
-    },
+  methods: {
+    fetchInitialVideosForPlayerView() {
+      // 确保 userid 已被设置
+      if (this.userid === -1) {
+        console.warn("User ID not set, cannot fetch initial videos.");
+        return Promise.resolve([]); // 返回一个空的 resolved Promise
+      }
+      console.log(`Parent: Fetching initial videos for user ${this.userid}`);
+      return axios.get(`/video/getRecVideoList/${this.userid}/10`)
+          .then((response) => {
+            return response.data.data || []; // 确保返回数组
+          })
+          .catch(error => {
+            console.error("Parent: Error fetching initial videos:", error);
+            return []; // 出错时返回空数组
+          });
 
-    LoadNewVideo(length){
-      return axios.get(`/video/getRecVideoList/${this.userid}/1`).then((response)=>{
-        let videos = response.data.data
-        return videos
-      }).catch(error=>{
-        console.error("Error fetching videos in LoadNewVideos:", error);
-        return []; // 或者 throw error;
-      })
-    }
+    },
+    fetchMoreVideosForPlayerView(currentListLength) {
+      if (this.userid === -1) {
+        console.warn("User ID not set, cannot fetch more videos.");
+        return Promise.resolve([]);
+      }
+      console.log(`Parent: Fetching more videos for user ${this.userid}, current length: ${currentListLength}`);
+      // 你可以利用 currentListLength 来实现分页或不同的拉取策略
+      return axios.get(`/video/getRecVideoList/${this.userid}/2`) // 假设每次拉取2个
+          .then((response) => {
+            return response.data.data || [];
+          })
+          .catch(error => {
+            console.error("Parent: Error fetching more videos:", error);
+            return [];
+          });
+    },
   },
-  created(){
+  created() {
     let _this = this
     if (localStorage.getItem('userInfo') !== null) {
       this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
     }
 
-    Middle.$on('getInitVideos', async (callback) => {
-      //第一次挂载时拉取videolist
-      const videosData = await _this.LoadInitVideos();
-      callback(videosData);
-
-    })
   },
 
   mounted() {
-    let _this = this
-    Middle.$on('getNewVideo',async (length,callback)=>{
-      const newVideo = await _this.LoadNewVideo(length);
-      callback(newVideo);
-
-    })
-
   }
 }
 </script>
 
 <template>
-  <PlayerView></PlayerView>
+  <PlayerView ref="playerView" :load-initial-videos-function="fetchInitialVideosForPlayerView"
+              :load-more-videos-function="fetchMoreVideosForPlayerView"></PlayerView>
 </template>
-
-
 
 
 <style scoped lang="stylus">
