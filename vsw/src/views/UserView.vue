@@ -191,6 +191,10 @@ export default {
           _this.upAvatarLoading = false
           // _this.editForm.profile = uploadInfo.
           // _this.toUserView('self')
+          if (_this.$refs.avatarUpload) {
+            _this.$refs.avatarUpload.clearFiles();
+          }
+          _this.imageUpList = [];
         }
 
       })
@@ -204,9 +208,10 @@ export default {
       this.imageUpList = [];
       this.imageUpList = fileList;
     },
+
     reUploadImage() {
       //之前的文件删除
-      //this.imageUpList=[];
+
       //初始化上传器
       this.imageUploader = this.initAcsClintImage()
       this.imageUploader.addFile(this.imageUpList[0].raw, null, null, null)
@@ -278,22 +283,13 @@ export default {
 
     },
     initInfo() {
-
       if (this.$route.query.id === 'self') {
-
         //console.log(localStorage.getItem('userInfo'))
         if (localStorage.getItem('userInfo') !== null) {
           let user = JSON.parse(localStorage.getItem('userInfo'))
-
           this.userid = user.userId
           this.isSelf = true
           this.setinfo(this.userid)
-          /*      this.userinfo.name = user.userName
-                this.userinfo.profile = user.avatar
-                this.userinfo.introduction = user.userInfo
-                this.userinfo.fansCount = user.fans
-                this.userinfo.subscribeCount = user.subscriber*/
-
         }
       } else {
         this.isSelf = false
@@ -320,6 +316,7 @@ export default {
         handleMainMenu.$emit('user')
 
     },
+
     handleCloseVideos() {
       // this.dialogVisible.video = false
     },
@@ -389,6 +386,7 @@ export default {
         user.avatar = userInfo.avatar
 
         localStorage.setItem('userInfo', JSON.stringify(user))
+        handleMainMenu.$emit('updateUserInfo')
         this.userinfo.name = this.editForm.name
         this.userinfo.introduction = this.editForm.introduction
         this.userinfo.profile = this.editForm.profile
@@ -396,14 +394,6 @@ export default {
       }).catch(error => {
 
       })
-      //
-      /*      if(1){//修改成功后触发下列内容
-              this.userinfo.name=this.editForm.name
-              this.userinfo.introduction=this.editForm.introduction
-              this.userinfo.profile=this.editForm.profile
-              this.handleCloseEdit()
-            }else{ //修改不成功？？？
-            }*/
 
     },
     login() {
@@ -741,6 +731,7 @@ export default {
           <el-avatar :size="80" class="edit-avatar-tiktok"
                      :src="editForm.displayProfile || editForm.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
           <el-upload
+              ref="avatarUpload"
               class="avatar-uploader-trigger-tiktok"
               action="#"
               :limit="1"
@@ -748,7 +739,7 @@ export default {
               :http-request=" reUploadImage"
               :show-file-list="false"
               accept="image/jpeg,image/png,image/gif">
-            <el-button size="small" type="primary" plain>更换头像</el-button>
+            <el-button size="small" type="primary" plain >更换头像</el-button>
           </el-upload>
           <div class="el-upload__tip">支持jpg/png/gif格式，大小不超过2MB</div>
         </el-form-item>

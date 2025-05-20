@@ -9,8 +9,8 @@ export default {
     return {
       videoId:"",
       dialogFormVisible:false,
-      searching: '',
-      type: '',
+      searchKeyword: this.$route.query.key || '',     // ✨ 初始化时从路由获取
+      searchType: this.$route.query.type || 'video', // ✨ 初始化时从路由获取，或默认
       loading:false,
       results: {
         users: [],
@@ -39,26 +39,26 @@ export default {
       this.$router.go(-1)
     },
     changeType(type) { //更改type时调用
+      console.log(type)
       //更改路由
+      if (this.searchType === type) return; // 类型未改变，不操作
+
+      // 更新路由的 type 参数，这将自动触发 watch 中的 executeSearch
       this.$router.push({
         name: 'search',
         query: {
-          key: this.searching,
+          key: this.searchKeyword,  // 保留其他 query 参数，如 key
           type: type
         }
-      }, () => {
+      }).catch(err => {
+        if (err.name !== 'NavigationDuplicated') {
+          console.error("Router push error from SearchView (changeType):", err);
+        }
       });
+    },
       //!!!执行数据调用
-    },
-    clickGeneralSearch() {
-      this.changeType('general')
-    },
-    clickVideoSearch() {
-      this.changeType('video')
-    },
-    clickUserSearch() {
-      this.changeType('user')
-    },
+
+
     showVideoDialog(videoId){
       this.videoId=videoId
       this.dialogFormVisible = true;
@@ -67,13 +67,13 @@ export default {
       this.dialogFormVisible = false;
     },
     Search() { //执行搜索
-   /*   console.log("sousuo" + this.searching + this.type)*/
+      console.log("sousuo" + this.searchKeyword + this.searchType)
       if(this.loading === false)
       {
         this.loading = true;
         let url = "/search/"
         let afterPath = 'user'
-         switch(this.type){
+         switch(this.searchType){
            case 'user' :{
              afterPath= 'user'
              break
@@ -88,11 +88,11 @@ export default {
          }
         url += afterPath
         try {
-          axios.post(url + '/' + this.searching).then((response) => {
+          axios.post(url + '/' + this.searchKeyword).then((response) => {
             if (response.data.code === 1) {
               console.log(response.data.data)
               this.firstSearchAttempted = true;
-              switch (this.type) {
+              switch (this.searchType) {
                 case 'user' : {
                   this.results.users = response.data.data
                   break;
@@ -121,24 +121,52 @@ export default {
       }
     }
   },
+  beforeMount() {
+
+  },
   mounted() {
-    let _this = this
-    Middle.$on('search', (data) => {
-      _this.Search();
-    })
-    //将搜索关键词赋值
-    this.searching = this.$route.query.key
-    this.type = this.$route.query.type
-    this.Search();
+    Middle.$on('forceSearchRefresh', (params) => {
+      // 确保当前确实在搜索页，并且事件是针对当前搜索状态的（可选，但更健壮）
+      if (this.$route.name === 'search') {
+        console.log("SearchView: 收到 forceSearchRefresh 事件，参数:", params);
+        this.results = {users: [], videos: []};
+        // 更新内部状态（如果事件传递了新参数，尽管在此场景下参数通常是相同的）
+        // this.searchKeyword = params.key;
+        // this.searchType = params.type;
+        // 然后直接调用搜索方法
+        this.Search(); // 使用当前组件状态的 searchKeyword 和 searchType
+      }
+    });
+    // ✨ 组件挂载时，如果路由中已有参数，主动执行一次搜索
+    if (this.searchKeyword.trim()) {
+      console.log("SearchView: Initial search on mount for keyword:", this.searchKeyword, "type:", this.searchType);
+      this.Search();
+    } else {
+      this.firstSearchAttempted = false; // 如果初始没有关键词
+    }
   },
   watch: {
-    //监听路由更改时将搜索结果赋值
-    '$route.query'(newKey) {
-      if (this.$route.name === 'search')   //当路由为该界面时
-      {
-        this.searching = newKey.key
-        //this.type=newKey.type
-        this.Search();
+    '$route.query': {
+      deep: true, // ✨ 监听 query 对象的深度变化
+  /*    immediate: true, // 关键：组件创建时立即执行一次 handler*/
+      handler(newQuery, oldQuery) {
+        console.log("routerchanged",newQuery)
+        const newKeyword = newQuery.key || '';
+        const newType = newQuery.type || 'video'; // 默认类型
+
+        // 仅当关键词或类型实际改变时才执行搜索，或者首次加载时
+        // (immediate: true 会在首次加载时 newKeyword 和 this.searchKeyword 可能不同)
+        if (newKeyword !== this.searchKeyword || newType !== this.searchType || !this.firstSearchAttempted) {
+          this.searchKeyword = newKeyword;
+          this.searchType = newType;
+          if (this.searchKeyword.trim()) {
+            this.Search();
+          } else {
+            // 如果关键词变为空，清空结果
+            this.results = { users: [], videos: [] };
+            this.firstSearchAttempted = false; // 可能需要重置
+          }
+        }
       }
 
     }
@@ -173,9 +201,9 @@ export default {
         <el-button icon="el-icon-arrow-left" @click="back" class="back-button">返回</el-button>
         <div class="search-types">
           <el-button-group>
-            <el-button :type="type === 'general' ? 'primary' : 'default'" @click="changeType('general')">综合</el-button>
-            <el-button :type="type === 'video' ? 'primary' : 'default'" @click="changeType('video')">视频</el-button>
-            <el-button :type="type === 'user' ? 'primary' : 'default'" @click="changeType('user')">用户</el-button>
+<!--            <el-button :type="type === 'general' ? 'primary' : 'default'" @click="changeType('general')">综合</el-button>-->
+            <el-button :type="searchType === 'video' ? 'primary' : 'default'" @click="changeType('video')">视频</el-button>
+            <el-button :type="searchType === 'user' ? 'primary' : 'default'" @click="changeType('user')">用户</el-button>
           </el-button-group>
         </div>
 
@@ -187,7 +215,7 @@ export default {
 
         <div v-if="hasResults">
           <!-- 视频搜索结果 -->
-          <div v-if="type === 'video' && results.videos && results.videos.length > 0" class="result-section">
+          <div v-if="searchType === 'video' && results.videos && results.videos.length > 0" class="result-section">
             <h3>视频</h3>
             <ul class="video-list">
               <li v-for="video in results.videos" :key="video.videoId" class="video-item">
@@ -208,7 +236,7 @@ export default {
           </div>
 
           <!-- 用户搜索结果 -->
-          <div v-if="type === 'user' && results.users && results.users.length > 0" class="result-section">
+          <div v-if="searchType === 'user' && results.users && results.users.length > 0" class="result-section">
             <h3>用户</h3>
             <ul class="user-list">
               <li v-for="(user,index) in results.users"  class="user-item" >

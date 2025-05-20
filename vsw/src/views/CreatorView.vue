@@ -16,6 +16,7 @@ import OSS from '../public/lib/aliyun-upload-sdk-1.5.6/lib/aliyun-oss-sdk-6.17.1
 window.OSS = OSS;
 import '../public/lib/aliyun-upload-sdk-1.5.6/aliyun-upload-sdk-1.5.7.min'*/
 import dayjs from "dayjs";
+import Player from "xgplayer";
 
 export default {
     data(){
@@ -33,12 +34,26 @@ export default {
         uploader:null,
         tagContent:'',
         loadedPercent:0,
-        uploading:false
+        uploading:false,
+        player:null,
+        currentVideoBlobUrl:null,
+        userInfo:null
       }
     },
+  computed:{
+    showDescription(){
+      let description = ""
+      if(this.tagContent!==''){
+        description = "#"+this.tagContent+" "
+      }
+      description = description +this.description
+      return description || '作品简介'
+    },
+  },
     mounted() {
       console.log("creator")
       this.initInfo()
+
     },
     created(){
       if(localStorage.getItem('userInfo')===null){
@@ -46,6 +61,21 @@ export default {
       }
     },
     methods:{
+      initVideo(url){
+        return new Player({
+          el: this.$refs.video,
+          url:url,
+          plugins: [],
+          poster: '',
+          width: '100%',
+          height: '100%',
+          autoplay: false,
+          keyShortcut: false,
+          //autoplayMuted: true
+          /*      controls: false,  // 禁用默认控制栏
+                disableControls: true  // 禁用默认控制按钮*/
+        });
+      },
       test(a){
           console.log("test:",a)
       },
@@ -53,6 +83,7 @@ export default {
         if(localStorage.getItem('userInfo')!=null){
           try {
             this.userid=JSON.parse(localStorage.getItem('userInfo')).userId;
+            this.userInfo = JSON.parse(localStorage.getItem('userInfo'))
           } catch(e) {
             console.error("initInfo: Error parsing user info from localStorage:", e);
           }
@@ -62,6 +93,7 @@ export default {
         }
 
       },
+
       initAcsClint(){
          let _this = this;
          let uploader = new AliyunUpload.Vod({
@@ -193,11 +225,16 @@ export default {
           }
         }
       },
-      handleVideoRemove(){
+      handleVideoRemove(file, fileList){
+        this.fileList = fileList;
       },
       handleChange(file, fileList){ //文件选择后执行的方法
-        this.fileList = fileList;
-       // console.log("选择后文件")
+
+        this.fileList = fileList.slice(-1);
+
+
+      /*  this.$refs.videoUploader.clearFiles();*/
+       console.log("选择后文件")
 
       },
       delFile(){  //点击上传文件触发的额外事件,清空fileList
@@ -206,15 +243,48 @@ export default {
         this.uploader=null;
       },
       uploadFile(file){
+        if (this.$refs.videoUploader) {
+          this.$refs.videoUploader.clearFiles();
+        }
 
           if (this.fileList.length === 0) return
         //初始化上传类
           this.uploader=this.initAcsClint()
         //添加文件
           this.uploader.addFile(this.fileList[0].raw)
+
+
+
+        if (this.player) { // 确保播放器已初始化且有文件
+            this.player.destroy()
+        }
+        const videoBlobUrl = URL.createObjectURL(this.fileList[0].raw);
+        this.player = this.initVideo(videoBlobUrl)
+        if (this.currentVideoBlobUrl) {
+          URL.revokeObjectURL(this.currentVideoBlobUrl);
+        }
+        this.currentVideoBlobUrl = videoBlobUrl; // 存储当前的 Blob URL 以便后续释放
+        // 【核心预览逻辑】
+   /*     if (this.player &&file.file) { // 确保播放器已初始化且有文件
+          const videoBlobUrl = URL.createObjectURL(file.file);
+          this.player.setConfig({ // 或者直接 player.src = videoBlobUrl;
+            url: videoBlobUrl,
+          });
+          // 可选：如果希望选择后立即播放预览
+           this.player.reload();
+
+          // 【重要】管理 Blob URL 的生命周期
+          // 当不再需要这个预览（例如，用户重新选择文件，或组件销毁）时，应释放 Blob URL
+          // 可以在 this.player 的 destroy 事件或 Vue 的 beforeDestroy 钩子中处理
+          // 或者在下一次调用 uploadFile 之前，如果旧的 Blob URL 存在，则先 revoke
+          if (this.currentVideoBlobUrl) {
+            URL.revokeObjectURL(this.currentVideoBlobUrl);
+          }
+          this.currentVideoBlobUrl = videoBlobUrl; // 存储当前的 Blob URL 以便后续释放
+        }*/
       },
 
-      submitVideo(){
+      submitVideoToAliyun(){
         if(this.title!==''){
           //开始上传
           this.uploader.startUpload()
@@ -225,10 +295,17 @@ export default {
 
       },
       reUpload(){
-        this.delFile()
-        //document.querySelector(".el-upload .el-upload").click();
+/*
+        if (this.$refs.videoUploader) {
+          this.$refs.videoUploader.clearFiles(); // 清空 el-upload 组件的内部文件列表
+        }
+*/
+        this.$refs.videoUploader.$el.querySelector('.el-upload-dragger').click()
+
+
       }
-    }
+    },
+
   }
 </script>
 <template>
@@ -245,16 +322,17 @@ export default {
 
       <!-- 使用 el-form 组织表单内容 -->
       <el-form label-position="top" class="creator-form">
-
         <!-- 文件上传区域 -->
         <el-form-item label="选择视频文件" required>
           <!-- el-upload 组件 -->
           <el-upload
+              v-show="fileList.length<1"
               ref="videoUploader"
               class="video-uploader"
+              :show-file-list="false"
               drag
               action="#"
-              :limit="1"
+              :limit="2"
               :multiple="false"
               :file-list="fileList"
               :on-change="handleChange"
@@ -275,7 +353,19 @@ export default {
             <!-- 原始模板: <el-upload> <el-button v-show="fileList.length===0">选取文件</el-button> </el-upload> -->
             <!-- 注意：原始模板的 button 在 el-upload 内部，新模板使用 slot="trigger" 或拖拽区 -->
           </el-upload>
+
           <!-- 重新选择按钮 -->
+          <div ref="video" style="height:500px"  v-show="fileList.length>0"  class="player-instance">
+            <div class="video-info-overlay">
+              <div class="video-description-content">
+                <p class="author-name">@{{userInfo.userName }}</p>
+                <p class="video-title">{{ title || '作品标题将会显示在这里' }}</p>
+                <p class="video-detail-desc"> {{showDescription }}</p>
+              </div>
+            </div></div>
+
+
+
           <el-button
               v-show="fileList.length > 0"
               @click="reUpload"
@@ -344,7 +434,7 @@ export default {
           <el-button
               type="primary"
               icon="el-icon-upload2"
-              @click="submitVideo"
+              @click="submitVideoToAliyun"
               :disabled="fileList.length === 0 || title.trim() === '' || uploading">
             {{ uploading ? '正在上传...' : '发 布 作 品' }}
           </el-button>
@@ -361,10 +451,10 @@ export default {
 
 <style scoped>
 /* === Creator Page Dark Theme (Standard CSS - Optimized & Unified) === */
+/* ... (你现有的所有 CSS 变量和样式保持不变) ... */
 
-
-.creator-page-container {
-  /* --- Start: Local Theme Variables (Remove if defined globally in :root) --- */
+/* --- Start: Local Theme Variables (Remove if defined globally in :root) --- */
+:root { /* CSS 变量通常定义在 :root 或一个共同的父元素上 */
   --theme-bg-color: #121212;
   --primary-bg-color: #1e1e1e;
   --secondary-bg-color: #282828; /* For less prominent surfaces like upload dragger bg */
@@ -373,6 +463,7 @@ export default {
 
   --primary-text-color: #e0e0e0;
   --secondary-text-color: #a0a0a0;
+  --overlay-text-color: #FFFFFF; /* 纯白色用于遮罩层文字，确保高对比度 */
 
   --accent-color: #FE2C55; /* TikTok Red */
   --accent-color-darker: #e02049;
@@ -414,12 +505,13 @@ export default {
 
   --transition-duration: 0.2s;
   --transition-timing-function: ease-in-out;
-  /* --- End: Local Theme Variables --- */
+}
+/* --- End: Local Theme Variables --- */
 
-  /* Base styles for the page container */
+.creator-page-container {
   padding: 24px;
   background-color: var(--theme-bg-color);
-  min-height: calc(100vh - 40px);
+  min-height: calc(100vh - 40px); /* 假设有一个 40px 高的页头/导航 */
   box-sizing: border-box;
   color: var(--primary-text-color);
   font-family: var(--font-family-sans-serif);
@@ -434,13 +526,13 @@ export default {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-large);
   box-shadow: var(--shadow-md);
-  overflow: hidden;
+  overflow: hidden; /* 确保子元素圆角生效 */
 }
 
 .creator-card .card-header {
   font-size: 18px;
   font-weight: 600;
-  color: var(--primary-text-color);
+  color: var(--primary-text-color); /* 使用主题主文字色 */
   border-bottom: 1px solid var(--border-color);
   padding: 18px 24px;
   display: flex;
@@ -450,7 +542,7 @@ export default {
 .creator-card .card-header i {
   margin-right: 12px;
   font-size: 22px;
-  color: var(--accent-color);
+  color: var(--accent-color); /* 使用主题强调色 */
   line-height: 1;
 }
 
@@ -460,18 +552,18 @@ export default {
 
 .creator-form .el-form-item {
   margin-bottom: 28px;
-  /* 移除这里的 color: white; 因为我们想让 label 自己控制颜色 */
 }
 
+/* 确保 Element UI 的 Label 也是白色/浅色 */
 .creator-form :deep(.el-form-item__label) {
   padding-bottom: 8px;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--primary-text-color); /* ✨ 使用我们定义的深色主题文字颜色 */
+  color: var(--primary-text-color) !important; /* 使用主题主文字色，!important确保覆盖默认 */
   font-size: 14px;
 }
 
-/* --- Upload Area --- */
+/* --- Upload Area (已有样式，保持) --- */
 .video-uploader ::v-deep .el-upload-dragger {
   width: 100%;
   height: 200px;
@@ -510,68 +602,83 @@ export default {
   margin-top: 12px;
 }
 
-/* Upload File List Item */
-.video-uploader ::v-deep .el-upload-list__item {
-  background-color: var(--secondary-bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-base);
-  margin-top: 10px;
-  padding: 10px 12px;
-  transition: background-color var(--transition-duration) var(--transition-timing-function);
-}
-.video-uploader ::v-deep .el-upload-list__item:hover {
-  background-color: var(--tertiary-bg-color);
-}
-.video-uploader ::v-deep .el-upload-list__item-name {
-  color: var(--primary-text-color);
-  font-size: 14px;
-  margin-right: 45px;
-}
-.video-uploader ::v-deep .el-upload-list__item .el-icon-close {
-  color: var(--secondary-text-color);
-  font-size: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: color var(--transition-duration) var(--transition-timing-function);
-}
-.video-uploader ::v-deep .el-upload-list__item .el-icon-close:hover {
-  color: var(--danger-color);
-}
-.video-uploader ::v-deep .el-upload-list__item-status-label,
-.video-uploader ::v-deep .el-upload-list__item .el-icon-upload-success, /* Element UI < 2.15.x */
-.video-uploader ::v-deep .el-upload-list__item .el-icon-circle-check { /* Element UI >= 2.15.x */
-  color: var(--success-color);
-  font-size: 16px;
-}
-.video-uploader ::v-deep .el-upload-list__item .el-icon-warning,
-.video-uploader ::v-deep .el-upload-list__item .el-icon-circle-close { /* Element UI 失败图标 */
-  color: var(--danger-color);
-  font-size: 16px;
-}
-.video-uploader ::v-deep .el-upload-list__item .el-progress {
-  position: absolute;
-  bottom: -1px; /* 微调，使其覆盖在边框上或紧贴 */
-  left: 0;
-  right: 0;
+/* --- 新增：视频预览区域样式 --- */
+.video-preview-wrapper {
+  position: relative; /* 为内部绝对定位的遮罩层提供基准 */
   width: 100%;
-  border-radius: 0 0 var(--border-radius-base) var(--border-radius-base); /* 底部圆角与列表项一致 */
-  overflow: hidden; /* 确保进度条不溢出圆角 */
+  height: 500px; /* 或根据需要调整，与播放器高度一致 */
+  background-color: #000; /* 预览区域背景，视频加载前可见 */
+  border-radius: var(--border-radius-medium); /* 轻微圆角 */
+  overflow: hidden; /* 确保子元素（播放器、遮罩）不超出圆角范围 */
+  margin-top: 10px; /* 与上传区域的间距 */
 }
-.video-uploader ::v-deep .el-upload-list__item .el-progress .el-progress-bar__outer {
-  border-radius: 0; /* 进度条轨道不需要单独圆角 */
-  height: 3px !important; /* 使进度条更细，作为状态指示 */
-  background-color: var(--tertiary-bg-color); /* 进度条背景色 */
+
+.player-instance {
+  width: 100%;
+  height: 100%;
 }
-.video-uploader ::v-deep .el-upload-list__item .el-progress .el-progress-bar__inner {
-  border-radius: 0;
-  background-color: var(--accent-color); /* 进度颜色 */
+/* 确保 xgplayer 内部的 video 标签充满容器 */
+.player-instance ::v-deep video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain; /* 或 cover，根据需要选择视频填充方式 */
 }
-.video-uploader ::v-deep .el-upload-list__item .el-progress__text {
-  display: none;
+
+.video-info-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px 20px; /* 遮罩层内边距 */
+  box-sizing: border-box;
+  z-index: 10; /* 确保在播放器之上 */
+  /* 从下往上渐变，增强文字可读性 */
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+  color: var(--overlay-text-color); /* 使用专门为遮罩层定义的纯白色 */
+  pointer-events: none; /* 允许点击穿透到视频播放器本身 */
+}
+
+.video-description-content { /* 文字内容的容器 */
+  /* 可以添加最大宽度等限制，如果需要的话 */
+}
+
+.video-info-overlay .author-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.video-info-overlay .video-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  /* 多行文字溢出处理 (可选) */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.video-info-overlay .video-detail-desc {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+  /* 多行文字溢出处理 (可选) */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 最多显示3行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 
 .reupload-button.el-button--warning.is-plain {
+  /* ... (已有样式保持) ... */
   color: var(--warning-color);
   background: transparent;
   border: 1.5px solid var(--warning-color);
@@ -592,7 +699,7 @@ export default {
   border-color: var(--warning-color-hover-text);
 }
 
-/* --- Divider --- */
+/* --- Divider (已有样式，保持) --- */
 .creator-form .el-divider--horizontal {
   margin: 32px 0;
   background-color: var(--border-color);
@@ -611,12 +718,12 @@ export default {
   padding: 0 18px;
 }
 
-/* --- Inputs & Textarea --- */
+/* --- Inputs & Textarea (已有样式，确保文字颜色) --- */
 .creator-form ::v-deep .el-input__inner,
 .creator-form ::v-deep .el-textarea__inner {
   background-color: var(--input-bg-color, var(--secondary-bg-color));
-  border: 1px solid var(--border-color-light); /* 默认边框用稍浅的颜色 */
-  color: var(--primary-text-color);
+  border: 1px solid var(--border-color-light);
+  color: var(--primary-text-color); /* 确保输入文字是浅色 */
   border-radius: var(--border-radius-medium);
   height: var(--input-height);
   line-height: var(--input-height);
@@ -625,9 +732,10 @@ export default {
   transition: border-color var(--transition-duration) var(--transition-timing-function),
   box-shadow var(--transition-duration) var(--transition-timing-function);
 }
-.creator-form ::v-deep .el-input__inner:hover, /* 添加 hover 状态 */
+/* ... (其余 input, textarea 样式保持不变) ... */
+.creator-form ::v-deep .el-input__inner:hover,
 .creator-form ::v-deep .el-textarea__inner:hover {
-  border-color: var(--border-color); /* 悬停时边框变深一点 */
+  border-color: var(--border-color);
 }
 .creator-form ::v-deep .el-input__inner:focus,
 .creator-form ::v-deep .el-textarea__inner:focus {
@@ -647,14 +755,12 @@ export default {
 .creator-form ::v-deep .el-input .el-input__clear:hover {
   color: var(--primary-text-color);
 }
-
 .creator-form ::v-deep .el-textarea__inner {
   height: auto;
   min-height: calc(var(--input-height) * 2.5);
   line-height: var(--line-height-base);
   padding: 10px var(--input-padding-horizontal);
 }
-
 .creator-form ::v-deep .el-input.is-disabled .el-input__inner,
 .creator-form ::v-deep .el-textarea.is-disabled .el-textarea__inner {
   background-color: var(--disabled-bg-color) !important;
@@ -665,16 +771,15 @@ export default {
   -webkit-text-fill-color: var(--disabled-text-color);
   box-shadow: none !important;
 }
-
 .creator-form ::v-deep .el-input__count .el-input__count-inner {
   background-color: transparent !important;
   color: var(--secondary-text-color);
   font-size: 12px;
 }
 
-/* --- Radio Group --- */
-.creator-form ::v-deep .el-radio { /* 为整个 radio 元素添加外边距 */
-  margin-right: 24px; /* 增加选项之间的距离 */
+/* --- Radio Group (已有样式，确保文字颜色) --- */
+.creator-form ::v-deep .el-radio {
+  margin-right: 24px;
 }
 .creator-form ::v-deep .el-radio__input .el-radio__inner {
   background: transparent;
@@ -694,7 +799,7 @@ export default {
   background-color: var(--accent-color-light-text);
 }
 .creator-form ::v-deep .el-radio__label {
-  color: var(--primary-text-color);
+  color: var(--primary-text-color); /* 确保 Radio Label 是浅色 */
   font-size: 14px;
   padding-left: 8px;
   transition: color var(--transition-duration) var(--transition-timing-function);
@@ -702,6 +807,7 @@ export default {
 .creator-form ::v-deep .el-radio:hover .el-radio__label {
   color: var(--accent-color);
 }
+/* ... (其余 radio 样式保持不变) ... */
 .creator-form ::v-deep .el-radio.is-disabled .el-radio__label {
   color: var(--disabled-text-color) !important;
   opacity: 1;
@@ -710,7 +816,6 @@ export default {
   background-color: var(--disabled-bg-color) !important;
   border-color: var(--disabled-border-color) !important;
 }
-
 .creator-form .access-tip {
   color: var(--secondary-text-color);
   font-size: 12px;
@@ -718,16 +823,15 @@ export default {
   font-style: italic;
 }
 
-/* --- Action Buttons & Progress --- */
+/* --- Action Buttons & Progress (已有样式，可微调进度条) --- */
 .action-buttons {
   margin-top: 36px;
-  text-align: right;
+  text-align: right; /* 发布按钮通常在右侧 */
 }
-
 .action-buttons .el-button--primary {
   background-color: var(--accent-color);
   border: 1px solid var(--accent-color);
-  color: var(--accent-color-light-text);
+  color: var(--accent-color-light-text); /* 确保按钮文字是浅色 */
   border-radius: var(--border-radius-medium);
   padding: 0 var(--button-padding-horizontal);
   height: var(--button-height);
@@ -737,8 +841,9 @@ export default {
   transition: background-color var(--transition-duration) var(--transition-timing-function),
   border-color var(--transition-duration) var(--transition-timing-function),
   box-shadow var(--transition-duration) var(--transition-timing-function);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.5px; /* 轻微增加字间距 */
 }
+/* ... (其余 button, progress 样式保持不变) ... */
 .action-buttons .el-button--primary:hover,
 .action-buttons .el-button--primary:focus {
   background-color: var(--accent-color-darker);
@@ -759,28 +864,26 @@ export default {
 
 .action-buttons .el-progress {
   margin-bottom: 18px;
+  /* 如果需要，可以调整进度条文本颜色，但Element UI通常处理得不错 */
 }
 .action-buttons .el-progress ::v-deep .el-progress-bar__outer {
-  border-radius: var(--border-radius-round, 100px);
+  border-radius: var(--border-radius-round, 100px); /* 使用CSS变量确保一致性 */
   background-color: var(--secondary-bg-color);
-  height: 10px !important;
+  height: 18px !important; /* 稍微加高一点，配合 text-inside */
 }
 .action-buttons .el-progress ::v-deep .el-progress-bar__inner {
   border-radius: var(--border-radius-round, 100px);
   background-color: var(--accent-color);
   transition: width 0.3s var(--transition-timing-function);
-  text-align: right;
+  text-align: right; /* 确保内部文字靠右 */
+  line-height: 18px; /* 与高度一致 */
 }
 .action-buttons .el-progress.is-text-inside ::v-deep .el-progress-bar__innerText {
-  color: var(--accent-color-light-text);
-  font-size: 12px; /* 确保与外部文字大小一致或协调 */
-  line-height: 10px; /* 与进度条高度一致 */
-  padding: 0 5px; /* 调整内边距 */
-  display: flex; /* 使用flex确保垂直居中 */
-  align-items: center;
-  justify-content: center; /* 水平居中 (如果需要) */
+  color: var(--accent-color-light-text); /* 确保进度条内部文字是浅色 */
+  font-size: 12px;
+  padding: 0 8px; /* 给文字一些呼吸空间 */
 }
-.action-buttons .el-progress ::v-deep .el-progress__text { /* 外部文字 */
+.action-buttons .el-progress:not(.is-text-inside) ::v-deep .el-progress__text {
   color: var(--secondary-text-color);
   font-size: 13px !important;
   margin-left: 8px;

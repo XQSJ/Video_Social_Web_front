@@ -67,21 +67,12 @@ export default {
         this.$refs.elMenu.activeIndex = 'user';
       }
     })
-    if (localStorage.getItem('userInfo') !== null) {
-      _this.userinfo = JSON.parse(localStorage.getItem('userInfo'));
-      let avatarPath = this.userinfo.avatar; // 使用更明确的变量名
+    handleMainMenu.$on('updateUserInfo',(data)=>{
 
-      if (avatarPath) { // 确保头像路径存在
-        axios.get(`/image/getUrl/${avatarPath}`).then((response) => {
-          if (response.data && response.data.data) { // 检查响应数据
-            _this.userinfo.profile = response.data.data;
-            this.$forceUpdate(); // 谨慎使用 $forceUpdate，通常 Vue 的响应式系统会自动处理
-          }
-        }).catch(error => {
-          console.error("获取头像URL失败:", error);
-        });
-      }
-      this.userid = this.userinfo.userId; // 直接从已解析的 userinfo 获取
+      this.initUserInfo()
+    })
+    if (localStorage.getItem('userInfo') !== null) {
+      this.initUserInfo()
     }
 
     if (this.userid !== -1) {
@@ -99,6 +90,23 @@ export default {
     }
   },
   methods: {
+    initUserInfo(){
+      let _this = this
+      _this.userinfo = JSON.parse(localStorage.getItem('userInfo'));
+      let avatarPath = this.userinfo.avatar; // 使用更明确的变量名
+
+      if (avatarPath) { // 确保头像路径存在
+        axios.get(`/image/getUrl/${avatarPath}`).then((response) => {
+          if (response.data && response.data.data) { // 检查响应数据
+            _this.userinfo.profile = response.data.data;
+            this.$forceUpdate(); // 谨慎使用 $forceUpdate，通常 Vue 的响应式系统会自动处理
+          }
+        }).catch(error => {
+          console.error("获取头像URL失败:", error);
+        });
+      }
+      this.userid = this.userinfo.userId; // 直接从已解析的 userinfo 获取
+    },
     existNewMessages() {
       if (this.dialogVisible.messageView === false && this.userid !== -1) { // 确保userid有效
         axios.get(`/message/exist/${this.userid}`).then((response) => {
@@ -165,30 +173,49 @@ export default {
     },
 
     clearSearch() {
-      // this.input_search = ''; // 已通过 el-input 的 clearable 实现
-      // 如果有其他清空搜索结果的逻辑，在此处添加
+
     },
     clickSearch() {
-      if (this.input_search.trim() !== '') {
-        const currentRoute = this.$route;
+      const searchTerm = this.input_search.trim();
+      if (searchTerm === '') {
+        this.$message.info('请输入搜索关键词');
+        return;
+      }
+
+      const currentRoute = this.$route;
+      let currentSearchType = 'video'; // 默认搜索类型
+      if (currentRoute.name === 'search' && currentRoute.query.type) {
+        currentSearchType = currentRoute.query.type;
+      }
+
         const targetRoute = {
           name: 'search',
           query: {
-            key: this.input_search.trim(),
-            type: 'general'
+            key: searchTerm,
+            type: currentSearchType // 将当前或默认类型带过去
           }
         };
-        // 避免不必要的重复导航
-        if (currentRoute.name !== targetRoute.name ||
-            currentRoute.query.key !== targetRoute.query.key ||
-            currentRoute.query.type !== targetRoute.query.type) {
-          this.$router.push(targetRoute).catch(err => {
-            if (err.name !== 'NavigationDuplicated') console.error(err);
-          });
-        } else {
-          Middle.$emit('search'); // 如果已在搜索页且参数相同，则触发事件
-        }
+      // 检查是否需要导航
+      if (
+          currentRoute.name === targetRoute.name &&
+          currentRoute.query.key === targetRoute.query.key &&
+          currentRoute.query.type === targetRoute.query.type
+      ) {
+        // 如果已经在搜索页且所有参数都相同，可能意味着用户想用相同的词刷新
+        // 此时，SearchView 内部的 watch 可能不会触发（因为 query 没变）
+        // 可以通过事件总线强制 SearchView 刷新，或者 SearchView 监听一个特定的“强制刷新”事件
+        console.log("MainUI: 已经在搜索页且参数相同，考虑是否需要强制刷新");
+        Middle.$emit('forceSearchRefresh', { key: searchTerm, type: currentSearchType  }); // 发出一个不同的事件
+      } else {
+        this.$router.push(targetRoute).catch(err => {
+          if (err.name !== 'NavigationDuplicated') {
+            console.error("Router push error from MainUI:", err);
+          }
+        });
       }
+
+
+
     }
   }
 }
