@@ -17,7 +17,7 @@ export default {
       this.dialogFormVisible = false;
     },
     showDialog(videoId){
-      console.log("showUservideo:",videoId)
+
       this.videoId=videoId
       this.dialogFormVisible = true;
     },

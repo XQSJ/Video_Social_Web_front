@@ -11,10 +11,12 @@ export default {
   components: {UserVideoPlayerDialog},
   data() {
     return {
+      activeFanTab: '关注',
       source: null,
       imageUpList: [],
       player: '',
       isSelf: false,
+      fansLoading:false,
       searchVideoLoading: true,
       upAvatarLoading: false,
       isFollower: 0,
@@ -325,19 +327,38 @@ export default {
       this.dialogVisible.fans = false
 
     },
-    handleOpenFans(item) {
-      let userid = this.userid
-      if (item === '关注') {
-        axios.get(`/follow/getsubs/${userid}`).then((response) => {
-          this.userList = response.data.data;
-        });
-      } else {
-        axios.get(`/follow/getfans/${userid}`).then((response) => {
-          this.userList = response.data.data;
-        });
+    handleOpenFans(tabName) {
+      this.activeFanTab = tabName; // ✨ 设置激活的标签页
+      let currentUserId = this.userid;
+      this.userList = {};
+      this.input_searchUser = '';
+      this.fansLoading=true;
+      let url = '';
+      if (tabName === '关注') {
+        url = `/follow/getsubs/${currentUserId}`;
+      } else { // 粉丝
+        url = `/follow/getfans/${currentUserId}`;
+      }
+      axios.get(url).then((response) => {
+        if (response.data.code === 1) {
+          this.userList = response.data.data || []; // 确保空数据时是数组
+        } else {
+          this.$message.error('获取列表失败: ' + response.data.msg);
+          this.userList = [];
+        }
+      }).catch(error => {
+        this.$message.error('请求列表接口失败: ' + error.message);
+        this.userList = [];
+      }).finally(() => {
+        this.fansLoading = false;
+      });
+      if (!this.dialogVisible.fans) { // 只有当弹窗未打开时才设为true，避免重复打开
+        this.dialogVisible.fans = true;
       }
 
-      this.dialogVisible.fans = true
+    },
+    switchFanTab(tabName) { // 用于点击按钮切换并加载数据
+      this.handleOpenFans(tabName);
     },
     handleCloseEdit() {
       this.imageUpList = []
@@ -528,7 +549,7 @@ export default {
       <el-row :gutter="20" type="flex" class="user-info-row-tiktok"> <!-- 移除 align="middle" 让 col 自己控制对齐 -->
         <!-- 头像列 -->
         <el-col :xs="24" :sm="6" :md="4" class="avatar-col-tiktok">
-          <el-avatar :size="90" class="user-avatar-tiktok"
+          <el-avatar :size="120" class="user-avatar-tiktok"
                      :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"/>
         </el-col>
 
@@ -558,17 +579,17 @@ export default {
         <!-- ✨ 操作按钮列：调整栅格占比，并确保内容右对齐 -->
         <el-col :xs="24" :sm="6" :md="6" class="action-col-tiktok">
           <div class="action-buttons-wrapper-tiktok"> <!-- 新增 wrapper 用于flex布局 -->
-            <el-button v-if="isSelf" type="primary" plain round class="edit-profile-btn-tiktok" @click="handleOpenEdit">
+            <el-button v-if="isSelf"   round class="edit-profile-btn-tiktok" @click="handleOpenEdit">
               <i class="el-icon-edit"></i> 编辑资料
             </el-button>
             <div v-if="!isSelf" class="follow-actions-tiktok">
-              <el-button v-if="isFollower === 0" type="primary" round class="follow-btn-tiktok main-action" @click="handleFollow(userid)">
+              <el-button v-if="isFollower === 0"  round class="follow-btn-tiktok main-action" @click="handleFollow(userid)">
                 <i class="el-icon-plus"></i> 关注
               </el-button>
-              <el-button v-if="isFollower === 1" type="default" round plain class="follow-btn-tiktok" @click="handleUnFollow(userid)">
+              <el-button v-if="isFollower === 1"  round plain class="follow-btn-tiktok" @click="handleUnFollow(userid)">
                 <i class="el-icon-check"></i> 已关注
               </el-button>
-              <el-button v-if="isFollower === 2" type="default" round plain class="follow-btn-tiktok" @click="handleUnFollow(userid)">
+              <el-button v-if="isFollower === 2"  round plain class="follow-btn-tiktok" @click="handleUnFollow(userid)">
                 <i class="el-icon-refresh-right"></i> 互相关注
               </el-button>
               <!--              <el-button type="default" round plain icon="el-icon-message" class="message-btn-tiktok">私信</el-button>-->
@@ -603,7 +624,8 @@ export default {
         </div>
       </div>
 
-      <div class="video-grid-wrapper-tiktok" v-loading="searchVideoLoading" element-loading-text="正在努力加载..." element-loading-spinner="el-icon-loading" element-loading-background="rgba(24, 24, 24, 0.8)">
+      <div class="video-grid-wrapper-tiktok" v-loading="searchVideoLoading"   element-loading-background="rgba(0, 0, 0, 0)" >
+
         <el-empty
             v-if="!searchVideoLoading && (!aboutVideos || (Array.isArray(aboutVideos) && aboutVideos.length === 0) || (typeof aboutVideos === 'object' && Object.keys(aboutVideos).length === 0))"
             image-size="100"
@@ -665,7 +687,7 @@ export default {
          <el-button type="primary" @click="submitVideoEdit" size="medium" class="dialog-btn-confirm-tiktok" :disabled="!currentEditingVideo">确 定</el-button>
        </span>
     </el-dialog>
-    <el-dialog :title="'用户列表'"
+    <el-dialog :title="(dialogVisible.fans && activeFanTab === '关注' ? '关注列表' : (dialogVisible.fans && activeFanTab === '粉丝' ? '粉丝列表' : '用户列表'))"
                :visible.sync="dialogVisible.fans" :before-close="handleCloseFans" width="450px"
                custom-class="fans-dialog-tiktok" append-to-body>
       <div class="fans-dialog-header-tiktok">
@@ -683,7 +705,7 @@ export default {
             class="fan-search-input-tiktok">
         </el-input>
       </div>
-      <div class="user-list-container-tiktok" v-loading="searchVideoLoading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading" element-loading-background="rgba(30, 30, 30, 0.8)">
+      <div class="user-list-container-tiktok" v-loading="searchVideoLoading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading" element-loading-background="rgba(0,0,0,0)">
         <el-empty
             v-if="!searchVideoLoading && (!userList || (Array.isArray(userList) && userList.length === 0) || (typeof userList === 'object' && Object.keys(userList).length === 0))"
             image-size="80"
@@ -852,8 +874,9 @@ export default {
 .action-buttons-wrapper-tiktok { /* 新增的包裹层 */
   display: flex;
   flex-direction: column; /* 如果希望编辑资料和关注按钮垂直堆叠 */
-  align-items: flex-end; /* 按钮在包裹层内也靠右 */
+  align-items: center;
   gap: 10px; /* 按钮之间的垂直间距 */
+  margin-top: 50px; /* 示例值，请调整 */
 }
 @media (min-width: 768px) { /* 在较大屏幕上，按钮可以水平排列 */
   .action-buttons-wrapper-tiktok {
@@ -1178,11 +1201,11 @@ export default {
   border-bottom: 1px solid #2c2c2c;
   padding: 18px 20px;
 }
-.user-view-page-tiktok-style >>> .el-dialog.edit-dialog-tiktok .el-dialog__title,
-.user-view-page-tiktok-style >>> .el-dialog.fans-dialog-tiktok .el-dialog__title {
-  font-size: 17px;
-  font-weight: 600;
-  color: #f1f1f1;
+.el-dialog.edit-dialog-tiktok .el-dialog__title,
+.el-dialog.fans-dialog-tiktok .el-dialog__title { /* 注意这里，移除了 .user-view-page-tiktok-style >>> */
+  font-size: 17px !important; /* 增加 !important 以确保覆盖 */
+  font-weight: 600 !important;
+  color: #ffffff !important; /* ✨ 修改为纯白色，并添加 !important ✨ */
 }
 .user-view-page-tiktok-style >>> .el-dialog.edit-dialog-tiktok .el-dialog__headerbtn .el-dialog__close,
 .user-view-page-tiktok-style >>> .el-dialog.fans-dialog-tiktok .el-dialog__headerbtn .el-dialog__close {

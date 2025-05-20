@@ -95,7 +95,7 @@ export default {
               let createTime = formattedTime
               let description = ""
               if(_this.tagContent!==''){
-                description = description +"#"+_this.tagContent+" "
+                description = "#"+_this.tagContent+" "
               }
               description = description +_this.description
               let videoInfo = {
@@ -362,14 +362,7 @@ export default {
 <style scoped>
 /* === Creator Page Dark Theme (Standard CSS - Optimized & Unified) === */
 
-/*
-  重要提示:
-  为了真正的“统一风格”，下面的 CSS 自定义属性 (变量)
-  应该在您的全局 CSS 文件 (例如 main.css 或 App.vue 的非 scoped <style>)
-  的 :root 选择器中定义一次。
-  此处在 .creator-page-container 中重复定义是为了演示和组件独立性。
-  如果全局已定义，请删除此处的重复定义，并确保 var() 中的变量名与全局一致。
-*/
+
 .creator-page-container {
   /* --- Start: Local Theme Variables (Remove if defined globally in :root) --- */
   --theme-bg-color: #121212;
@@ -467,13 +460,14 @@ export default {
 
 .creator-form .el-form-item {
   margin-bottom: 28px;
+  /* 移除这里的 color: white; 因为我们想让 label 自己控制颜色 */
 }
 
-.creator-form ::v-deep .el-form-item__label {
+.creator-form :deep(.el-form-item__label) {
   padding-bottom: 8px;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--secondary-text-color);
+  color: var(--primary-text-color); /* ✨ 使用我们定义的深色主题文字颜色 */
   font-size: 14px;
 }
 

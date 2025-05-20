@@ -2,9 +2,15 @@
 import axios from "axios";
 import dayjs from "dayjs";
 import handleMainMenu from "@/utils/handleMainMenu";
+import toLogin from "@/utils/toLogin";
 
 export default {
   name:'CommentDialog',
+  computed: {
+    toLogin() {
+      return toLogin
+    }
+  },
   data(){
     return{
       videoIndex:null,
@@ -190,7 +196,7 @@ export default {
       this.toUserView(userid)
     },
     handleOpenLog(){
-      handleMainMenu.$emit('openLogView')
+      handleMainMenu.$emit('handleOpenLogView')
     },
     test(a){
       console.log("test:",a)

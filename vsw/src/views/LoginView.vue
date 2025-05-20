@@ -157,244 +157,353 @@ export default {
 </script>
 
 <template>
-<!--  <div v-loading="loading">-->
-<!--    <div v-show="!isRegister">
-      登录<br>
-      账户
-      <el-input v-model.trim="userId" placeholder="请输入账户" clearable></el-input>
-      密码
-      <el-input v-model.trim="userPwd" placeholder="请输入密码" clearable></el-input>
-      <el-button @click="handleRegisterButton">注册</el-button>
-      <el-button @click="verifyLogin" :disabled="!this.loginButton">登录</el-button>
-
-    </div>-->
-
-    <div class="login-register-wrapper" v-loading="loading" element-loading-text="正在处理..." element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.7)">
-      <!-- 使用 el-card 增强视觉效果 -->
-      <el-card class="box-card">
-<!--        &lt;!&ndash; 使用 transition 实现切换动画 &ndash;&gt;
-        <transition name="fade" mode="out-in">-->
-<!--     登录表单 (v-if 控制显示)-->
-        <el-button @click="closeLogView()">关闭</el-button>
-    <div v-if="!isRegister" key="login">
-      <div class="form-header">
-        <h2 class="form-title">用户登录</h2>
-      </div>
-      <!-- 使用 el-form 组织表单 -->
-      <el-form label-position="top">
-        <el-form-item label="用户 ID">
-          <el-input
-              oninput="value=value.replace(/[^\d.]/g,'')"
-              v-model.trim="userId"
-              placeholder="请输入用户 ID"
-              clearable
-              prefix-icon="el-icon-user">
-          </el-input>
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input
-              v-model.trim="userPwd"
-              placeholder="请输入密码"
-              clearable
-              show-password
-              prefix-icon="el-icon-lock">
-          </el-input>
-        </el-form-item>
-        <el-form-item class="button-group">
-          <!-- 登录按钮，禁用状态绑定到计算属性 -->
-          <el-button
-              type="primary"
-              :disabled="!loginButton"
-              style="width: 100%;"
-              @click="verifyLogin">
+  <!--  HTML 结构保持不变 -->
+  <div class="login-register-wrapper" v-loading="loading" :element-loading-text="loadingText" element-loading-spinner="el-icon-loading" :element-loading-background="loadingBackground">
+    <el-card class="box-card">
+      <!--
+        将 el-button 的 type="primary" (如果之前有) 或 type="success" (注册按钮)
+        移除或改为一个不带特定颜色的类型 (如默认类型)，然后通过自定义 class 来应用抖音红。
+        或者，如下方 CSS 所示，直接覆盖 Element UI 的 .el-button--primary 和 .el-button--success。
+      -->
+      <el-button @click="closeLogView()" class="top-close-button">关闭</el-button>
+      <div v-if="!isRegister" key="login">
+        <div class="form-header">
+          <h2 class="form-title">用户登录</h2>
+        </div>
+        <el-form label-position="top" @submit.native.prevent="verifyLogin">
+          <el-form-item label="用户 ID">
+            <el-input
+                oninput="value=value.replace(/[^\d.]/g,'')"
+                v-model.trim="userId"
+                placeholder="请输入用户 ID"
+                clearable
+                prefix-icon="el-icon-user">
+            </el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input
+                v-model.trim="userPwd"
+                placeholder="请输入密码"
+                clearable
+                show-password
+                prefix-icon="el-icon-lock">
+            </el-input>
+          </el-form-item>
+          <el-form-item class="button-group">
+            <el-button
+                type="primary"
+            :disabled="!loginButton"
+            style="width: 100%;"
+            native-type="submit"
+            @click="verifyLogin">
             登 录
-          </el-button>
-          <!-- 切换到注册的文字按钮 -->
-          <el-button type="text" @click="handleRegisterButton" class="switch-button">
-            没有账户？前往注册
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <div v-show="isRegister">
-      <div class="form-header">
-        <!-- 返回登录按钮 -->
-        <el-button type="text" icon="el-icon-arrow-left" @click="goBackToLogin" class="back-button">
-          返回登录
-        </el-button>
-        <h2 class="form-title">用户注册</h2>
+            </el-button>
+            <el-button type="text" @click="handleRegisterButton" class="switch-button">
+              没有账户？前往注册
+            </el-button>
+          </el-form-item>
+        </el-form>
       </div>
-
-<!--
-      用户名
-      <el-input v-model.trim="registerName" placeholder="请输入用户名" clearable></el-input>
-      密码
-      <el-input v-model.trim="registerPwd" placeholder="请输入密码" clearable></el-input>
-      <el-button @click="Register" :disabled="!this.registerButton">注册</el-button>
--->
-
-      <!-- 使用 el-form 组织表单 -->
-      <el-form label-position="top" @submit.native.prevent="Register">
-        <el-form-item label="用户名">
-          <el-input
-              v-model.trim="registerName"
-              placeholder="设置一个用户名"
-              clearable
-              prefix-icon="el-icon-user-solid">
-          </el-input>
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input
-              v-model.trim="registerPwd"
-              placeholder="设置密码"
-              clearable
-              show-password
-              prefix-icon="el-icon-lock">
-          </el-input>
-        </el-form-item>
-        <el-form-item class="button-group">
-          <!-- 注册按钮，禁用状态绑定到计算属性 -->
-          <el-button
-              type="success"
-              native-type="submit"
-              :disabled="!this.registerButton"
-              style="width: 100%;">
-            注 册
+      <div v-else key="register">
+        <div class="form-header">
+          <el-button type="text" icon="el-icon-arrow-left" @click="goBackToLogin" class="back-button">
+            返回登录
           </el-button>
-          <!-- 注册成功后显示用户ID提示 -->
-          <div v-if="registerId" class="register-success-info">
-            注册成功！您的ID是: <strong>{{ registerId }}</strong>，请牢记并使用ID登录。
-          </div>
-        </el-form-item>
-      </el-form>
-    </div>
-<!--        </transition>-->
-      </el-card>
+          <h2 class="form-title">用户注册</h2>
+        </div>
+        <el-form label-position="top" @submit.native.prevent="Register">
+          <el-form-item label="用户名">
+            <el-input
+                v-model.trim="registerName"
+                placeholder="设置一个用户名"
+                clearable
+                prefix-icon="el-icon-user-solid">
+            </el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input
+                v-model.trim="registerPwd"
+                placeholder="设置密码"
+                clearable
+                show-password
+                prefix-icon="el-icon-lock">
+            </el-input>
+          </el-form-item>
+          <el-form-item class="button-group">
+            <el-button
+                type="primary"
+            native-type="submit"
+            :disabled="!this.registerButton"
+            style="width: 100%;">
+            注 册
+            </el-button>
+            <div v-if="registerId" class="register-success-info">
+              注册成功！您的ID是: <strong>{{ registerId }}</strong>，请牢记并使用ID登录。
+            </div>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-card>
   </div>
 </template>
 
-<style scoped lang="stylus">
-// --- 整体布局与卡片样式 ---
+
+<style>
+  /* --- CSS 自定义属性 (抖音红风格 - 纯 CSS 版本) --- */
+:root {
+  --font-family-douyin: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --color-text-primary: #161823;
+  --color-text-secondary: #6F7581;
+  --color-text-placeholder: #A0A7B3;
+  --color-text-link-douyin: #FE2C55; /* 抖音红用于链接 */
+  --color-background-card: #FFFFFF;
+  --color-background-input: #F2F3F5;
+
+  --color-button-primary-douyin: #FE2C55; /* 主要按钮颜色 (抖音红) */
+  --color-button-primary-douyin-hover: #E4234A;
+  --color-button-primary-douyin-disabled: #FD9AAE;
+
+  --color-border-input: #E5E6EB;
+  --color-border-input-focus-douyin: #FE2C55; /* 输入框聚焦边框 (抖音红) */
+
+  --color-close-button-bg: #F2F3F5;
+  --color-close-button-text: #4E5969;
+  --color-close-button-border: #E5E6EB;
+
+  --border-radius-card: 8px;
+  --border-radius-input: 6px;
+  --box-shadow-card: 0px 6px 16px -2px rgba(22, 24, 35, 0.08), 0px 4px 8px -4px rgba(22, 24, 35, 0.05);
+
+  /* 加载动画相关颜色 */
+  --loading-mask-background-color: rgba(0, 0, 0, 0);
+  --loading-spinner-color: var(--color-button-primary-douyin);
+  --loading-text-color: var(--color-text-primary);
+}
+
+/* --- 整体布局与卡片样式 --- */
 .login-register-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  // 如果需要在弹窗内，高度可能由弹窗控制
-  // min-height: 400px; /* 可以设置最小高度 */
+  font-family: var(--font-family-douyin);
+  background-color: #000000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
 }
 
 .box-card {
-  width: 400px;       /* 固定宽度 */
-  padding: 20px;      /* 卡片内边距 */
-  border-radius: 8px; /* 圆角 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 添加阴影 */
-  overflow: hidden; /* 防止内容溢出 */
+  width: 380px;
+  padding: 32px;
+  border-radius: var(--border-radius-card);
+  box-shadow: var(--box-shadow-card);
+  background-color: var(--color-background-card);
+  position: relative;
 }
 
-// --- 表单头部样式 ---
+.top-close-button.el-button { /* 需要 :deep 如果 scoped */
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  padding: 6px 12px !important;
+  border: 1px solid var(--color-close-button-border) !important;
+  background-color: var(--color-close-button-bg) !important;
+  color: var(--color-close-button-text) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: var(--border-radius-input) !important;
+  min-height: auto !important;
+  line-height: normal !important;
+}
+.top-close-button.el-button:hover,
+.top-close-button.el-button:focus {
+  background-color: #E5E6EB !important;
+  border-color: #DCDFE6 !important;
+  color: var(--color-text-primary) !important;
+}
+
 .form-header {
-  display: flex;
-  align-items: center; /* 垂直居中 */
-  margin-bottom: 25px; /* 与下方表单间距 */
-  position: relative;  /* 用于返回按钮绝对定位 */
+  text-align: center;
+  margin-bottom: 32px;
+  position: relative;
 }
 
 .form-header .form-title {
-  margin: 0 auto;      /* 标题水平居中 */
-  font-size: 22px;     /* 标题字号 */
-  font-weight: 600;    /* 标题字重 */
-  color: #303133;      /* 标题颜色 */
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 28px;
 }
 
-.form-header .back-button {
-  position: absolute;  /* 绝对定位 */
-  left: -10px;         /* 调整水平位置 */
-  top: 50%;            /* 垂直居中 */
-  transform: translateY(-50%); /* 精确垂直居中 */
-  padding: 0 10px;     /* 按钮内边距 */
-  font-size: 14px;     /* 按钮字号 */
-  color: #409EFF;      /* 按钮颜色 */
+.form-header .back-button.el-button--text { /* 需要 :deep 如果 scoped */
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 10px !important;
+  font-size: 14px !important;
+  color: var(--color-text-secondary) !important;
+  min-height: auto !important;
+  background-color: transparent !important;
 }
-.form-header .back-button:hover {
-  color: #66b1ff;
+.form-header .back-button.el-button--text:hover,
+.form-header .back-button.el-button--text:focus {
+  color: var(--color-text-primary) !important;
+  background-color: transparent !important;
+}
+.form-header .back-button.el-button--text i {
+  font-weight: bold;
 }
 
-
-// --- 表单项与输入框样式 ---
 .el-form-item {
-  margin-bottom: 20px; /* 表单项间距 */
+  margin-bottom: 20px;
 }
 
-/* 修改 Element UI 默认 label 样式 */
-.el-form-item >>> .el-form-item__label { /* 深度选择器 */
-  padding-bottom: 5px; /* 标签与输入框间距 */
-  line-height: 1.5;    /* 行高 */
-  font-weight: 500;    /* 字体加粗 */
-  color: #606266;      /* 标签颜色 */
+/* 如果是 scoped CSS, 以下所有 .el-form-item__label, .el-input__inner 等都需要 :deep() */
+.el-form-item__label {
+  padding-bottom: 8px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  color: var(--color-text-primary) !important;
+  font-size: 14px !important;
 }
 
-/* 修改 Element UI 默认 input 样式 */
-.el-input >>> .el-input__inner { /* 深度选择器 */
-  border-radius: 4px; /* 输入框圆角 */
-  transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1); /* 过渡效果 */
+.el-input__inner {
+  background-color: var(--color-background-input) !important;
+  border-radius: var(--border-radius-input) !important;
+  border: 1px solid var(--color-border-input) !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  padding: 0 12px 0 40px !important;
+  font-size: 14px !important;
+  color: var(--color-text-primary) !important;
+  transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out !important;
+}
+.el-input__inner::placeholder {
+  color: var(--color-text-placeholder) !important;
+}
+.el-input__inner:focus {
+  border-color: var(--color-border-input-focus-douyin) !important; /* 抖音红边框 */
+  background-color: var(--color-background-card) !important;
+  box-shadow: none !important;
 }
 
-.el-input >>> .el-input__inner:focus {
-  border-color: #409EFF; /* 输入框聚焦时边框颜色 */
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2); /* 聚焦时外发光效果 */
+.el-input__prefix {
+  left: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.el-input__icon {
+  color: var(--color-text-secondary) !important;
+  font-size: 16px !important;
+  width: auto !important;
+}
+.el-input__suffix {
+  right: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.el-input__suffix-inner .el-input__icon {
+  color: var(--color-text-secondary) !important;
+  cursor: pointer !important;
+}
+.el-input__suffix-inner .el-input__icon:hover {
+  color: var(--color-text-primary) !important;
 }
 
-.el-input >>> .el-input__prefix .el-input__icon {
-  color: #C0C4CC; /* 图标颜色 */
-}
-
-// --- 按钮组与按钮样式 ---
 .button-group {
-  margin-top: 30px; /* 按钮组与上方表单项的距离 */
+  margin-top: 24px;
 }
 
-.button-group .el-button {
-  font-size: 16px;    /* 按钮字号 */
-  border-radius: 4px; /* 按钮圆角 */
-  padding: 12px 20px; /* 按钮内边距 */
+/* --- 覆盖 Element UI 默认按钮颜色 --- */
+/* 主要按钮 (type="primary") */
+.el-button--primary { /* 需要 :deep 如果 scoped */
+  background-color: var(--color-button-primary-douyin) !important;
+  border-color: var(--color-button-primary-douyin) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.2) !important;
+}
+.el-button--primary:hover,
+.el-button--primary:focus {
+  background-color: var(--color-button-primary-douyin-hover) !important;
+  border-color: var(--color-button-primary-douyin-hover) !important;
+  color: #fff !important;
+}
+.el-button--primary.is-disabled,
+.el-button--primary.is-disabled:hover,
+.el-button--primary.is-disabled:focus {
+  background-color: var(--color-button-primary-douyin-disabled) !important;
+  border-color: var(--color-button-primary-douyin-disabled) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  opacity: 0.7 !important;
 }
 
-/* 切换注册/登录的文字按钮样式 */
-.switch-button {
-  display: block;      /* 独占一行 */
-  margin: 15px auto 0; /* 上方间距，水平居中 */
-  font-size: 14px;     /* 字号 */
-  color: #409EFF;      /* 颜色 */
-  padding: 0;          /* 去除文字按钮默认padding */
-  line-height: 1;      /* 调整行高 */
+/* 文字按钮 (type="text") */
+.el-button--text { /* 需要 :deep 如果 scoped */
+  color: var(--color-text-link-douyin) !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+.el-button--text:hover,
+.el-button--text:focus {
+  color: var(--color-button-primary-douyin-hover) !important; /* 也可以用链接的 hover 色 */
+  background-color: transparent !important;
+  border-color: transparent !important;
 }
 
-.switch-button:hover {
-  color: #66b1ff;      /* 悬停颜色 */
+
+/* 您的自定义按钮样式 (如果与 Element UI 按钮类名不冲突) */
+.button-group .el-button { /* 统一按钮高度和圆角 */
+  width: 100%;
+  height: 44px !important;
+  border-radius: var(--border-radius-input) !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  transition: background-color .2s ease !important;
 }
 
-// --- 注册成功提示信息样式 ---
+.switch-button.el-button--text { /* 确保 switch-button 也是文字按钮样式 */
+  display: block !important;
+  margin: 16px auto 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  min-height: auto !important;
+}
+
 .register-success-info {
-  margin-top: 15px;      /* 与上方按钮间距 */
-  padding: 10px;         /* 内边距 */
-  background-color: #f0f9eb; /* 成功背景色 */
-  color: #67c23a;         /* 成功文字颜色 */
-  border: 1px solid #e1f3d8; /* 边框颜色 */
-  border-radius: 4px;      /* 圆角 */
-  text-align: center;      /* 文字居中 */
-  font-size: 14px;         /* 字号 */
+  margin-top: 16px;
+  padding: 10px 15px;
+  background-color: #FFF1F3;
+  color: var(--color-button-primary-douyin);
+  border: 1px solid #FFE0E6;
+  border-radius: var(--border-radius-input);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
 }
-
 .register-success-info strong {
-  font-weight: bold;     /* ID 加粗 */
+  font-weight: 600;
 }
 
-// --- 切换动画 ---
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .3s ease; /* 透明度过渡 */
+/* --- 加载动画样式 (Element UI) --- */
+/* v-loading 的 element-loading-background 是行内样式，CSS 变量无法直接作用。
+   但我们可以覆盖遮罩本身的背景色。 */
+.el-loading-mask { /* 需要 :deep 如果 scoped */
+  border-radius: var(--border-radius-card) !important; /* 如果加载是针对卡片 */
+  background-color: var(--loading-mask-background-color) !important;
 }
-
-.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
-  opacity: 0; /* 进入前和离开后透明度为0 */
+.el-loading-spinner .el-icon-loading { /* 需要 :deep 如果 scoped */
+  color: var(--loading-spinner-color) !important;
+  font-size: 28px !important;
+}
+.el-loading-spinner .el-loading-text { /* 需要 :deep 如果 scoped */
+  color: var(--loading-text-color) !important;
+  font-size: 14px !important;
+  margin-top: 6px !important;
 }
 </style>
