@@ -1,7 +1,7 @@
 <script>
 import axios from "axios";
 import toMainUI from '@/utils/LoginViewToMainUIView';
-
+import handleMainMenu from "@/utils/handleMainMenu";
 export default {
   data() {
     return {
@@ -116,6 +116,9 @@ export default {
       localStorage.setItem("isLogin", "1");
       this.$router.go(0)
       this.$store.state.userInfo = user;
+    },
+    closeLogView(){
+      handleMainMenu.$emit('closeLogView')
     }
   },
   watch: {
@@ -172,6 +175,7 @@ export default {
 <!--        &lt;!&ndash; 使用 transition 实现切换动画 &ndash;&gt;
         <transition name="fade" mode="out-in">-->
 <!--     登录表单 (v-if 控制显示)-->
+        <el-button @click="closeLogView()">关闭</el-button>
     <div v-if="!isRegister" key="login">
       <div class="form-header">
         <h2 class="form-title">用户登录</h2>

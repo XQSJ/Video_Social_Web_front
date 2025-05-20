@@ -300,6 +300,7 @@ import 'xgplayer/dist/index.min.css';
 import axios from "axios";
 import dayjs from "dayjs";
 import videoSideCard from "@/views/VideoCard/VideoSideCard.vue";
+import handleMainMenu from "@/utils/handleMainMenu";
 export default {
   components:{videoSideCard},
   props: {
@@ -465,7 +466,7 @@ export default {
           }
         })
       } else {
-        this.toLoginView();
+        handleMainMenu.$emit('openLogView')
       }
     },
     handleUnLikeButton(index) {

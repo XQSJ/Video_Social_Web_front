@@ -518,228 +518,6 @@ export default {
 
 }
 </script>
-<!--
-
-<template>
-  <div style="height: 100%">
-
-    &lt;!&ndash;    <el-dialog style="width: 100%;height: 100%" @opened="showVideo" :visible.sync="this.dialogVisible.video" :before-close="handleCloseVideos" :destroy-on-close="true">
-          <div>
-            eee
-          </div>
-          <div>
-            {{test}}
-          </div>&ndash;&gt;
-&lt;!&ndash;
-    <el-dialog style="width: 100%;height: 100%" @opened="showVideo" :visible.sync="this.dialogVisible.video" :before-close="handleCloseVideos" :destroy-on-close="true">
-&ndash;&gt;
-
-    <div v-show="this.dialogVisible.video" >
-      <el-button @click="closeVideo">关闭</el-button>
-      <div id="video" class="video-container" style="width: 100%;height: 500px" v-show="this.dialogVisible.video">
-        <div>
-        </div>
-      </div>
-       <el-button @click="editVideo(item)" v-if="isSelf">编辑</el-button>
-    </div>
-
-&lt;!&ndash;    </el-dialog>&ndash;&gt;
-    <el-dialog :visible.sync="this.dialogVisible.videoEdit" :before-close="handleCloseVideoEdit">
-
-    </el-dialog>
-    <el-dialog :visible="this.dialogVisible.fans" :before-close="handleCloseFans" :destroy-on-close=true>
-      <el-button @click="handleOpenFans('关注')">关注</el-button>
-      <el-button @click="handleOpenFans('粉丝')">粉丝</el-button>
-      <el-input placeholder="搜索用户名字或id" v-model="input_searchUser" clearable @clear="clearSearchUser">
-      </el-input>
-      <div v-for="(user, index) in userList" @click="toUser(user.userId)">
-
-        id：{{ user.userId }}
-        名称：{{ user.userName }}<br>
-        {{ user.userInfo }}
-      </div>
-    </el-dialog>
-    <el-dialog :close-on-click-modal="false" :visible="this.dialogVisible.editIntro" :before-close="handleCloseEdit"
-               :destroy-on-close=true>
-      <el-row>
-        编辑资料
-      </el-row>
-      <el-row>
-        头像
-      </el-row>
-      <el-row>
-        名字
-        <el-input placeholder="记得填写昵称" v-model="editForm.name"></el-input>
-      </el-row>
-      <el-row>
-        简介
-        <el-input placeholder="介绍一下你自己" v-model="editForm.introduction"></el-input>
-      </el-row>
-      <el-row>
-        <el-button @click="handleCloseEdit">取消</el-button>
-        <el-button @click="editUserInfo">保存</el-button>
-      </el-row>
-
-    </el-dialog>
-    <el-container style="height: 100%">
-
-      <el-header style="height: 15%">
-        <el-row style="height: 100%">
-          <el-col :span="4">头像</el-col>
-          <el-col :span="12">
-            <el-row>{{ userinfo.name }}</el-row>
-
-            <el-row>
-              <el-button @click="handleOpenFans('关注')">
-                关注 {{ userinfo.subscribeCount }}
-              </el-button>
-              <el-button @click="handleOpenFans('粉丝')">
-                粉丝 {{ userinfo.fansCount }}
-              </el-button>
-
-            </el-row>
-            <el-row>id: {{ userid }}</el-row>
-            <el-row>{{ userinfo.introduction }}</el-row>
-          </el-col>
-          <el-col :span="4">
-            <el-button @click="handleOpenEdit" v-if="this.isSelf">
-              编辑资料
-            </el-button>
-            <div v-if="!this.isSelf">
-              <el-button @click="handleFollow(userid)" v-if="isFollower===0">
-                关注
-              </el-button>
-              <el-button @click="handleUnFollow(userid)" v-if="isFollower===1">
-                已关注
-              </el-button>
-              <el-button @click="handleUnFollow(userid)" v-if="isFollower===2">
-                相互关注
-              </el-button>
-            </div>
-
-          </el-col>
-        </el-row>
-      </el-header>
-      <el-main style="height: 100%">
-        <el-container class="about-video">
-          <el-header class="about-video-header">
-            <el-button @click="searchUserVideo('create',userid)">作品</el-button>
-            <el-button @click="searchUserVideo('like',userid)">喜欢</el-button>
-            <el-button @click="searchUserVideo('favorite',userid)">收藏</el-button>
-            <el-button @click="searchUserVideo('history',userid)">观看历史</el-button>
-            <el-button @click="searchUserVideo('later',userid)">稍后再看</el-button>
-          </el-header>
-          <el-main>
-            <div class="video-grid" v-loading="loading">
-              <div v-for="(item, index) in aboutVideos" :key="item.videoId" class="video-item">
-                <el-button style="height: 100%;width: 100%" @click="showVideo(item,index)">
-                  <img v-if="item.coverUrl" :src="item.coverUrl" alt="视频封面" class="video-cover"/>
-                  <div v-else class="placeholder-cover">封面加载中...</div>
-                  <h3>{{ item.title }}</h3>
-                  点赞数 {{ item.likeCount }}
-                  &lt;!&ndash;                <el-button @click="editVideo(item)" v-if="isSelf">编辑</el-button>&ndash;&gt;
-                </el-button>
-
-              </div>
-            </div>
-          </el-main>
-        </el-container>
-      </el-main>
-    </el-container>
-
-  </div>
-
-</template>
-
-<style scoped lang="stylus">
-.about-video {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  position: relative;
-  background-color: #f9f9f9; // Light background for better contrast
-}
-
-.about-video-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: #fff; // White background for header
-  height: 60px; // Increased height for better spacing
-  display: flex;
-  align-items: center;
-  padding: 0 20px; // Increased padding for better spacing
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); // Slightly darker shadow for more depth
-}
-
-.video-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 20px; // Increased gap for better spacing
-  padding: 20px; // Increased padding for breathing space
-  overflow-y: auto;
-  max-height: calc(100vh - 120px); // Adjusted maximum height
-  background-color: #ffffff; // Set a white background for video grid
-  border-radius: 8px; // Rounded corners for the grid
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); // Shadow for the grid
-}
-
-.video-item {
-  width: calc(25% - 15px); // Four-column layout with adjusted margin
-  background-color: #fff;
-  border: 1px solid #e0e0e0; // Softer border color
-  border-radius: 8px; // Increased roundness
-  overflow: hidden;
-  position: relative;
-  transition: transform 0.3s, box-shadow 0.3s; // Smooth transition for hover effects
-  cursor: pointer; // Pointer cursor for better UX
-}
-
-.video-item:hover {
-  transform: scale(1.05); // Slightly increase size on hover
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); // Shadow effect on hover
-}
-
-.video-cover {
-  width: 100%;
-  height: 180px; // Increased height for better visibility
-  object-fit: cover;
-  border-bottom: 3px solid #007bff; // Add a colored bottom border for effect
-}
-
-.placeholder-cover {
-  width: 100%;
-  height: 180px;
-  background-color: #e0e0e0; // Softer placeholder color
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #999;
-  font-size: 18px; // Larger font size for better visibility
-}
-
-.video-title {
-  font-size: 16px; // Increased title size
-  margin: 10px;
-  font-weight: bold; // Bold title for emphasis
-  color: #333; // Darker text color for contrast
-}
-
-.el-button {
-  background-color: #007bff; // Primary button color
-  color: white; // Button text color
-  border: none; // Remove border for a cleaner look
-  border-radius: 5px; // Rounded button corners
-  padding: 8px 12px; // Button padding
-  transition: background-color 0.3s; // Smooth transition for hover effect
-}
-
-.el-button:hover {
-  background-color: #0056b3; // Darker shade on hover
-}
-</style>
--->
 
 <template>
   <!-- 页面主容器 -->
@@ -887,7 +665,7 @@ export default {
          <el-button type="primary" @click="submitVideoEdit" size="medium" class="dialog-btn-confirm-tiktok" :disabled="!currentEditingVideo">确 定</el-button>
        </span>
     </el-dialog>
-    <el-dialog :title="(dialogVisible.fans && activeFanTab === '关注' ? '关注列表' : (dialogVisible.fans && activeFanTab === '粉丝' ? '粉丝列表' : '用户列表'))"
+    <el-dialog :title="'用户列表'"
                :visible.sync="dialogVisible.fans" :before-close="handleCloseFans" width="450px"
                custom-class="fans-dialog-tiktok" append-to-body>
       <div class="fans-dialog-header-tiktok">
@@ -931,6 +709,9 @@ export default {
         </div>
       </div>
     </el-dialog>
+
+
+
     <el-dialog title="编辑个人资料" :visible.sync="dialogVisible.editIntro" :before-close="handleCloseEdit"
                width="500px" :close-on-click-modal="false" custom-class="edit-dialog-tiktok" append-to-body v-loading="upAvatarLoading" element-loading-text="处理中...">
       <el-form :model="editForm" ref="editProfileFormRef" label-position="top" class="edit-profile-form-tiktok">
@@ -942,7 +723,7 @@ export default {
               action="#"
               :limit="1"
               :on-change="handleChangeImage"
-              :http-request="customUploadRequest"
+              :http-request=" reUploadImage"
               :show-file-list="false"
               accept="image/jpeg,image/png,image/gif">
             <el-button size="small" type="primary" plain>更换头像</el-button>
@@ -959,7 +740,7 @@ export default {
       </el-form>
       <span slot="footer" class="dialog-footer-tiktok">
         <el-button @click="handleCloseEdit" size="medium" class="dialog-btn-cancel-tiktok">取 消</el-button>
-        <el-button type="primary" @click="submitEditUserInfo" size="medium" class="dialog-btn-confirm-tiktok" :loading="upAvatarLoading">保 存</el-button>
+        <el-button type="primary" @click="editUserInfo" size="medium" class="dialog-btn-confirm-tiktok" :loading="upAvatarLoading">保 存</el-button>
       </span>
     </el-dialog>
   </div>
@@ -1443,6 +1224,7 @@ export default {
   border-color: #ff4d70;
 }
 
+
 /* --- 粉丝/关注弹窗样式 (暗色) --- */
 .fans-dialog-tiktok .fans-dialog-header-tiktok {
   margin-bottom: 15px;
@@ -1450,42 +1232,63 @@ export default {
   flex-direction: column;
   gap: 10px;
 }
-.fan-tabs-tiktok {
-  width: 100%;
+
+/* ✨ 重点修改区域：美化粉丝/关注弹窗中的 el-button-group (全局样式版本) ✨ */
+
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button {
+  background-color: #282828 !important; /* 暗色背景 */
+  border-color: #3a3a3a !important;     /* 暗色边框 */
+  color: #a0a0a0 !important;           /* 默认文字颜色 */
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  padding: 8px 15px !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
 }
-.user-view-page-tiktok-style >>> .fans-dialog-tiktok .fan-tabs-tiktok .el-tabs__header {
-  margin-bottom: 10px;
-  background-color: transparent;
+
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button:hover {
+  background-color: #383838 !important; /* 悬浮时背景变亮一点 */
+  border-color: #4a4a4a !important;
+  color: #f1f1f1 !important;           /* 悬浮时文字变亮 */
 }
-.user-view-page-tiktok-style >>> .fans-dialog-tiktok .fan-tabs-tiktok .el-tabs__nav-wrap::after {
-  display: none;
+
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button.el-button--primary {
+  background-color: #FE2C55 !important; /* 主题色背景 (激活状态) */
+  border-color: #FE2C55 !important;
+  color: #ffffff !important;           /* 白色文字 (激活状态) */
+  z-index: 1 !important;
 }
-.user-view-page-tiktok-style >>> .fans-dialog-tiktok .fan-tabs-tiktok .el-tabs__item {
-  color: #a0a0a0;
-  font-size: 15px;
-  font-weight: 500;
-  padding: 0 20px;
-  height: 40px;
-  line-height: 40px;
+
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button.el-button--primary:hover {
+  background-color: #e02048 !important; /* 主题色悬浮时更亮 */
+  border-color: #e02048 !important;
 }
-.user-view-page-tiktok-style >>> .fans-dialog-tiktok .fan-tabs-tiktok .el-tabs__item.is-active {
-  color: #f1f1f1;
+
+/* 确保按钮组之间的间隙 */
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button:not(:first-child) {
+  margin-left: -1px !important;
 }
-.user-view-page-tiktok-style >>> .fans-dialog-tiktok .fan-tabs-tiktok .el-tabs__active-bar {
-  background-color: #FE2C55;
-  height: 2.5px;
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button:first-child {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
 }
-.fan-search-input-tiktok >>> .el-input__inner {
-  background-color: #101010;
-  border-color: #2c2c2c;
-  color: #f1f1f1;
-  border-radius: 18px;
+.el-dialog.fans-dialog-tiktok .fans-dialog-header-tiktok .el-button-group .el-button:last-child {
+  border-top-right-radius: 4px !important;
+  border-bottom-right-radius: 4px !important;
 }
-.fan-search-input-tiktok >>> .el-input__inner::placeholder {
-  color: #555555;
+
+
+/* --- 搜索框 (全局样式版本) --- */
+.el-dialog.fans-dialog-tiktok .fan-search-input-tiktok .el-input__inner {
+  background-color: #101010 !important;
+  border-color: #2c2c2c !important;
+  color: #f1f1f1 !important;
+  border-radius: 18px !important;
 }
-.fan-search-input-tiktok >>> .el-input__prefix .el-input__icon {
-  color: #a0a0a0;
+.el-dialog.fans-dialog-tiktok .fan-search-input-tiktok .el-input__inner::placeholder {
+  color: #555555 !important;
+}
+.el-dialog.fans-dialog-tiktok .fan-search-input-tiktok .el-input__prefix .el-input__icon {
+  color: #a0a0a0 !important;
 }
 
 .user-list-container-tiktok {

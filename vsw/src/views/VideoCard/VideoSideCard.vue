@@ -1,6 +1,7 @@
 <script>
 import axios from "axios";
 import dayjs from "dayjs";
+import handleMainMenu from "@/utils/handleMainMenu";
 
 export default {
   name:'CommentDialog',
@@ -188,6 +189,9 @@ export default {
     toUser(userid) {
       this.toUserView(userid)
     },
+    handleOpenLog(){
+      handleMainMenu.$emit('openLogView')
+    },
     test(a){
       console.log("test:",a)
 
@@ -329,7 +333,7 @@ export default {
           </el-button>
         </div>
         <div v-else class="login-prompt">
-          <el-button type="text" @click="toUser(-1)">请先登录后发表评论</el-button> <!-- toUser(-1) or specific login trigger -->
+          <el-button type="text" @click="handleOpenLog">请先登录后发表评论</el-button> <!-- toUser(-1) or specific login trigger -->
         </div>
       </el-footer>
     </el-container>

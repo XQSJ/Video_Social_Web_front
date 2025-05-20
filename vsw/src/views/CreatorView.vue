@@ -171,6 +171,7 @@ export default {
 
 
       beforeUpload(file){ //上传文件之前
+
         if (file.type !== "" || file.type != null || file.type !== undefined){
           //截取文件的后缀，判断文件类型
           const FileExt = file.name.replace(/.+\./, "").toLowerCase();
@@ -192,8 +193,9 @@ export default {
           }
         }
       },
+      handleVideoRemove(){
+      },
       handleChange(file, fileList){ //文件选择后执行的方法
-
         this.fileList = fileList;
        // console.log("选择后文件")
 
@@ -204,6 +206,7 @@ export default {
         this.uploader=null;
       },
       uploadFile(file){
+
           if (this.fileList.length === 0) return
         //初始化上传类
           this.uploader=this.initAcsClint()
@@ -356,173 +359,438 @@ export default {
   </div>
 </template>
 
-<style scoped lang="stylus">
-// --- 页面整体与卡片 ---
+<style scoped>
+/* === Creator Page Dark Theme (Standard CSS - Optimized & Unified) === */
+
+/*
+  重要提示:
+  为了真正的“统一风格”，下面的 CSS 自定义属性 (变量)
+  应该在您的全局 CSS 文件 (例如 main.css 或 App.vue 的非 scoped <style>)
+  的 :root 选择器中定义一次。
+  此处在 .creator-page-container 中重复定义是为了演示和组件独立性。
+  如果全局已定义，请删除此处的重复定义，并确保 var() 中的变量名与全局一致。
+*/
 .creator-page-container {
-  padding: 20px; /* 页面内边距 */
-  background-color: #f5f7fa; /* 页面背景色 */
-  min-height: calc(100vh - 40px); /* 最小高度 */
+  /* --- Start: Local Theme Variables (Remove if defined globally in :root) --- */
+  --theme-bg-color: #121212;
+  --primary-bg-color: #1e1e1e;
+  --secondary-bg-color: #282828; /* For less prominent surfaces like upload dragger bg */
+  --tertiary-bg-color: #333333; /* For hover states or subtle distinctions */
+  --input-bg-color: #252525;    /* Specific background for inputs if different from secondary */
+
+  --primary-text-color: #e0e0e0;
+  --secondary-text-color: #a0a0a0;
+
+  --accent-color: #FE2C55; /* TikTok Red */
+  --accent-color-darker: #e02049;
+  --accent-color-light-text: #ffffff;
+  --accent-color-hover-bg: rgba(254, 44, 85, 0.08); /* Subtle hover for text buttons */
+
+  --border-color: #3a3a3a;       /* Borders for cards, dividers */
+  --border-color-light: #4d4d4d; /* Lighter borders, e.g., for input default state */
+
+  --disabled-bg-color: #2c2c2c;
+  --disabled-text-color: #757575;
+  --disabled-border-color: #383838; /* Border for disabled elements */
+
+  --success-color: #4CAF50;
+  --warning-color: #FFC107;
+  --warning-color-hover-bg: rgba(255, 193, 7, 0.1);
+  --warning-color-hover-text: #e6a23c;
+  --danger-color: #F44336;
+
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --base-font-size: 14px;
+  --line-height-base: 1.6;
+
+  --border-radius-small: 4px;
+  --border-radius-base: 6px;
+  --border-radius-medium: 8px;
+  --border-radius-large: 12px;
+  --border-radius-round: 50%;
+
+  --input-height: 40px;
+  --input-padding-horizontal: 15px;
+  --button-height: 40px;
+  --button-padding-horizontal: 20px;
+
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 5px var(--shadow-color);
+  --shadow-md: 0 5px 15px var(--shadow-color);
+  --shadow-lg: 0 10px 30px var(--shadow-color);
+
+  --transition-duration: 0.2s;
+  --transition-timing-function: ease-in-out;
+  /* --- End: Local Theme Variables --- */
+
+  /* Base styles for the page container */
+  padding: 24px;
+  background-color: var(--theme-bg-color);
+  min-height: calc(100vh - 40px);
   box-sizing: border-box;
+  color: var(--primary-text-color);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--base-font-size);
+  line-height: var(--line-height-base);
 }
 
 .creator-card {
-  max-width: 800px; /* 内容最大宽度 */
-  margin: 0 auto; /* 水平居中 */
-  border: 1px solid #e6e6e6; /* 轻微边框 */
+  max-width: 720px;
+  margin: 24px auto;
+  background-color: var(--primary-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 
-.card-header {
+.creator-card .card-header {
   font-size: 18px;
-  font-weight: bold;
-  color: #303133;
-  i { /* 图标右边距 */
-    margin-right: 8px;
-    font-size: 20px; /* 图标稍大 */
-    vertical-align: middle; /* 垂直对齐 */
-  }
+  font-weight: 600;
+  color: var(--primary-text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
 }
 
-// --- 表单样式 ---
+.creator-card .card-header i {
+  margin-right: 12px;
+  font-size: 22px;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
 .creator-form {
-  padding-top: 10px; /* 表单顶部留白 */
+  padding: 24px;
 }
 
-.el-form-item {
-  margin-bottom: 24px; /* 表单项间距 */
+.creator-form .el-form-item {
+  margin-bottom: 28px;
 }
 
-/* 调整标签样式 */
-.creator-form >>> .el-form-item__label {
-  padding-bottom: 8px; /* 标签与控件间距 */
+.creator-form ::v-deep .el-form-item__label {
+  padding-bottom: 8px;
   font-weight: 500;
   line-height: 1.4;
-  color: #606266;
+  color: var(--secondary-text-color);
+  font-size: 14px;
 }
 
-// --- 上传区域样式 ---
-.video-uploader >>> .el-upload-dragger {
-  width: 100%; /* 拖拽区域宽度占满 */
-  height: 200px; /* 增加拖拽区域高度 */
+/* --- Upload Area --- */
+.video-uploader ::v-deep .el-upload-dragger {
+  width: 100%;
+  height: 200px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 2px dashed #d9d9d9;
-  border-radius: 6px;
-  transition: border-color 0.3s;
-  &:hover {
-    border-color: #409EFF; /* 悬停时边框高亮 */
-  }
-  .el-icon-upload {
-    font-size: 56px;
-    color: #C0C4CC;
-    margin: 0 0 18px; /* 图标与文字间距 */
-  }
-  .el-upload__text {
-    color: #606266;
-    font-size: 14px;
-    em {
-      color: #409EFF;
-      font-style: normal;
-    }
-  }
+  background-color: var(--secondary-bg-color);
+  border: 2px dashed var(--border-color-light);
+  border-radius: var(--border-radius-medium);
+  transition: border-color var(--transition-duration) var(--transition-timing-function),
+  background-color var(--transition-duration) var(--transition-timing-function);
 }
-.video-uploader >>> .el-upload__tip {
+.video-uploader ::v-deep .el-upload-dragger:hover {
+  border-color: var(--accent-color);
+  background-color: var(--tertiary-bg-color);
+}
+.video-uploader ::v-deep .el-upload-dragger .el-icon-upload {
+  font-size: 56px;
+  color: var(--secondary-text-color);
+  margin-bottom: 18px;
+}
+.video-uploader ::v-deep .el-upload-dragger .el-upload__text {
+  color: var(--primary-text-color);
+  font-size: 15px;
+}
+.video-uploader ::v-deep .el-upload-dragger .el-upload__text em {
+  color: var(--accent-color);
+  font-style: normal;
+  font-weight: 500;
+}
+.video-uploader ::v-deep .el-upload__tip {
   line-height: 1.5;
-  color: #909399;
+  color: var(--secondary-text-color);
   font-size: 13px;
+  margin-top: 12px;
+}
+
+/* Upload File List Item */
+.video-uploader ::v-deep .el-upload-list__item {
+  background-color: var(--secondary-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-base);
   margin-top: 10px;
+  padding: 10px 12px;
+  transition: background-color var(--transition-duration) var(--transition-timing-function);
 }
-/* 文件列表项样式 (如果需要调整) */
-.video-uploader >>> .el-upload-list__item {
-  transition: background-color 0.2s;
+.video-uploader ::v-deep .el-upload-list__item:hover {
+  background-color: var(--tertiary-bg-color);
 }
-.video-uploader >>> .el-upload-list__item:hover {
-  background-color: #f5f7fa;
-}
-
-.reupload-button {
-  // 样式已在模板中通过 style 设置 margin-top
-}
-
-
-// --- 分割线 ---
-.el-divider--horizontal {
-  margin: 30px 0; /* 增大上下间距 */
-}
-.el-divider i {
-  margin-right: 6px;
-  font-size: 16px;
-  vertical-align: middle;
-}
-.el-divider__text {
+.video-uploader ::v-deep .el-upload-list__item-name {
+  color: var(--primary-text-color);
   font-size: 14px;
-  color: #606266;
-  font-weight: 500; /* 加粗一点 */
-  background-color: #f5f7fa; // 使文字背景与页面背景一致
-  padding: 0 15px; // 左右留白
+  margin-right: 45px;
+}
+.video-uploader ::v-deep .el-upload-list__item .el-icon-close {
+  color: var(--secondary-text-color);
+  font-size: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: color var(--transition-duration) var(--transition-timing-function);
+}
+.video-uploader ::v-deep .el-upload-list__item .el-icon-close:hover {
+  color: var(--danger-color);
+}
+.video-uploader ::v-deep .el-upload-list__item-status-label,
+.video-uploader ::v-deep .el-upload-list__item .el-icon-upload-success, /* Element UI < 2.15.x */
+.video-uploader ::v-deep .el-upload-list__item .el-icon-circle-check { /* Element UI >= 2.15.x */
+  color: var(--success-color);
+  font-size: 16px;
+}
+.video-uploader ::v-deep .el-upload-list__item .el-icon-warning,
+.video-uploader ::v-deep .el-upload-list__item .el-icon-circle-close { /* Element UI 失败图标 */
+  color: var(--danger-color);
+  font-size: 16px;
+}
+.video-uploader ::v-deep .el-upload-list__item .el-progress {
+  position: absolute;
+  bottom: -1px; /* 微调，使其覆盖在边框上或紧贴 */
+  left: 0;
+  right: 0;
+  width: 100%;
+  border-radius: 0 0 var(--border-radius-base) var(--border-radius-base); /* 底部圆角与列表项一致 */
+  overflow: hidden; /* 确保进度条不溢出圆角 */
+}
+.video-uploader ::v-deep .el-upload-list__item .el-progress .el-progress-bar__outer {
+  border-radius: 0; /* 进度条轨道不需要单独圆角 */
+  height: 3px !important; /* 使进度条更细，作为状态指示 */
+  background-color: var(--tertiary-bg-color); /* 进度条背景色 */
+}
+.video-uploader ::v-deep .el-upload-list__item .el-progress .el-progress-bar__inner {
+  border-radius: 0;
+  background-color: var(--accent-color); /* 进度颜色 */
+}
+.video-uploader ::v-deep .el-upload-list__item .el-progress__text {
+  display: none;
 }
 
-// --- 输入框和单选框 ---
-.el-input, .el-textarea {
-  // 无需特殊样式，Element UI 默认即可
+
+.reupload-button.el-button--warning.is-plain {
+  color: var(--warning-color);
+  background: transparent;
+  border: 1.5px solid var(--warning-color);
+  margin-top: 12px;
+  border-radius: var(--border-radius-medium);
+  font-weight: 500;
+  height: 36px;
+  padding: 0 var(--button-padding-horizontal);
+  font-size: 14px;
+  transition: background-color var(--transition-duration) var(--transition-timing-function),
+  color var(--transition-duration) var(--transition-timing-function),
+  border-color var(--transition-duration) var(--transition-timing-function);
 }
-.el-radio-group {
-  line-height: 2; // 增加行高防止拥挤
+.reupload-button.el-button--warning.is-plain:hover,
+.reupload-button.el-button--warning.is-plain:focus {
+  background: var(--warning-color-hover-bg);
+  color: var(--warning-color-hover-text);
+  border-color: var(--warning-color-hover-text);
 }
-.access-tip {
-  color: #909399;
+
+/* --- Divider --- */
+.creator-form .el-divider--horizontal {
+  margin: 32px 0;
+  background-color: var(--border-color);
+}
+.creator-form .el-divider ::v-deep i {
+  margin-right: 10px;
+  font-size: 18px;
+  vertical-align: middle;
+  color: var(--secondary-text-color);
+}
+.creator-form .el-divider ::v-deep .el-divider__text {
+  font-size: 15px;
+  color: var(--primary-text-color);
+  font-weight: 500;
+  background-color: var(--primary-bg-color);
+  padding: 0 18px;
+}
+
+/* --- Inputs & Textarea --- */
+.creator-form ::v-deep .el-input__inner,
+.creator-form ::v-deep .el-textarea__inner {
+  background-color: var(--input-bg-color, var(--secondary-bg-color));
+  border: 1px solid var(--border-color-light); /* 默认边框用稍浅的颜色 */
+  color: var(--primary-text-color);
+  border-radius: var(--border-radius-medium);
+  height: var(--input-height);
+  line-height: var(--input-height);
+  padding: 0 var(--input-padding-horizontal);
+  font-size: 14px;
+  transition: border-color var(--transition-duration) var(--transition-timing-function),
+  box-shadow var(--transition-duration) var(--transition-timing-function);
+}
+.creator-form ::v-deep .el-input__inner:hover, /* 添加 hover 状态 */
+.creator-form ::v-deep .el-textarea__inner:hover {
+  border-color: var(--border-color); /* 悬停时边框变深一点 */
+}
+.creator-form ::v-deep .el-input__inner:focus,
+.creator-form ::v-deep .el-textarea__inner:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.15);
+}
+.creator-form ::v-deep .el-input__inner::placeholder,
+.creator-form ::v-deep .el-textarea__inner::placeholder {
+  color: var(--secondary-text-color);
+  opacity: 0.8;
+}
+.creator-form ::v-deep .el-input .el-input__clear,
+.creator-form ::v-deep .el-input .el-input__suffix {
+  color: var(--secondary-text-color);
+  transition: color var(--transition-duration) var(--transition-timing-function);
+}
+.creator-form ::v-deep .el-input .el-input__clear:hover {
+  color: var(--primary-text-color);
+}
+
+.creator-form ::v-deep .el-textarea__inner {
+  height: auto;
+  min-height: calc(var(--input-height) * 2.5);
+  line-height: var(--line-height-base);
+  padding: 10px var(--input-padding-horizontal);
+}
+
+.creator-form ::v-deep .el-input.is-disabled .el-input__inner,
+.creator-form ::v-deep .el-textarea.is-disabled .el-textarea__inner {
+  background-color: var(--disabled-bg-color) !important;
+  border-color: var(--disabled-border-color) !important;
+  color: var(--disabled-text-color) !important;
+  cursor: not-allowed;
+  opacity: 1;
+  -webkit-text-fill-color: var(--disabled-text-color);
+  box-shadow: none !important;
+}
+
+.creator-form ::v-deep .el-input__count .el-input__count-inner {
+  background-color: transparent !important;
+  color: var(--secondary-text-color);
   font-size: 12px;
-  margin-left: 4px;
 }
 
-// --- 操作按钮 ---
+/* --- Radio Group --- */
+.creator-form ::v-deep .el-radio { /* 为整个 radio 元素添加外边距 */
+  margin-right: 24px; /* 增加选项之间的距离 */
+}
+.creator-form ::v-deep .el-radio__input .el-radio__inner {
+  background: transparent;
+  border: 1.5px solid var(--border-color-light);
+  width: 18px;
+  height: 18px;
+  transition: border-color var(--transition-duration) var(--transition-timing-function),
+  background-color var(--transition-duration) var(--transition-timing-function);
+}
+.creator-form ::v-deep .el-radio__input.is-checked .el-radio__inner {
+  border-color: var(--accent-color);
+  background: var(--accent-color);
+}
+.creator-form ::v-deep .el-radio__input.is-checked .el-radio__inner::after {
+  width: 7px;
+  height: 7px;
+  background-color: var(--accent-color-light-text);
+}
+.creator-form ::v-deep .el-radio__label {
+  color: var(--primary-text-color);
+  font-size: 14px;
+  padding-left: 8px;
+  transition: color var(--transition-duration) var(--transition-timing-function);
+}
+.creator-form ::v-deep .el-radio:hover .el-radio__label {
+  color: var(--accent-color);
+}
+.creator-form ::v-deep .el-radio.is-disabled .el-radio__label {
+  color: var(--disabled-text-color) !important;
+  opacity: 1;
+}
+.creator-form ::v-deep .el-radio.is-disabled .el-radio__input .el-radio__inner {
+  background-color: var(--disabled-bg-color) !important;
+  border-color: var(--disabled-border-color) !important;
+}
+
+.creator-form .access-tip {
+  color: var(--secondary-text-color);
+  font-size: 12px;
+  margin-left: 6px;
+  font-style: italic;
+}
+
+/* --- Action Buttons & Progress --- */
 .action-buttons {
-  margin-top: 35px; /* 与上方表单项的距离 */
-  text-align: right; /* 按钮右对齐 */
-  .el-button {
-    padding: 12px 30px; /* 增大按钮内边距 */
-    font-size: 15px;    /* 按钮文字大小 */
-  }
+  margin-top: 36px;
+  text-align: right;
+}
+
+.action-buttons .el-button--primary {
+  background-color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color-light-text);
+  border-radius: var(--border-radius-medium);
+  padding: 0 var(--button-padding-horizontal);
+  height: var(--button-height);
+  line-height: var(--button-height);
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color var(--transition-duration) var(--transition-timing-function),
+  border-color var(--transition-duration) var(--transition-timing-function),
+  box-shadow var(--transition-duration) var(--transition-timing-function);
+  letter-spacing: 0.5px;
+}
+.action-buttons .el-button--primary:hover,
+.action-buttons .el-button--primary:focus {
+  background-color: var(--accent-color-darker);
+  border-color: var(--accent-color-darker);
+  box-shadow: 0 0 10px rgba(254, 44, 85, 0.3);
+}
+.action-buttons .el-button--primary.is-disabled {
+  background-color: var(--disabled-bg-color);
+  border-color: var(--disabled-border-color);
+  color: var(--disabled-text-color);
+  opacity: 1;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.action-buttons .el-button--primary.is-loading ::v-deep .el-icon-loading {
+  color: var(--accent-color-light-text);
+}
+
+.action-buttons .el-progress {
+  margin-bottom: 18px;
+}
+.action-buttons .el-progress ::v-deep .el-progress-bar__outer {
+  border-radius: var(--border-radius-round, 100px);
+  background-color: var(--secondary-bg-color);
+  height: 10px !important;
+}
+.action-buttons .el-progress ::v-deep .el-progress-bar__inner {
+  border-radius: var(--border-radius-round, 100px);
+  background-color: var(--accent-color);
+  transition: width 0.3s var(--transition-timing-function);
+  text-align: right;
+}
+.action-buttons .el-progress.is-text-inside ::v-deep .el-progress-bar__innerText {
+  color: var(--accent-color-light-text);
+  font-size: 12px; /* 确保与外部文字大小一致或协调 */
+  line-height: 10px; /* 与进度条高度一致 */
+  padding: 0 5px; /* 调整内边距 */
+  display: flex; /* 使用flex确保垂直居中 */
+  align-items: center;
+  justify-content: center; /* 水平居中 (如果需要) */
+}
+.action-buttons .el-progress ::v-deep .el-progress__text { /* 外部文字 */
+  color: var(--secondary-text-color);
+  font-size: 13px !important;
+  margin-left: 8px;
+  line-height: 1;
 }
 
 </style>
-<!--
-
-<template>
-  <div>
-
-    <el-container>
-      <el-header style="height:100%">
-        发布视频<br>
-        <el-upload class="el-upload"
-                   :file-list="fileList"
-                   :http-request="uploadFile"
-                   :on-change="handleChange"
-                   :multiple="multiple"
-                   :before-upload="beforeUpload"
-        >
-          <el-button @click="" v-show="fileList.length===0">选取文件</el-button>
-        </el-upload>
-        <br>
-        <el-button @click="reUpload" v-show="fileList.length>0">重新上传</el-button>
-
-      </el-header>
-      <el-main>
-        作品描述
-        <el-input v-model="title" placeholder="填写作品标题，为作品获得更多流量"></el-input>
-        <el-input v-model="description" placeholder="添加作品简介"></el-input>
-        <el-radio v-model="access" label="0">公开</el-radio>
-        <el-radio v-model="access" label="1">不公开</el-radio>
-      </el-main>
-      <el-footer>
-        <el-button @click="submitVideo" :disabled="fileList.length===0">发布</el-button>
-&lt;!&ndash;        <el-button @click="test(fileList.length)">test</el-button>&ndash;&gt;
-      </el-footer>
-    </el-container>
-  </div>
-</template>
-
-<style scoped lang="stylus">
-
-</style>-->

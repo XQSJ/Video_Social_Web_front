@@ -6,7 +6,7 @@ import toLogin from '@/utils/toLogin'
 import ChatView from "@/views/ChatView.vue";
 import MessageView from "@/views/MessageView.vue";
 import LoginView from "@/views/LoginView.vue";
-import loginView from "@/views/LoginView.vue";
+import loginView from "@/views/LoginView.vue"; // 似乎与上面重复，可以考虑移除一个
 import axios from "axios";
 
 export default {
@@ -21,10 +21,10 @@ export default {
       },
       isLogin: false,
       input_search: '',
-      button_Search_isDisable: true,
+      // button_Search_isDisable: true, // 这个似乎没有在模板中使用，可以考虑移除
       dialogVisible: {
         messageView: false,
-        chatView: false,
+        chatView: false, // chatView的显示逻辑似乎未在模板中明确使用dialogVisible控制
         logView: false,
       }
     }
@@ -32,21 +32,24 @@ export default {
   watch: {},
   beforeMount() {
     let _this = this
-    //console.log("登陆状态"+localStorage.getItem("isLogin"))
     if (localStorage.getItem("isLogin") === null) {
-      console.log("未登录")
-      this.isLogin = false
-      _this.dialogVisible.logView = true
+      console.log("未登录");
+      this.isLogin = false;
+      _this.dialogVisible.logView = true;
     } else {
-      console.log("已登录")
-      this.isLogin = true
+      console.log("已登录");
+      this.isLogin = true;
       _this.dialogVisible.logView = false;
     }
-
   },
   async mounted() {
     let _this = this
-    //console.log("登陆状态"+localStorage.getItem("isLogin"))
+    handleMainMenu.$on('openLogView',(data)=>{
+      _this.handleOpenLog();
+    })
+    handleMainMenu.$on('closeLogView',(data)=>{
+      _this.handleCloseLog();
+    })
     fromLogin.$on('login', (data) => {
       _this.handleCloseLog();
       _this.isLogin = true;
@@ -55,128 +58,136 @@ export default {
       _this.login();
     })
     handleMainMenu.$on('cancel', () => {
-      this.$refs.elMenu.activeIndex = null
+      if (this.$refs.elMenu) { // 添加检查以防 $refs.elMenu 未定义
+        this.$refs.elMenu.activeIndex = null;
+      }
     })
     handleMainMenu.$on('user', () => {
-      this.$refs.elMenu.activeIndex = 'user'
+      if (this.$refs.elMenu) { // 添加检查
+        this.$refs.elMenu.activeIndex = 'user';
+      }
     })
     if (localStorage.getItem('userInfo') !== null) {
-      _this.userinfo = JSON.parse(localStorage.getItem('userInfo'))
+      _this.userinfo = JSON.parse(localStorage.getItem('userInfo'));
+      let avatarPath = this.userinfo.avatar; // 使用更明确的变量名
 
-      let avatar = this.userinfo.avatar
-
-      axios.get(`/image/getUrl/${avatar}`).then((response) => {
-
-        avatar = response.data.data
-
-        _this.userinfo.profile = avatar
-
-        this.$forceUpdate()
-      })
-      this.userid = JSON.parse(localStorage.getItem('userInfo')).userId
+      if (avatarPath) { // 确保头像路径存在
+        axios.get(`/image/getUrl/${avatarPath}`).then((response) => {
+          if (response.data && response.data.data) { // 检查响应数据
+            _this.userinfo.profile = response.data.data;
+            this.$forceUpdate(); // 谨慎使用 $forceUpdate，通常 Vue 的响应式系统会自动处理
+          }
+        }).catch(error => {
+          console.error("获取头像URL失败:", error);
+        });
+      }
+      this.userid = this.userinfo.userId; // 直接从已解析的 userinfo 获取
     }
 
-    if (this.userid !== -1) { //若登录
-      //轮询 创建定时器
+    if (this.userid !== -1) {
       this.timer = window.setInterval(() => {
         setTimeout(() => {
-
-          //this.existNewMessages();
+          // this.existNewMessages(); // 考虑在需要时调用，而不是固定轮询，或使用WebSocket
         }, 0)
       }, 3000);
     }
   },
+  beforeDestroy() { // 组件销毁前清除定时器
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  },
   methods: {
     existNewMessages() {
-      if (this.dialogVisible.messageView === false) {
+      if (this.dialogVisible.messageView === false && this.userid !== -1) { // 确保userid有效
         axios.get(`/message/exist/${this.userid}`).then((response) => {
-          if (response.data.code === 1) {
-            this.newMessage = response.data.data
+          if (response.data && response.data.code === 1) {
+            this.newMessage = response.data.data;
           }
-        })
+        }).catch(error => {
+          console.error("检查新消息失败:", error);
+        });
+      }
+    },
+    test(a) {
+      console.log("测试功能触发，参数：" + a); // 中文日志
+      this.$router.push({name: 'recommend'}).catch(err => {
+        if (err.name !== 'NavigationDuplicated') console.error(err);
+      });
+    },
+    toCreator() {
+
+      if(this.userid===-1){
+        this.dialogVisible.logView = true; // 登出后显示登录框
+      }else{
+        this.$router.push({name: 'creator'}).catch(err => { // 添加错误捕获
+          if (err.name !== 'NavigationDuplicated') {
+            console.error(err);
+          }
+        });
       }
 
     },
-    test(a) {
-      console.log("test" + a)
-    },
-    toCreator() {
-      this.$router.push({name: 'creator'}, () => {
-      });
-    },
     logout() {
-      this.$router.go(0);
       this.isLogin = false;
       localStorage.clear();
+      this.$router.go(0); // 强制刷新页面体验可能不佳，考虑其他方式重置状态
+      // 可能需要将用户重定向到登录页或首页
+      this.$router.push({ name: 'recommend' }).catch(err => {
+        if (err.name !== 'NavigationDuplicated') console.error(err);
+      });
+      this.dialogVisible.logView = true; // 登出后显示登录框
+
     },
     login() {
       this.dialogVisible.logView = true;
     },
+    handleOpenLog() {
+      this.dialogVisible.logView = true;
+    },
     handleCloseLog() {
-      this.dialogVisible.logView = false
+      this.dialogVisible.logView = false;
     },
     checkNew() {
       this.newMessage = false;
     },
     handleOpenMessageView() {
-      //console.log("openmessageview")
-      this.dialogVisible.messageView = true
-
-
+      this.dialogVisible.messageView = true;
+      // 打开消息视图时可以调用一次 existNewMessages 来刷新
+      this.existNewMessages();
     },
-
     handleCloseMessageView() {
-      this.dialogVisible.messageView = false
-
+      this.dialogVisible.messageView = false;
     },
-    /*
-    handleOpenChatView(){
-      this.dialogVisible.chatView=true
-    },
-    handleCloseChatView(){
-
-    },*/
-    //点击用户时触发
     clickUser(user_id) {
-
-      //调用全局函数
-      this.toUserView(user_id)
-
-
+      this.toUserView(user_id); // 假设 toUserView 是全局混入或原型上的方法
     },
-    //点击推荐按钮时触发
-    clickRecommend() {
-      this.$router.push({name: 'recommend'}, () => {
-      });
-    },
-    //点击关注按钮时触发
-    clickFollow() {
-      this.$router.push({name: 'follow'}, () => {
-      });
-    },
-    //点击清空按钮时触发
+
     clearSearch() {
-      //alert("点击清空按钮时触发")
-      //this.input_search=''
+      // this.input_search = ''; // 已通过 el-input 的 clearable 实现
+      // 如果有其他清空搜索结果的逻辑，在此处添加
     },
-    //点击搜索按钮时触发
     clickSearch() {
-      //若input_search不为空时触发
-      if (this.input_search !== '') {
-        if (this.$route.name !== 'search') {
-
-          this.$router.push({
-            name: 'search',
-            query: {
-              key: this.input_search,
-              type: 'general'
-            }
-          }, () => {
+      if (this.input_search.trim() !== '') {
+        const currentRoute = this.$route;
+        const targetRoute = {
+          name: 'search',
+          query: {
+            key: this.input_search.trim(),
+            type: 'general'
+          }
+        };
+        // 避免不必要的重复导航
+        if (currentRoute.name !== targetRoute.name ||
+            currentRoute.query.key !== targetRoute.query.key ||
+            currentRoute.query.type !== targetRoute.query.type) {
+          this.$router.push(targetRoute).catch(err => {
+            if (err.name !== 'NavigationDuplicated') console.error(err);
           });
         } else {
-          Middle.$emit('search');
+          Middle.$emit('search'); // 如果已在搜索页且参数相同，则触发事件
         }
-
       }
     }
   }
@@ -185,7 +196,7 @@ export default {
 
 <template>
   <!-- 主界面根容器 -->
-  <div class="main-ui-container dark-theme"> <!-- ✨ 添加 dark-theme 类 -->
+  <div class="main-ui-container dark-theme"> <!-- ✨ 应用深色主题类 -->
     <!-- 登录弹窗 (样式将通过 custom-class 调整) -->
     <el-dialog
         :visible.sync="dialogVisible.logView"
@@ -195,18 +206,17 @@ export default {
         append-to-body
         custom-class="login-dialog-dark"
         :show-close="false">
-      <div slot="title" class="login-dialog-header-dark"> <!-- ✨ 自定义头部 -->
+      <div slot="title" class="login-dialog-header-dark"> <!-- ✨ 自定义深色主题头部 -->
         <span>欢迎回来</span>
-        <i class="el-icon-close dialog-close-icon-dark" @click="handleCloseLog"></i>
       </div>
       <LoginView></LoginView>
     </el-dialog>
 
     <el-container class="main-layout">
       <!-- 左侧边栏 -->
-      <el-aside width="200px" class="main-aside-dark"> <!-- ✨ 宽度调整，类名修改 -->
+      <el-aside width="200px" class="main-aside-dark"> <!-- ✨ 深色主题侧边栏，宽度调整 -->
         <div class="aside-header-dark">
-          <span class="logo-text-dark">MyAPP</span> <!-- ✨ Logo 文字调整 -->
+          <span class="logo-text-dark">我的应用</span> <!-- ✨ Logo 文字内容 -->
         </div>
         <el-menu
             ref="elMenu"
@@ -218,15 +228,15 @@ export default {
             router>
           <el-menu-item index="recommend" :route="{ name: 'recommend' }">
             <i class="el-icon-discover"></i>
-            <span slot="title">发现</span> <!-- ✨ 文本调整 -->
+            <span slot="title">发现</span> <!-- ✨ 菜单项文本 -->
           </el-menu-item>
           <el-menu-item index="follow" :route="{ name: 'follow' }">
             <i class="el-icon-star-off"></i>
             <span slot="title">关注</span>
           </el-menu-item>
-          <el-menu-item index="user" :route="{ name: 'user',query:{id:'self'} }">
+          <el-menu-item index="user" :route="{ name: 'user',query:{id:'self'} }" >
             <i class="el-icon-user"></i>
-            <span slot="title">我</span> <!-- ✨ 文本调整 -->
+            <span slot="title">我</span> <!-- ✨ 菜单项文本 -->
           </el-menu-item>
         </el-menu>
         <div class="aside-footer-dark">
@@ -240,14 +250,14 @@ export default {
         <el-header class="main-header-dark" height="60px">
           <div class="search-box-dark">
             <el-input
-                placeholder="搜索精彩内容"
+                placeholder="搜索精彩内容..."
                 v-model="input_search"
                 class="search-input-dark"
                 clearable
                 @clear="clearSearch"
                 @keyup.enter.native="clickSearch">
               <el-button slot="append" icon="el-icon-search" @click="clickSearch"
-                         :disabled="!input_search.trim()"></el-button>
+                         :disabled="!input_search.trim()" title="搜索"></el-button>
             </el-input>
           </div>
 
@@ -260,7 +270,7 @@ export default {
                         popper-class="action-popover-dark message-popover-dark" @show="handleOpenMessageView"
                         @hide="handleCloseMessageView">
               <div class="popover-content-dark" v-if="dialogVisible.messageView">
-                <MessageView :existNewMessage="this.newMessage" v-on:checkNew="checkNew"
+                <MessageView :existNewMessage="newMessage" @checkNew="checkNew"
                              style="max-height: 400px; overflow-y: auto;"></MessageView>
               </div>
               <el-badge class="action-badge-dark" slot="reference" :is-dot="newMessage" :hidden="!newMessage">
@@ -268,15 +278,15 @@ export default {
               </el-badge>
             </el-popover>
 
-            <el-popover placement="bottom-end" width="400" trigger="hover"
+<!--            <el-popover placement="bottom-end" width="400" trigger="hover"
                         popper-class="action-popover-dark chat-popover-dark">
               <div class="popover-content-dark">
-                <ChatView style="max-height: 450px;"></ChatView>
+                <ChatView style="max-height: 450px; overflow-y: auto;"></ChatView> &lt;!&ndash; 建议ChatView也处理滚动 &ndash;&gt;
               </div>
-              <el-badge is-dot class="action-badge-dark" slot="reference" :hidden="true"> <!-- 示例：私信红点逻辑待实现 -->
+              <el-badge is-dot class="action-badge-dark" slot="reference" :hidden="true"> &lt;!&ndash; 示例：私信红点逻辑待实现 &ndash;&gt;
                 <el-button type="text" icon="el-icon-message" class="action-icon-button-dark" title="私信"></el-button>
               </el-badge>
-            </el-popover>
+            </el-popover>-->
 
             <div class="user-section-dark">
               <el-popover
@@ -288,28 +298,34 @@ export default {
                 <template #reference>
                   <el-avatar :size="38"
                              :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
-                             class="header-avatar-dark"></el-avatar>
+                             class="header-avatar-dark"
+                             alt="用户头像"></el-avatar>
                 </template>
                 <div class="user-popover-content-dark">
                   <div class="user-info-header-popover-dark">
                     <el-avatar :size="50"
                                :src="userinfo.profile || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
-                               :key="userinfo.profile"></el-avatar>
+                               :key="userinfo.profile" alt="用户头像"></el-avatar>
                     <div class="user-info-text-popover-dark">
-                      <span class="user-name-popover-dark">{{ userinfo.userName || '用户' }}</span>
-                      <span class="user-id-popover-dark">ID: {{ userinfo.userId || '-' }}</span>
+                      <span class="user-name-popover-dark">{{ userinfo.userName || ' ' }}</span>
+                      <span class="user-id-popover-dark">ID: {{ userinfo.userId || '---' }}</span>
                     </div>
                   </div>
                   <div class="user-stats-popover-dark">
                     <div><span>{{ userinfo.subscriber || 0 }}</span><label>关注</label></div>
                     <el-divider direction="vertical"></el-divider>
                     <div><span>{{ userinfo.fans || 0 }}</span><label>粉丝</label></div>
-<!--                    <div><span>{{ userinfo.likes || 0 }}</span><label>获赞</label></div> &lt;!&ndash; 假设有获赞数 &ndash;&gt;-->
+                    <!-- 示例：获赞数 (若有此数据)
+                    <el-divider direction="vertical" v-if="userinfo.likes !== undefined"></el-divider>
+                    <div v-if="userinfo.likes !== undefined"><span>{{ userinfo.likes }}</span><label>获赞</label></div>
+                    -->
                   </div>
                   <div class="user-actions-popover-dark">
                     <el-button type="text" @click="clickUser('self')"><i class="el-icon-user"></i>个人主页</el-button>
-<!--                    <el-button type="text"><i class="el-icon-wallet"></i>我的钱包</el-button>
-                    <el-button type="text"><i class="el-icon-setting"></i>账号设置</el-button>-->
+                    <!-- 示例：其他操作
+                    <el-button type="text"><i class="el-icon-wallet"></i>我的钱包</el-button>
+                    <el-button type="text"><i class="el-icon-setting"></i>账号设置</el-button>
+                    -->
                     <el-button type="text" @click="logout" class="logout-btn-popover-dark"><i
                         class="el-icon-switch-button"></i>退出登录
                     </el-button>
@@ -334,39 +350,56 @@ export default {
   </div>
 </template>
 
-
-
 <style>
-/* === THEME VARIABLES (CSS Custom Properties) === */
-:root { /* 或者特定的主题类，如 .dark-theme */
+/* === 主题变量 (CSS 自定义属性) === */
+:root { /* 或者特定的主题类, 例如 .dark-theme */
   --theme-bg-color: #121212; /* 主要背景色 (深黑) */
   --primary-bg-color: #1e1e1e; /* 面板/卡片背景色 (次深黑) */
-  --secondary-bg-color: #282828; /* 更浅的面板或交互元素背景 */
+  --secondary-bg-color: #282828; /* 更浅的面板或交互元素背景 (例如输入框) */
+  --tertiary-bg-color: #333333; /* 用于细微区分的背景色 */
   --primary-text-color: #e0e0e0; /* 主要文字颜色 (浅灰) */
   --secondary-text-color: #a0a0a0; /* 次要文字/图标颜色 (中灰) */
   --accent-color: #FE2C55; /* 品牌强调色 (例如抖音红) */
+  --accent-color-darker: #e02049; /* 用于强调色的悬停/激活状态 */
+  --accent-color-light-text: #ffffff; /* 强调色背景上的文字颜色 */
+  --accent-color-hover-bg: rgba(254, 44, 85, 0.08); /* 用于朴素/文字按钮的强调色悬停背景 */
   --border-color: #303030; /* 边框/分割线颜色 */
+  --border-color-light: #444444; /* 稍浅的边框色, 用于聚焦/悬停 */
+  --success-color: #28a745; /* 成功状态颜色 */
+  --warning-color: #ffc107; /* 警告状态颜色 */
+  --danger-color: #dc3545; /* 危险状态颜色 */
 
-  /* 可选的其他变量 */
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --base-font-size: 14px;
-  --border-radius-base: 4px;
-  --border-radius-large: 8px;
-  --border-radius-round: 50%;
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* 系统默认字体栈 */
+  --base-font-size: 14px; /* 基础字号 */
+  --border-radius-small: 3px; /* 小圆角 */
+  --border-radius-base: 4px; /* 基础圆角 */
+  --border-radius-medium: 6px; /* 中等圆角 (用于按钮, 输入框) */
+  --border-radius-large: 8px; /* 大圆角 (用于卡片, 对话框) */
+  --border-radius-xl: 12px; /* 超大圆角 */
+  --border-radius-round: 50%; /* 圆形 */
+
+  --input-height: 38px; /* 输入框标准高度 */
+}
+
+/* --- 全局重置与基础样式 --- */
+body.dark-theme { /* 如果将 dark-theme 应用于 body 标签 */
+  background-color: var(--theme-bg-color);
+  color: var(--primary-text-color);
+  margin: 0; /* 移除默认 body margin */
 }
 
 /* --- 主界面整体布局 --- */
 .main-ui-container.dark-theme {
-  height: 100vh;
-  overflow: hidden;
-  background-color: var(--theme-bg-color); /* 使用变量 */
-  color: var(--primary-text-color);       /* 使用变量 */
+  height: 100vh; /* 占满视窗高度 */
+  overflow: hidden; /* 防止主容器出现滚动条 */
+  background-color: var(--theme-bg-color);
+  color: var(--primary-text-color);
   font-family: var(--font-family-sans-serif);
   font-size: var(--base-font-size);
 }
 
 .main-layout {
-  height: 100%;
+  height: 100%; /* 继承父容器高度 */
 }
 
 /* --- 左侧边栏样式 --- */
@@ -375,311 +408,347 @@ export default {
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 200px; /* 固定宽度 */
 }
 
 .aside-header-dark {
-  height: 60px;
+  height: 60px; /* 头部高度 */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 20px;
   border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
+  flex-shrink: 0; /* 防止头部在内容过多时被压缩 */
 }
 
 .logo-text-dark {
   font-size: 22px;
-  font-weight: bold;
+  font-weight: 700; /* 加粗Logo文字 */
   color: var(--primary-text-color);
+  letter-spacing: 0.5px; /* 轻微字间距 */
 }
 
-.aside-menu-dark { /* el-menu 样式通常需要 >>> 或 /deep/ 或 ::v-deep (如果scoped) */
-  flex-grow: 1;
-  border-right: none !important;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-top: 15px;
-  background-color: transparent; /* el-menu 的背景由其父容器 .main-aside-dark 控制 */
+.aside-menu-dark { /* Element UI 菜单样式 */
+  flex-grow: 1; /* 占据剩余空间 */
+  border-right: none !important; /* 移除 Element UI 默认的右边框 */
+  overflow-y: auto; /* 内容超出时显示滚动条 */
+  padding-top: 10px; /* 顶部留白 */
+  background-color: transparent; /* 菜单背景由父容器控制 */
 }
 
-/* 注意：Element UI 组件的内部样式修改，如果是在 scoped style 中，需要使用深度选择器 */
-/* 如果这个CSS是全局的，可以直接用类名 */
 .aside-menu-dark .el-menu-item {
-  height: 48px;
-  line-height: 48px;
-  font-size: 15px;
-  padding: 0 25px !important;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  height: 46px; /* 菜单项高度 */
+  line-height: 46px; /* 垂直居中文本 */
+  font-size: 14px; /* 标准化字号 */
+  padding: 0 20px !important; /* 调整内边距 */
+  transition: background-color 0.2s ease, color 0.2s ease; /* 平滑过渡效果 */
   color: var(--secondary-text-color); /* 默认文字颜色 */
+  border-radius: var(--border-radius-medium); /* 中等圆角 */
+  margin: 4px 8px; /* 菜单项之间的外边距 */
+  width: calc(100% - 16px); /* 根据外边距调整宽度以充满 */
 }
 
-.aside-menu-dark .el-menu-item i {
-  margin-right: 12px;
-  font-size: 20px;
-  width: 24px;
-  text-align: center;
+.aside-menu-dark .el-menu-item i { /* 菜单项图标 */
+  margin-right: 10px; /* 图标与文字间距 */
+  font-size: 18px; /* 标准化图标大小 */
+  width: 20px; /* 固定图标宽度以对齐 */
+  text-align: center; /* 图标居中 */
   color: var(--secondary-text-color); /* 默认图标颜色 */
+  transition: color 0.2s ease; /* 图标颜色过渡 */
 }
-.aside-menu-dark .el-menu-item span { /* Element UI menu item text is in a span */
-  font-weight: 500;
+.aside-menu-dark .el-menu-item span { /* 菜单项文字 */
+  font-weight: 500; /* 适中字重 */
 }
 
-.aside-menu-dark .el-menu-item.is-active {
-  background-color: var(--accent-color) !important;
-  color: #ffffff !important;
+.aside-menu-dark .el-menu-item.is-active { /* 激活状态的菜单项 */
+  background-color: var(--accent-color) !important; /* 使用强调色背景 */
+  color: var(--accent-color-light-text) !important; /* 强调色背景上的文字颜色 */
+  box-shadow: 0 2px 8px rgba(254, 44, 85, 0.2); /* 轻微阴影提升层次感 */
 }
 .aside-menu-dark .el-menu-item.is-active i {
-  color: #ffffff !important;
+  color: var(--accent-color-light-text) !important; /* 激活时图标颜色 */
 }
 
-.aside-menu-dark .el-menu-item:hover {
+.aside-menu-dark .el-menu-item:hover:not(.is-active) { /* 未激活菜单项的悬停状态 */
   background-color: var(--secondary-bg-color) !important;
   color: var(--primary-text-color) !important;
 }
-.aside-menu-dark .el-menu-item:hover i {
+.aside-menu-dark .el-menu-item:hover:not(.is-active) i {
   color: var(--primary-text-color) !important;
 }
 
-
-.aside-footer-dark {
+.aside-footer-dark { /* 侧边栏底部 */
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-top: 1px solid var(--border-color);
   flex-shrink: 0;
+  padding: 0 8px; /* 底部内边距 */
 }
 
-.aside-footer-dark .settings-btn-dark { /* el-button type="text" */
+.aside-footer-dark .settings-btn-dark { /* 底部设置按钮 */
   color: var(--secondary-text-color);
   font-size: 14px;
   background-color: transparent;
   border: none;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-medium);
+  width: 100%; /* 按钮充满底部区域 */
+  text-align: left; /* 文字左对齐 */
 }
 .aside-footer-dark .settings-btn-dark:hover {
   color: var(--primary-text-color);
   background-color: var(--secondary-bg-color);
 }
 .aside-footer-dark .settings-btn-dark i {
-  margin-right: 6px;
+  margin-right: 8px; /* 设置图标与文字间距 */
 }
-
 
 /* --- 右侧主内容区 --- */
 .main-content-container-dark {
   background-color: var(--theme-bg-color);
 }
 
-.main-header-dark {
+.main-header-dark { /* 顶部栏 */
   background-color: var(--primary-bg-color);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 25px;
+  padding: 0 24px; /* 统一内边距 */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px; /* 确保header有明确高度 */
+  height: 60px; /* 固定高度 */
 }
 
+/* --- 搜索框优化 --- */
 .search-box-dark {
-  flex-grow: 0;
-  width: 350px;
-  position: relative; /* For positioning search button if inside */
+  width: 320px; /* 调整宽度 */
+  position: relative; /* 便于内部元素定位 */
 }
 
-/* For search-input-dark and its ::v-deep parts */
-.search-input-dark .el-input__inner {
+.search-input-dark .el-input__inner { /* Element UI 输入框内部样式 */
   background-color: var(--secondary-bg-color);
-  border: 1px solid var(--secondary-bg-color);
+  border: 1px solid var(--border-color); /* 默认边框颜色 */
   color: var(--primary-text-color);
-  border-radius: 25px;
-  padding-left: 20px;
-  padding-right: 40px; /* Make space for icon button if positioned inside */
-  height: 38px;
-  line-height: 38px;
+  border-radius: var(--border-radius-medium); /* 中等圆角 */
+  padding-left: 15px; /* 左内边距 */
+  padding-right: 40px; /* 右内边距, 为搜索按钮腾出空间 */
+  height: var(--input-height);
+  line-height: var(--input-height);
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease; /* 平滑过渡 */
 }
-.search-input-dark .el-input__inner:focus {
-  border-color: var(--accent-color);
+.search-input-dark .el-input__inner:focus { /* 输入框聚焦时 */
+  border-color: var(--accent-color); /* 使用强调色边框 */
+  box-shadow: 0 0 0 2px rgba(254, 44, 85, 0.2); /* 添加聚焦光晕效果 */
 }
-.search-input-dark .el-input__inner::placeholder {
+.search-input-dark .el-input__inner::placeholder { /* 占位符文字颜色 */
   color: var(--secondary-text-color);
+  opacity: 0.8; /* 略微透明 */
 }
-.search-input-dark .el-input-group__append { /* If using append slot */
-  display: none; /* Hide default append slot if button is absolutely positioned */
+
+.search-input-dark .el-input-group__append { /* Element UI 默认的 append 插槽 */
+  /*display: none;*/ /* 隐藏, 因为我们将按钮绝对定位 */
+
 }
-.search-input-dark .el-button[slot="append"] { /* Custom search button */
+.search-input-dark .el-button[slot="append"] { /* 自定义搜索按钮 */
   position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  color: var(--secondary-text-color);
-  font-size: 18px;
-  padding: 6px;
+  right: 1px; /* 对齐输入框右边框 */
+  top: 1px; /* 对齐输入框上边框 */
+  bottom: 1px; /* 对齐输入框下边框 */
+  width: 36px; /* 固定按钮宽度 */
+  background: transparent; /* 透明背景 */
+  border: none; /* 无边框 */
+  color: var(--secondary-text-color); /* 默认图标颜色 */
+  font-size: 16px; /* 图标大小 */
+  padding: 0; /* 无内边距 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0; /* 右侧圆角 */
+  transition: color 0.2s ease;
   cursor: pointer;
 }
-.search-input-dark .el-button[slot="append"]:hover {
-  color: var(--accent-color);
+.search-input-dark .el-button[slot="append"]:hover:not(:disabled) { /* 按钮悬停 (非禁用时) */
+  color: var(--accent-color); /* 使用强调色 */
 }
-.search-input-dark .el-button[slot="append"].is-disabled {
-  color: #6c757d; /* Darken secondary text color for disabled */
+.search-input-dark .el-button[slot="append"]:disabled { /* 禁用状态 */
+  color: #555; /* 深灰色 */
+  cursor: not-allowed; /* 禁用鼠标样式 */
+}
+.search-input-dark .el-input__clear { /* Element UI 清除按钮样式 */
+  color: var(--secondary-text-color);
+  font-size: 15px;
+  /* 确保清除按钮不与搜索图标重叠, 根据实际情况调整 */
+  /*margin-right: 35px;*/
+}
+.search-input-dark .el-input__clear:hover {
+  color: var(--primary-text-color);
 }
 
-
+/* --- 顶部操作按钮区 --- */
 .header-actions-dark {
   display: flex;
   align-items: center;
+  gap: 12px; /* 操作项之间的间距 */
 }
 
+/* 操作按钮基础样式 (例如 "发布", "登录") */
 .action-button-dark {
-  margin-left: 15px;
-  border-radius: 20px;
-  font-weight: 500;
-  padding: 9px 18px;
-  border: 1px solid transparent; /* Base border */
+  border-radius: var(--border-radius-medium); /* 中等圆角 */
+  font-weight: 500; /* 适中字重 */
+  font-size: 14px;
+  padding: 0 18px; /* 左右内边距 */
+  height: calc(var(--input-height) - 2px); /* 高度略小于输入框以视觉平衡 */
+  line-height: calc(var(--input-height) - 2px); /* 垂直居中 */
+  border: 1.5px solid transparent; /* 默认透明边框, 便于悬停/聚焦时添加颜色 */
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
-.action-button-dark.upload-btn-dark {
-  background-color: var(--accent-color);
-  border-color: var(--accent-color);
-  color: #fff;
-}
-.action-button-dark.upload-btn-dark:hover {
-  background-color: #e02049; /* Lighten accent color */
-  border-color: #e02049;
-}
-.action-button-dark.upload-btn-dark.is-plain {
+
+/* "发布" 按钮优化 (朴素主要按钮) */
+.action-button-dark.upload-btn-dark.el-button--primary.is-plain {
   color: var(--accent-color);
   background: transparent;
   border-color: var(--accent-color);
 }
-.action-button-dark.upload-btn-dark.is-plain:hover {
-  background: rgba(254, 44, 85, 0.1); /* Accent color with alpha */
+.action-button-dark.upload-btn-dark.el-button--primary.is-plain:hover,
+.action-button-dark.upload-btn-dark.el-button--primary.is-plain:focus {
+  background: var(--accent-color-hover-bg); /* 使用强调色悬停背景 */
+  color: var(--accent-color-darker); /* 悬停时文字颜色加深 */
+  border-color: var(--accent-color-darker); /* 悬停时边框颜色加深 */
 }
-.action-button-dark.login-btn-dark {
+
+/* "登录" 按钮 (主要按钮) */
+.action-button-dark.login-btn-dark.el-button--primary {
   background-color: var(--accent-color);
   border-color: var(--accent-color);
-  color: #fff;
+  color: var(--accent-color-light-text);
 }
-.action-button-dark.login-btn-dark:hover {
-  background-color: #e02049;
-  border-color: #e02049;
-}
-
-.action-icon-button-dark {
-  font-size: 22px;
-  color: var(--primary-text-color);
-  margin: 0 10px;
-  padding: 8px;
-  transition: color 0.2s ease;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.action-icon-button-dark:hover {
-  color: var(--accent-color);
+.action-button-dark.login-btn-dark.el-button--primary:hover,
+.action-button-dark.login-btn-dark.el-button--primary:focus {
+  background-color: var(--accent-color-darker); /* 悬停/聚焦时背景色加深 */
+  border-color: var(--accent-color-darker);
+  box-shadow: 0 2px 6px rgba(254, 44, 85, 0.25); /* 添加轻微阴影 */
 }
 
-.action-badge-dark {
-  margin-left: 0;
+/* 图标按钮优化 (例如 "通知", "私信") */
+.action-icon-button-dark.el-button--text {
+  font-size: 20px; /* 图标大小 */
+  color: var(--secondary-text-color); /* 默认颜色 */
+  padding: 7px; /* 使点击区域为方形 */
+  margin: 0; /* 移除 Element UI 文本按钮的默认外边距 */
+  border-radius: var(--border-radius-round); /* 圆形 */
+  background: transparent; /* 透明背景 */
+  border: none; /* 无边框 */
+  line-height: 1; /* 重要: 用于图标垂直居中 */
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.action-icon-button-dark.el-button--text:hover,
+.action-icon-button-dark.el-button--text:focus {
+  color: var(--primary-text-color); /* 悬停/聚焦时图标颜色 */
+  background-color: var(--secondary-bg-color); /* 轻微背景反馈 */
+}
+
+.action-badge-dark { /* Element UI 徽标点 */
+  margin-left: 0; /* 根据实际布局调整 */
   line-height: 1;
   vertical-align: middle;
   position: relative;
 }
-/* For Element UI Badge ::v-deep may be needed if scoped */
-.action-badge-dark .el-badge__content.is-dot {
+.action-badge-dark .el-badge__content.is-dot { /* 徽标点具体样式 */
   background-color: var(--accent-color);
   width: 8px;
   height: 8px;
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  border: 1px solid var(--primary-bg-color);
+  position: absolute; /* 相对于其引用的按钮定位 */
+  top: 2px; /* 微调位置 */
+  right: 2px; /* 微调位置 */
+  border: 1px solid var(--primary-bg-color); /* 与背景色区分的边框 */
 }
-.action-badge-dark.is-hidden .el-badge__content.is-dot {
+.action-badge-dark.is-hidden .el-badge__content.is-dot { /* 隐藏状态 */
   display: none;
 }
 
-
-.user-section-dark {
-  margin-left: 15px;
+.user-section-dark { /* 用户头像区域 */
+  margin-left: 15px; /* 与其他操作项的间距 */
   display: flex;
   align-items: center;
 }
 
-.header-avatar-dark { /* el-avatar */
+.header-avatar-dark { /* Element UI 头像 */
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 2px solid transparent; /* 默认透明边框 */
   transition: border-color 0.2s ease;
-  width: 38px; /* Ensure size if not set by el-avatar prop */
+  width: 38px; /* 确保尺寸 */
   height: 38px;
-  border-radius: var(--border-radius-round);
+  border-radius: var(--border-radius-round); /* 圆形 */
 }
 .header-avatar-dark:hover {
-  border-color: var(--accent-color);
+  border-color: var(--accent-color); /* 悬停时显示强调色边框 */
 }
 
-
-/* --- Popover 统一样式 (暗色) --- */
-/* These classes target the popper itself, which is usually appended to body */
-/* So, these should be global styles or use ::v-deep if this style block is scoped */
+/* --- Popover 浮层统一样式 (深色) --- */
+/* 这些类针对浮层本身, 通常附加到 body, 所以应为全局样式或使用 ::v-deep (若在 scoped style 中) */
 .el-popover.action-popover-dark,
 .el-popover.user-popover-dark {
-  background-color: var(--secondary-bg-color) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius-large) !important;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  color: var(--primary-text-color);
-  padding: 0 !important; /* Let content define padding */
+  background-color: var(--secondary-bg-color) !important; /* 背景色 */
+  border: 1px solid var(--border-color) !important; /* 边框色 */
+  border-radius: var(--border-radius-large) !important; /* 大圆角 */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* 阴影 */
+  color: var(--primary-text-color); /* 文字颜色 */
+  padding: 0 !important; /* 让内容区域自己定义内边距 */
 }
 
+/* Popover 箭头样式 (兼容 Element UI 不同版本) */
 .el-popover.action-popover-dark .popper__arrow,
-.el-popover.user-popover-dark .popper__arrow {
-  border-bottom-color: var(--secondary-bg-color) !important; /* Assuming bottom placement */
-}
+.el-popover.user-popover-dark .popper__arrow,
 .el-popover.action-popover-dark .popper__arrow::after, /* Element UI < 2.15.7 */
 .el-popover.user-popover-dark .popper__arrow::after {
-  border-bottom-color: var(--secondary-bg-color) !important; /* Element UI < 2.15.7 */
+  border-bottom-color: var(--secondary-bg-color) !important; /* 假设底部弹出 */
 }
-/* For Element Plus or newer Element UI, arrow might be different */
+/* Element Plus 或较新 Element UI 的箭头 */
 .el-popper[x-placement^="bottom"].action-popover-dark .el-popper__arrow::before,
 .el-popper[x-placement^="bottom"].user-popover-dark .el-popper__arrow::before {
-  border-bottom-color: var(--border-color) !important; /* Arrow border */
+  border-bottom-color: var(--border-color) !important; /* 箭头边框 */
 }
 .el-popper[x-placement^="bottom"].action-popover-dark .el-popper__arrow::after,
 .el-popper[x-placement^="bottom"].user-popover-dark .el-popper__arrow::after {
-  border-bottom-color: var(--secondary-bg-color) !important; /* Arrow fill */
+  border-bottom-color: var(--secondary-bg-color) !important; /* 箭头填充 */
 }
 
+/* Popover 内容区域特定样式 */
+.popover-content-dark {
+  /* 例如 MessageView 和 ChatView 的容器 */
+  padding: 10px; /* 如果需要统一内边距 */
+}
 
-/* User Info Popover Content (dark) */
+/* 用户信息 Popover 内容 (深色) */
 .user-popover-dark .user-popover-content-dark {
-  padding: 18px;
+  padding: 18px; /* Popover 内部的整体内边距 */
 }
-.user-popover-dark .user-info-header-popover-dark {
+.user-popover-dark .user-info-header-popover-dark { /* 头部用户信息 */
   display: flex;
   align-items: center;
   margin-bottom: 18px;
 }
-.user-popover-dark .user-info-header-popover-dark .el-avatar {
+.user-popover-dark .user-info-header-popover-dark .el-avatar { /* Popover 内的头像 */
   width: 50px; height: 50px; border-radius: var(--border-radius-round);
 }
-.user-popover-dark .user-info-text-popover-dark {
+.user-popover-dark .user-info-text-popover-dark { /* 用户名和ID区域 */
   margin-left: 12px;
   display: flex;
   flex-direction: column;
 }
-.user-popover-dark .user-name-popover-dark {
+.user-popover-dark .user-name-popover-dark { /* 用户名 */
   font-size: 16px;
   font-weight: 600;
   color: var(--primary-text-color);
   margin-bottom: 4px;
 }
-.user-popover-dark .user-id-popover-dark {
+.user-popover-dark .user-id-popover-dark { /* 用户ID */
   font-size: 12px;
   color: var(--secondary-text-color);
 }
-.user-popover-dark .user-stats-popover-dark {
+.user-popover-dark .user-stats-popover-dark { /* 用户数据统计 (关注/粉丝) */
   font-size: 13px;
   color: var(--primary-text-color);
   display: flex;
@@ -687,134 +756,146 @@ export default {
   margin-bottom: 18px;
   text-align: center;
 }
-.user-popover-dark .user-stats-popover-dark div {
+.user-popover-dark .user-stats-popover-dark div { /* 单个数据项 */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.user-popover-dark .user-stats-popover-dark div span {
+.user-popover-dark .user-stats-popover-dark div span { /* 数据数字 */
   font-weight: 600;
   font-size: 15px;
   margin-bottom: 2px;
 }
-.user-popover-dark .user-stats-popover-dark div label {
+.user-popover-dark .user-stats-popover-dark div label { /* 数据标签 (关注/粉丝) */
   font-size: 12px;
   color: var(--secondary-text-color);
 }
-.user-popover-dark .user-stats-popover-dark .el-divider--vertical {
+.user-popover-dark .user-stats-popover-dark .el-divider--vertical { /* 分割线 */
   background-color: var(--border-color);
-  height: 2em;
-  margin: 0 10px;
-  align-self: center;
+  height: 2em; /* 根据内容调整高度 */
+  margin: 0 10px; /* 左右外边距 */
+  align-self: center; /* 垂直居中 */
 }
 
-.user-popover-dark .user-actions-popover-dark {
+.user-popover-dark .user-actions-popover-dark { /* 用户操作按钮列表 */
   display: flex;
   flex-direction: column;
 }
-.user-popover-dark .user-actions-popover-dark .el-button--text {
+.user-popover-dark .user-actions-popover-dark .el-button--text { /* 操作按钮 */
   padding: 10px 0;
   font-size: 14px;
   color: var(--primary-text-color);
   text-align: left;
-  justify-content: flex-start; /* Align button content to start */
-  border-radius: var(--border-radius-base);
+  justify-content: flex-start; /* 使按钮内容左对齐 */
+  border-radius: var(--border-radius-base); /* 基础圆角 */
   transition: background-color 0.2s ease;
-  display: flex; /* To align icon and text */
+  display: flex; /* 用于对齐图标和文字 */
   align-items: center;
 }
 .user-popover-dark .user-actions-popover-dark .el-button--text:hover {
-  background-color: var(--secondary-bg-color);
+  background-color: var(--tertiary-bg-color); /* 更轻微的悬停背景 */
   color: var(--primary-text-color);
 }
-.user-popover-dark .user-actions-popover-dark .el-button--text i {
+.user-popover-dark .user-actions-popover-dark .el-button--text i { /* 操作按钮图标 */
   margin-right: 10px;
   font-size: 16px;
   color: var(--secondary-text-color);
-  width: 16px; /* Fixed width for icon alignment */
+  width: 16px; /* 固定图标宽度以对齐 */
   text-align: center;
 }
-.user-popover-dark .user-actions-popover-dark .logout-btn-popover-dark {
+.user-popover-dark .user-actions-popover-dark .logout-btn-popover-dark { /* 退出登录按钮 */
   color: var(--accent-color);
 }
 .user-popover-dark .user-actions-popover-dark .logout-btn-popover-dark i {
   color: var(--accent-color);
 }
 .user-popover-dark .user-actions-popover-dark .logout-btn-popover-dark:hover {
-  background-color: rgba(254, 44, 85, 0.1); /* Accent color with alpha */
+  background-color: var(--accent-color-hover-bg); /* 使用强调色悬停背景 */
 }
 
-
-/* --- 右侧主内容区域 --- */
+/* --- 右侧主内容区域 (router-view) --- */
 .main-content-dark {
   background-color: var(--theme-bg-color);
-  padding: 0; /* Main content often doesn't need padding if router views handle it */
-  height: calc(100vh - 60px); /* Full height minus header */
-  overflow-y: auto;
+  padding: 0; /* 主内容区域通常不需要内边距, 由路由视图自行处理 */
+  height: calc(100vh - 60px); /* 占满除顶部栏外的剩余高度 */
+  overflow-y: auto; /* 内容超出时显示滚动条 */
 }
 
-/* --- 登录弹窗样式 (暗色) --- */
-/* This class is applied to el-dialog via custom-class prop */
-/* Styles for .el-dialog itself should be global or use ::v-deep */
+/* --- 登录弹窗样式 (深色) --- */
+/* 此类通过 custom-class 属性应用于 el-dialog */
+/* el-dialog 本身的样式需要全局或使用 ::v-deep */
+.login-dialog-dark.el-dialog { /* 确保 custom-class 生效于 el-dialog 根元素 */
+  background-color: var(--primary-bg-color); /* 对话框背景 */
+  border-radius: var(--border-radius-large); /* 大圆角 */
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4); /* 更明显的阴影 */
+}
 .login-dialog-dark .el-dialog__header {
-  display: none; /* Hide default header, use custom slot */
+  display: none; /* 隐藏 Element UI 默认头部, 使用自定义 slot */
 }
 .login-dialog-dark .el-dialog__body {
-  padding: 0; /* Let LoginView fill the body */
-  background-color: var(--primary-bg-color); /* Ensure body bg matches */
-  border-radius: 0 0 var(--border-radius-large) var(--border-radius-large); /* Match dialog border radius if header is custom */
+  padding: 0; /* 让 LoginView 组件填充整个主体区域 */
+  background-color: var(--primary-bg-color); /* 确保主体背景色一致 */
+  /* 如果自定义头部有圆角, 主体也需要匹配底部圆角 */
+  border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
 }
 
-/* Custom Dialog Header (dark) */
+/* 自定义登录弹窗头部 (深色) */
 .login-dialog-header-dark {
-  padding: 20px 25px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 20px 25px; /* 内边距 */
+  border-bottom: 1px solid var(--border-color); /* 底部边框 */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--primary-text-color);
-  background-color: var(--primary-bg-color); /* Match dialog bg */
-  border-radius: var(--border-radius-large) var(--border-radius-large) 0 0; /* Top corners rounded */
+  font-size: 18px; /* 标题字号 */
+  font-weight: 600; /* 标题字重 */
+  color: var(--primary-text-color); /* 标题颜色 */
+  background-color: var(--primary-bg-color); /* 与对话框背景一致 */
+  /* 匹配对话框的顶部圆角 */
+  border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
 }
-.dialog-close-icon-dark {
+.dialog-close-icon-dark { /* 关闭图标 */
   cursor: pointer;
   color: var(--secondary-text-color);
   font-size: 20px;
 }
 .dialog-close-icon-dark:hover {
-  color: var(--primary-text-color);
+  color: var(--primary-text-color); /* 悬停时颜色变亮 */
 }
 
-/* --- 滚动条美化 (暗色主题) --- */
+/* --- 滚动条美化 (深色主题) --- */
+/* 适用于 Webkit 内核浏览器 (Chrome, Safari, Edge 新版) */
 .aside-menu-dark::-webkit-scrollbar,
 .main-content-dark::-webkit-scrollbar,
-.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar { /* Targeting popover's scrollable content */
-  width: 6px;
+.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar,
+.el-popover.chat-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar { /* 针对 Popover 内部可能滚动的 div */
+  width: 6px; /* 滚动条宽度 */
 }
 .aside-menu-dark::-webkit-scrollbar-thumb,
 .main-content-dark::-webkit-scrollbar-thumb,
-.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
-  background-color: var(--secondary-bg-color);
-  border-radius: 3px;
+.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb,
+.el-popover.chat-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
+  background-color: var(--secondary-bg-color); /* 滑块颜色 */
+  border-radius: 3px; /* 滑块圆角 */
 }
 .aside-menu-dark::-webkit-scrollbar-thumb:hover,
 .main-content-dark::-webkit-scrollbar-thumb:hover,
-.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
-  background-color: #4a4a4a; /* Slightly lighter for hover */
+.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover,
+.el-popover.chat-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
+  background-color: #4a4a4a; /* 悬停时滑块颜色变亮 */
 }
 .aside-menu-dark::-webkit-scrollbar-track,
 .main-content-dark::-webkit-scrollbar-track,
-.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
-  background: transparent;
+.el-popover.action-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-track,
+.el-popover.chat-popover-dark div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
+  background: transparent; /* 轨道背景透明 */
 }
 
+/* 适用于 Firefox 浏览器 */
 .aside-menu-dark,
 .main-content-dark,
-.el-popover.action-popover-dark div[style*="overflow-y: auto"] {
-  scrollbar-width: thin;
-  scrollbar-color: var(--secondary-bg-color) transparent;
+.el-popover.action-popover-dark div[style*="overflow-y: auto"],
+.el-popover.chat-popover-dark div[style*="overflow-y: auto"] {
+  scrollbar-width: thin; /* "thin" 或 "auto" */
+  scrollbar-color: var(--secondary-bg-color) transparent; /* 滑块颜色 轨道颜色 */
 }
 </style>
-
