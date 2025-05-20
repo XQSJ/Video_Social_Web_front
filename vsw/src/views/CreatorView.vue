@@ -357,8 +357,8 @@ export default {
           <!-- 重新选择按钮 -->
           <div ref="video" style="height:500px"  v-show="fileList.length>0"  class="player-instance">
             <div class="video-info-overlay">
-              <div class="video-description-content">
-                <p class="author-name">@{{userInfo.userName }}</p>
+              <div class="video-description-content" v-if="fileList.length>0">
+                <p class="author-name">@{{userInfo.userName || '' }}</p>
                 <p class="video-title">{{ title || '作品标题将会显示在这里' }}</p>
                 <p class="video-detail-desc"> {{showDescription }}</p>
               </div>
@@ -646,6 +646,7 @@ export default {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 5px;
+  color:white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
@@ -667,6 +668,7 @@ export default {
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 0;
+  color:white;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
   /* 多行文字溢出处理 (可选) */
   display: -webkit-box;
