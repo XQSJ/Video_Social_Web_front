@@ -450,90 +450,34 @@ export default {
 </template>
 
 <style scoped>
-/* === Creator Page Dark Theme (Standard CSS - Optimized & Unified) === */
-/* ... (你现有的所有 CSS 变量和样式保持不变) ... */
-
-/* --- Start: Local Theme Variables (Remove if defined globally in :root) --- */
-:root { /* CSS 变量通常定义在 :root 或一个共同的父元素上 */
-  --theme-bg-color: #121212;
-  --primary-bg-color: #1e1e1e;
-  --secondary-bg-color: #282828; /* For less prominent surfaces like upload dragger bg */
-  --tertiary-bg-color: #333333; /* For hover states or subtle distinctions */
-  --input-bg-color: #252525;    /* Specific background for inputs if different from secondary */
-
-  --primary-text-color: #e0e0e0;
-  --secondary-text-color: #a0a0a0;
-  --overlay-text-color: #FFFFFF; /* 纯白色用于遮罩层文字，确保高对比度 */
-
-  --accent-color: #FE2C55; /* TikTok Red */
-  --accent-color-darker: #e02049;
-  --accent-color-light-text: #ffffff;
-  --accent-color-hover-bg: rgba(254, 44, 85, 0.08); /* Subtle hover for text buttons */
-
-  --border-color: #3a3a3a;       /* Borders for cards, dividers */
-  --border-color-light: #4d4d4d; /* Lighter borders, e.g., for input default state */
-
-  --disabled-bg-color: #2c2c2c;
-  --disabled-text-color: #757575;
-  --disabled-border-color: #383838; /* Border for disabled elements */
-
-  --success-color: #4CAF50;
-  --warning-color: #FFC107;
-  --warning-color-hover-bg: rgba(255, 193, 7, 0.1);
-  --warning-color-hover-text: #e6a23c;
-  --danger-color: #F44336;
-
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --base-font-size: 14px;
-  --line-height-base: 1.6;
-
-  --border-radius-small: 4px;
-  --border-radius-base: 6px;
-  --border-radius-medium: 8px;
-  --border-radius-large: 12px;
-  --border-radius-round: 50%;
-
-  --input-height: 40px;
-  --input-padding-horizontal: 15px;
-  --button-height: 40px;
-  --button-padding-horizontal: 20px;
-
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 2px 5px var(--shadow-color);
-  --shadow-md: 0 5px 15px var(--shadow-color);
-  --shadow-lg: 0 10px 30px var(--shadow-color);
-
-  --transition-duration: 0.2s;
-  --transition-timing-function: ease-in-out;
-}
-/* --- End: Local Theme Variables --- */
+/* === Creator Page Light Theme (Standard CSS - Optimized & Unified) - No :root variables === */
 
 .creator-page-container {
   padding: 24px;
-  background-color: var(--theme-bg-color);
-  min-height: calc(100vh - 40px); /* 假设有一个 40px 高的页头/导航 */
+  background-color: #f4f5f7; /* 页面背景色 - 浅灰色 */
+  min-height: calc(100vh - 40px);
   box-sizing: border-box;
-  color: var(--primary-text-color);
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--base-font-size);
-  line-height: var(--line-height-base);
+  color: #303133; /* 主要文字颜色 - 深灰色 */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .creator-card {
   max-width: 720px;
   margin: 24px auto;
-  background-color: var(--primary-bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-large);
-  box-shadow: var(--shadow-md);
-  overflow: hidden; /* 确保子元素圆角生效 */
+  background-color: #ffffff; /* 卡片背景白色 */
+  border: 1px solid #dcdfe6; /* 浅色边框 */
+  border-radius: 12px; /* --border-radius-large */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* --shadow-md with light shadow color */
+  overflow: hidden;
 }
 
 .creator-card .card-header {
   font-size: 18px;
   font-weight: 600;
-  color: var(--primary-text-color); /* 使用主题主文字色 */
-  border-bottom: 1px solid var(--border-color);
+  color: #303133; /* 主要文字颜色 */
+  border-bottom: 1px solid #dcdfe6; /* 浅色边框 */
   padding: 18px 24px;
   display: flex;
   align-items: center;
@@ -542,7 +486,7 @@ export default {
 .creator-card .card-header i {
   margin-right: 12px;
   font-size: 22px;
-  color: var(--accent-color); /* 使用主题强调色 */
+  color: #FE2C55; /* 主题强调色 (TikTok Red) */
   line-height: 1;
 }
 
@@ -554,16 +498,15 @@ export default {
   margin-bottom: 28px;
 }
 
-/* 确保 Element UI 的 Label 也是白色/浅色 */
 .creator-form :deep(.el-form-item__label) {
   padding-bottom: 8px;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--primary-text-color) !important; /* 使用主题主文字色，!important确保覆盖默认 */
+  color: #303133 !important; /* 主要文字颜色 */
   font-size: 14px;
 }
 
-/* --- Upload Area (已有样式，保持) --- */
+/* --- Upload Area --- */
 .video-uploader ::v-deep .el-upload-dragger {
   width: 100%;
   height: 200px;
@@ -571,322 +514,316 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: var(--secondary-bg-color);
-  border: 2px dashed var(--border-color-light);
-  border-radius: var(--border-radius-medium);
-  transition: border-color var(--transition-duration) var(--transition-timing-function),
-  background-color var(--transition-duration) var(--transition-timing-function);
+  background-color: #f0f2f5; /* 次要表面背景色 - 极浅灰色 */
+  border: 2px dashed #e4e7ed; /* 更浅的边框颜色 */
+  border-radius: 8px; /* --border-radius-medium */
+  transition: border-color 0.2s ease-in-out,
+  background-color 0.2s ease-in-out;
 }
 .video-uploader ::v-deep .el-upload-dragger:hover {
-  border-color: var(--accent-color);
-  background-color: var(--tertiary-bg-color);
+  border-color: #FE2C55; /* 主题强调色 */
+  background-color: #e9ecef; /* 悬停状态或细微区分的背景色 - 浅灰色 */
 }
 .video-uploader ::v-deep .el-upload-dragger .el-icon-upload {
   font-size: 56px;
-  color: var(--secondary-text-color);
+  color: #606266; /* 次要文字颜色 - 中灰色 */
   margin-bottom: 18px;
 }
 .video-uploader ::v-deep .el-upload-dragger .el-upload__text {
-  color: var(--primary-text-color);
+  color: #303133; /* 主要文字颜色 */
   font-size: 15px;
 }
 .video-uploader ::v-deep .el-upload-dragger .el-upload__text em {
-  color: var(--accent-color);
+  color: #FE2C55; /* 主题强调色 */
   font-style: normal;
   font-weight: 500;
 }
 .video-uploader ::v-deep .el-upload__tip {
   line-height: 1.5;
-  color: var(--secondary-text-color);
+  color: #606266; /* 次要文字颜色 */
   font-size: 13px;
   margin-top: 12px;
 }
 
-/* --- 新增：视频预览区域样式 --- */
-.video-preview-wrapper {
-  position: relative; /* 为内部绝对定位的遮罩层提供基准 */
+/* --- 视频预览区域样式 --- */
+.video-preview-wrapper { /* This class was in your HTML but no styles were applied, adding if needed */
+  position: relative;
   width: 100%;
-  height: 500px; /* 或根据需要调整，与播放器高度一致 */
-  background-color: #000; /* 预览区域背景，视频加载前可见 */
-  border-radius: var(--border-radius-medium); /* 轻微圆角 */
-  overflow: hidden; /* 确保子元素（播放器、遮罩）不超出圆角范围 */
-  margin-top: 10px; /* 与上传区域的间距 */
+  height: 500px;
+  background-color: #000;
+  border-radius: 8px; /* --border-radius-medium */
+  overflow: hidden;
+  margin-top: 10px;
 }
 
-.player-instance {
+.player-instance { /* This is the ref="video" div */
   width: 100%;
-  height: 100%;
+  height: 100%; /* Ensure it fills the parent if .video-preview-wrapper is used */
+  /* If .video-preview-wrapper is NOT used, and this is directly after upload,
+     you might want to add the background and border-radius here instead. */
+  background-color: #000; /* Added here to ensure a black background for the player */
+  border-radius: 8px; /* --border-radius-medium, matches preview wrapper if separate */
+  overflow: hidden; /* To contain the player within rounded corners */
 }
-/* 确保 xgplayer 内部的 video 标签充满容器 */
 .player-instance ::v-deep video {
   width: 100% !important;
   height: 100% !important;
-  object-fit: contain; /* 或 cover，根据需要选择视频填充方式 */
+  object-fit: contain;
 }
 
+/* 视频预览遮罩层样式 */
 .video-info-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 15px 20px; /* 遮罩层内边距 */
+  padding: 15px 20px;
   box-sizing: border-box;
-  z-index: 10; /* 确保在播放器之上 */
-  /* 从下往上渐变，增强文字可读性 */
+  z-index: 10;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
-  color: var(--overlay-text-color); /* 使用专门为遮罩层定义的纯白色 */
-  pointer-events: none; /* 允许点击穿透到视频播放器本身 */
+  color: #FFFFFF; /* 遮罩层文字 - 纯白色 */
+  pointer-events: none;
 }
-
-.video-description-content { /* 文字内容的容器 */
-  /* 可以添加最大宽度等限制，如果需要的话 */
-}
-
 .video-info-overlay .author-name {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 5px;
-  color:white;
+  color: #FFFFFF;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
-
 .video-info-overlay .video-title {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 8px;
   line-height: 1.3;
+  color: #FFFFFF;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-  /* 多行文字溢出处理 (可选) */
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .video-info-overlay .video-detail-desc {
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 0;
-  color:white;
+  color: #FFFFFF;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
-  /* 多行文字溢出处理 (可选) */
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* 最多显示3行 */
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-
+/* 重新选择按钮 */
 .reupload-button.el-button--warning.is-plain {
-  /* ... (已有样式保持) ... */
-  color: var(--warning-color);
-  background: transparent;
-  border: 1.5px solid var(--warning-color);
+  color: #E6A23C; /* 警告色 (Element UI Warning) */
+  background: #ffffff; /* 背景为白色或卡片背景色 */
+  border: 1.5px solid #E6A23C;
   margin-top: 12px;
-  border-radius: var(--border-radius-medium);
+  border-radius: 8px; /* --border-radius-medium */
   font-weight: 500;
   height: 36px;
-  padding: 0 var(--button-padding-horizontal);
+  padding: 0 20px; /* --button-padding-horizontal */
   font-size: 14px;
-  transition: background-color var(--transition-duration) var(--transition-timing-function),
-  color var(--transition-duration) var(--transition-timing-function),
-  border-color var(--transition-duration) var(--transition-timing-function);
+  transition: background-color 0.2s ease-in-out,
+  color 0.2s ease-in-out,
+  border-color 0.2s ease-in-out;
 }
 .reupload-button.el-button--warning.is-plain:hover,
 .reupload-button.el-button--warning.is-plain:focus {
-  background: var(--warning-color-hover-bg);
-  color: var(--warning-color-hover-text);
-  border-color: var(--warning-color-hover-text);
+  background: rgba(230, 162, 60, 0.1); /* 警告色悬停背景 */
+  color: #cf9236; /* 警告色悬停文字 */
+  border-color: #cf9236; /* 警告色悬停边框 */
 }
 
-/* --- Divider (已有样式，保持) --- */
+/* --- Divider --- */
 .creator-form .el-divider--horizontal {
   margin: 32px 0;
-  background-color: var(--border-color);
+  background-color: #dcdfe6; /* 边框颜色 */
 }
 .creator-form .el-divider ::v-deep i {
   margin-right: 10px;
   font-size: 18px;
   vertical-align: middle;
-  color: var(--secondary-text-color);
+  color: #606266; /* 次要文字颜色 */
 }
 .creator-form .el-divider ::v-deep .el-divider__text {
   font-size: 15px;
-  color: var(--primary-text-color);
-  font-weight: 500;
-  background-color: var(--primary-bg-color);
+  color: #303133; /* 主要文字颜色 */
+  background-color: #ffffff; /* 分割线文字背景与卡片背景一致 */
   padding: 0 18px;
 }
 
-/* --- Inputs & Textarea (已有样式，确保文字颜色) --- */
+/* --- Inputs & Textarea --- */
 .creator-form ::v-deep .el-input__inner,
 .creator-form ::v-deep .el-textarea__inner {
-  background-color: var(--input-bg-color, var(--secondary-bg-color));
-  border: 1px solid var(--border-color-light);
-  color: var(--primary-text-color); /* 确保输入文字是浅色 */
-  border-radius: var(--border-radius-medium);
-  height: var(--input-height);
-  line-height: var(--input-height);
-  padding: 0 var(--input-padding-horizontal);
+  background-color: #ffffff; /* 输入框背景 - 白色 */
+  border: 1px solid #e4e7ed; /* 更浅的边框颜色 */
+  color: #303133; /* 主要文字颜色 */
+  border-radius: 8px; /* --border-radius-medium */
+  height: 40px; /* --input-height */
+  line-height: 40px; /* --input-height */
+  padding: 0 15px; /* --input-padding-horizontal */
   font-size: 14px;
-  transition: border-color var(--transition-duration) var(--transition-timing-function),
-  box-shadow var(--transition-duration) var(--transition-timing-function);
+  transition: border-color 0.2s ease-in-out,
+  box-shadow 0.2s ease-in-out;
 }
-/* ... (其余 input, textarea 样式保持不变) ... */
 .creator-form ::v-deep .el-input__inner:hover,
 .creator-form ::v-deep .el-textarea__inner:hover {
-  border-color: var(--border-color);
+  border-color: #dcdfe6; /* 边框颜色 */
 }
 .creator-form ::v-deep .el-input__inner:focus,
 .creator-form ::v-deep .el-textarea__inner:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.15);
+  border-color: #FE2C55; /* 主题强调色 */
+  box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.1);
 }
 .creator-form ::v-deep .el-input__inner::placeholder,
 .creator-form ::v-deep .el-textarea__inner::placeholder {
-  color: var(--secondary-text-color);
-  opacity: 0.8;
+  color: #909399; /* Element UI placeholder color or your --secondary-text-color with opacity */
+  opacity: 1; /* Ensure placeholder color is fully visible if direct color is set */
 }
 .creator-form ::v-deep .el-input .el-input__clear,
 .creator-form ::v-deep .el-input .el-input__suffix {
-  color: var(--secondary-text-color);
-  transition: color var(--transition-duration) var(--transition-timing-function);
+  color: #606266; /* 次要文字颜色 */
+  transition: color 0.2s ease-in-out;
 }
 .creator-form ::v-deep .el-input .el-input__clear:hover {
-  color: var(--primary-text-color);
+  color: #303133; /* 主要文字颜色 */
 }
 .creator-form ::v-deep .el-textarea__inner {
   height: auto;
-  min-height: calc(var(--input-height) * 2.5);
-  line-height: var(--line-height-base);
-  padding: 10px var(--input-padding-horizontal);
+  min-height: calc(40px * 2.5); /* calc(var(--input-height) * 2.5) */
+  line-height: 1.6; /* --line-height-base */
+  padding: 10px 15px; /* padding: 10px var(--input-padding-horizontal) */
 }
+/* 禁用状态输入框 */
 .creator-form ::v-deep .el-input.is-disabled .el-input__inner,
 .creator-form ::v-deep .el-textarea.is-disabled .el-textarea__inner {
-  background-color: var(--disabled-bg-color) !important;
-  border-color: var(--disabled-border-color) !important;
-  color: var(--disabled-text-color) !important;
+  background-color: #f5f7fa !important; /* 禁用背景色 */
+  border-color: #e4e7ed !important; /* 禁用边框色 */
+  color: #c0c4cc !important; /* 禁用文字色 */
   cursor: not-allowed;
   opacity: 1;
-  -webkit-text-fill-color: var(--disabled-text-color);
+  -webkit-text-fill-color: #c0c4cc;
   box-shadow: none !important;
 }
 .creator-form ::v-deep .el-input__count .el-input__count-inner {
   background-color: transparent !important;
-  color: var(--secondary-text-color);
+  color: #606266; /* 次要文字颜色 */
   font-size: 12px;
 }
 
-/* --- Radio Group (已有样式，确保文字颜色) --- */
+/* --- Radio Group --- */
 .creator-form ::v-deep .el-radio {
   margin-right: 24px;
 }
 .creator-form ::v-deep .el-radio__input .el-radio__inner {
-  background: transparent;
-  border: 1.5px solid var(--border-color-light);
+  background: #ffffff; /* Radio 内圈背景 */
+  border: 1.5px solid #e4e7ed; /* Radio 边框 */
   width: 18px;
   height: 18px;
-  transition: border-color var(--transition-duration) var(--transition-timing-function),
-  background-color var(--transition-duration) var(--transition-timing-function);
+  transition: border-color 0.2s ease-in-out,
+  background-color 0.2s ease-in-out;
 }
 .creator-form ::v-deep .el-radio__input.is-checked .el-radio__inner {
-  border-color: var(--accent-color);
-  background: var(--accent-color);
+  border-color: #FE2C55; /* 主题强调色 */
+  background: #FE2C55; /* 主题强调色 */
 }
 .creator-form ::v-deep .el-radio__input.is-checked .el-radio__inner::after {
   width: 7px;
   height: 7px;
-  background-color: var(--accent-color-light-text);
+  background-color: #ffffff; /* 选中标记 - 白色 */
 }
 .creator-form ::v-deep .el-radio__label {
-  color: var(--primary-text-color); /* 确保 Radio Label 是浅色 */
+  color: #303133; /* 主要文字颜色 */
   font-size: 14px;
   padding-left: 8px;
-  transition: color var(--transition-duration) var(--transition-timing-function);
+  transition: color 0.2s ease-in-out;
 }
 .creator-form ::v-deep .el-radio:hover .el-radio__label {
-  color: var(--accent-color);
+  color: #FE2C55; /* 主题强调色 */
 }
-/* ... (其余 radio 样式保持不变) ... */
+/* 禁用状态 Radio */
 .creator-form ::v-deep .el-radio.is-disabled .el-radio__label {
-  color: var(--disabled-text-color) !important;
+  color: #c0c4cc !important; /* 禁用文字色 */
   opacity: 1;
 }
 .creator-form ::v-deep .el-radio.is-disabled .el-radio__input .el-radio__inner {
-  background-color: var(--disabled-bg-color) !important;
-  border-color: var(--disabled-border-color) !important;
+  background-color: #f5f7fa !important; /* 禁用背景色 */
+  border-color: #e4e7ed !important; /* 禁用边框色 */
 }
 .creator-form .access-tip {
-  color: var(--secondary-text-color);
+  color: #606266; /* 次要文字颜色 */
   font-size: 12px;
   margin-left: 6px;
   font-style: italic;
 }
 
-/* --- Action Buttons & Progress (已有样式，可微调进度条) --- */
+/* --- Action Buttons & Progress --- */
 .action-buttons {
   margin-top: 36px;
-  text-align: right; /* 发布按钮通常在右侧 */
+  text-align: right;
 }
+/* 主要操作按钮 (例如发布按钮) */
 .action-buttons .el-button--primary {
-  background-color: var(--accent-color);
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color-light-text); /* 确保按钮文字是浅色 */
-  border-radius: var(--border-radius-medium);
-  padding: 0 var(--button-padding-horizontal);
-  height: var(--button-height);
-  line-height: var(--button-height);
+  background-color: #FE2C55; /* 主题强调色 */
+  border: 1px solid #FE2C55; /* 主题强调色 */
+  color: #ffffff; /* 按钮文字 - 白色 */
+  border-radius: 8px; /* --border-radius-medium */
+  padding: 0 20px; /* --button-padding-horizontal */
+  height: 40px; /* --button-height */
+  line-height: 40px; /* --button-height */
   font-size: 15px;
   font-weight: 500;
-  transition: background-color var(--transition-duration) var(--transition-timing-function),
-  border-color var(--transition-duration) var(--transition-timing-function),
-  box-shadow var(--transition-duration) var(--transition-timing-function);
-  letter-spacing: 0.5px; /* 轻微增加字间距 */
+  transition: background-color 0.2s ease-in-out,
+  border-color 0.2s ease-in-out,
+  box-shadow 0.2s ease-in-out;
+  letter-spacing: 0.5px;
 }
-/* ... (其余 button, progress 样式保持不变) ... */
 .action-buttons .el-button--primary:hover,
 .action-buttons .el-button--primary:focus {
-  background-color: var(--accent-color-darker);
-  border-color: var(--accent-color-darker);
-  box-shadow: 0 0 10px rgba(254, 44, 85, 0.3);
+  background-color: #e02049; /* 主题强调色 - 深色变体 */
+  border-color: #e02049; /* 主题强调色 - 深色变体 */
+  box-shadow: 0 0 10px rgba(254, 44, 85, 0.2);
 }
 .action-buttons .el-button--primary.is-disabled {
-  background-color: var(--disabled-bg-color);
-  border-color: var(--disabled-border-color);
-  color: var(--disabled-text-color);
+  background-color: #f5f7fa; /* 禁用背景色 */
+  border-color: #e4e7ed; /* 禁用边框色 */
+  color: #c0c4cc; /* 禁用文字色 */
   opacity: 1;
   box-shadow: none;
   cursor: not-allowed;
 }
 .action-buttons .el-button--primary.is-loading ::v-deep .el-icon-loading {
-  color: var(--accent-color-light-text);
+  color: #ffffff; /* 按钮文字 - 白色 */
 }
 
+/* 进度条 */
 .action-buttons .el-progress {
   margin-bottom: 18px;
-  /* 如果需要，可以调整进度条文本颜色，但Element UI通常处理得不错 */
 }
 .action-buttons .el-progress ::v-deep .el-progress-bar__outer {
-  border-radius: var(--border-radius-round, 100px); /* 使用CSS变量确保一致性 */
-  background-color: var(--secondary-bg-color);
-  height: 18px !important; /* 稍微加高一点，配合 text-inside */
+  border-radius: 50px; /* --border-radius-round or 100px */
+  background-color: #f0f2f5; /* 次要表面背景色 */
+  height: 18px !important;
 }
 .action-buttons .el-progress ::v-deep .el-progress-bar__inner {
-  border-radius: var(--border-radius-round, 100px);
-  background-color: var(--accent-color);
-  transition: width 0.3s var(--transition-timing-function);
-  text-align: right; /* 确保内部文字靠右 */
-  line-height: 18px; /* 与高度一致 */
+  border-radius: 50px; /* --border-radius-round or 100px */
+  background-color: #FE2C55; /* 主题强调色 */
+  transition: width 0.3s ease-in-out;
+  text-align: right;
+  line-height: 18px;
 }
 .action-buttons .el-progress.is-text-inside ::v-deep .el-progress-bar__innerText {
-  color: var(--accent-color-light-text); /* 确保进度条内部文字是浅色 */
+  color: #ffffff; /* 进度条内部文字 - 白色 */
   font-size: 12px;
-  padding: 0 8px; /* 给文字一些呼吸空间 */
+  padding: 0 8px;
 }
 .action-buttons .el-progress:not(.is-text-inside) ::v-deep .el-progress__text {
-  color: var(--secondary-text-color);
+  color: #606266; /* 次要文字颜色 */
   font-size: 13px !important;
   margin-left: 8px;
   line-height: 1;

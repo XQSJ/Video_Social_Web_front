@@ -617,7 +617,8 @@ export default {
         'createTime':createTime,
         'duration':player.duration,
         'newVideo': newVideo,
-        'playTime': video.playTime
+        'playTime': video.playTime,
+        'tagId':this.tagId
       }
       axios.post('/history/create',history)
     },
